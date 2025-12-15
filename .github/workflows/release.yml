@@ -27,7 +27,7 @@ jobs:
           
           # Kopiere alle relevanten Dateien
           cp -r assets dist/gutenblock-pro/
-          cp -r bridge dist/gutenblock-pro/
+          cp -r includes dist/gutenblock-pro/
           cp -r build dist/gutenblock-pro/
           cp -r inc dist/gutenblock-pro/
           cp -r languages dist/gutenblock-pro/ 2>/dev/null || true
