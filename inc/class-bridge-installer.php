@@ -20,7 +20,7 @@ class GutenBlock_Pro_Bridge_Installer {
 	/**
 	 * Bridge mu-plugin Version (muss bei Updates angepasst werden)
 	 */
-	const BRIDGE_VERSION = '2.0.0';
+	const BRIDGE_VERSION = '2.0.1';
 
 	/**
 	 * Get singleton instance

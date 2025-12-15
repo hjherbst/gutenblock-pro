@@ -2,7 +2,7 @@
 /**
  * GutenBlock Bridge (MU-Plugin)
  * Content-Replacement und Style-Preview für GutenBlock SaaS
- * Version: 2.0.0
+ * Version: 2.0.1
  * 
  * INSTALLATION: Wird automatisch von GutenBlock Pro nach /wp-content/mu-plugins/ kopiert
  * MU-Plugins werden automatisch geladen, kein Aktivieren nötig.
@@ -444,6 +444,54 @@ function gutenblock_bridge_get_sections($request) {
 }
 
 // ============================================================================
+// CUSTOM STYLES
+// ============================================================================
+
+add_action('wp_enqueue_scripts', 'gutenblock_bridge_enqueue_custom_styles', 999);
+add_action('enqueue_block_editor_assets', 'gutenblock_bridge_enqueue_custom_styles', 999);
+
+function gutenblock_bridge_enqueue_custom_styles() {
+    static $enqueued = false;
+    
+    if ($enqueued) {
+        return;
+    }
+    
+    $css_file = get_stylesheet_directory() . '/css/gutenblock-custom-styles.css';
+    if (file_exists($css_file)) {
+        wp_enqueue_style(
+            'gutenblock-custom-styles',
+            get_stylesheet_directory_uri() . '/css/gutenblock-custom-styles.css',
+            array(),
+            filemtime($css_file)
+        );
+        $enqueued = true;
+    }
+}
+
+// ============================================================================
+// CACHE-DEAKTIVIERUNG FÜR PREVIEW
+// ============================================================================
+
+if (!empty($_GET['gutenblock-preview']) || !empty($_GET['gutenblock-preview-content'])) {
+    add_filter('wp_cache_themes_persistently', '__return_false');
+    if (!defined('WP_CACHE')) {
+        define('WP_CACHE', false);
+    }
+}
+
+// ============================================================================
+// ACTIVE STYLE FÜR EDITOR
+// ============================================================================
+
+add_filter('pre_option_wp_theme_preview', function($value) {
+    if (!empty($_GET['gutenblock-preview'])) {
+        return sanitize_text_field($_GET['gutenblock-preview']);
+    }
+    return $value;
+});
+
+// ============================================================================
 // STYLE-PREVIEW (Inline CSS für Varianten)
 // ============================================================================
 
@@ -497,6 +545,17 @@ function gutenblock_bridge_apply_style_variant($theme_json) {
             $theme_data['settings']['typography'] = array_merge(
                 $theme_data['settings']['typography'],
                 $style_variation['settings']['typography']
+            );
+            $modified = true;
+        }
+        
+        if (isset($style_variation['settings']['layout'])) {
+            if (!isset($theme_data['settings']['layout'])) {
+                $theme_data['settings']['layout'] = array();
+            }
+            $theme_data['settings']['layout'] = array_merge(
+                $theme_data['settings']['layout'],
+                $style_variation['settings']['layout']
             );
             $modified = true;
         }
@@ -565,7 +624,9 @@ function gutenblock_bridge_inline_css() {
     
     echo '}';
     echo '</style>';
-    echo '<!-- GutenBlock Bridge v2.0.0 -->';
+    
+    $mode = !empty($_GET['gutenblock-preview']) ? 'Preview' : 'Persistent';
+    echo '<!-- GutenBlock ' . $mode . ': ' . esc_attr($style_slug) . ' (Farben + Typografie) -->';
 }
 
 // ============================================================================
