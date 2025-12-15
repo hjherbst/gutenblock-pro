@@ -2,7 +2,7 @@
 /**
  * GutenBlock Bridge (MU-Plugin)
  * Content-Replacement und Style-Preview für GutenBlock SaaS
- * Version: 2.0.2
+ * Version: 2.0.3
  * 
  * INSTALLATION: Wird automatisch von GutenBlock Pro nach /wp-content/mu-plugins/ kopiert
  * MU-Plugins werden automatisch geladen, kein Aktivieren nötig.
@@ -80,6 +80,42 @@ function gutenblock_bridge_get_replacement_script() {
 (function() {
     'use strict';
     
+    // Funktion zum Ersetzen von Content (wird mehrfach aufgerufen)
+    function replaceContent(data) {
+        if (!data.content || typeof data.content !== 'object') {
+            console.warn('GutenBlock Bridge: Keine Content-Felder gefunden');
+            return;
+        }
+        
+        let replacedCount = 0;
+        
+        for (const [fieldId, text] of Object.entries(data.content)) {
+            if (!text) continue;
+            
+            // Primär: data-content-field Attribut
+            // WICHTIG: querySelectorAll findet auch Elemente mit display:none
+            let elements = document.querySelectorAll(`[data-content-field="${fieldId}"]`);
+            
+            // Fallback: CSS-ID
+            if (elements.length === 0) {
+                elements = document.querySelectorAll('#' + fieldId);
+            }
+            
+            if (elements.length > 0) {
+                elements.forEach(element => {
+                    // Ersetze Text in ALLEN gefundenen Elementen (auch in ausgeblendeten Sections)
+                    element.textContent = text;
+                    replacedCount++;
+                });
+                console.log('GutenBlock Bridge: Ersetzt', fieldId, 'in', elements.length, 'Element(en) →', text.substring(0, 50) + '...');
+            } else {
+                console.warn('GutenBlock Bridge: Element nicht gefunden:', fieldId);
+            }
+        }
+        
+        console.log(`GutenBlock Bridge: ${replacedCount} Felder ersetzt`);
+    }
+    
     if (typeof gutenblockContent === 'undefined') {
         console.log('GutenBlock Bridge: Keine Content-Daten vorhanden');
         return;
@@ -101,36 +137,20 @@ function gutenblock_bridge_get_replacement_script() {
             return response.json();
         })
         .then(data => {
-            if (!data.content || typeof data.content !== 'object') {
-                console.warn('GutenBlock Bridge: Keine Content-Felder gefunden');
-                return;
-            }
+            // Initial Content-Replacement
+            replaceContent(data);
             
-            let replacedCount = 0;
-            
-            for (const [fieldId, text] of Object.entries(data.content)) {
-                if (!text) continue;
-                
-                // Primär: data-content-field Attribut
-                let elements = document.querySelectorAll(`[data-content-field="${fieldId}"]`);
-                
-                // Fallback: CSS-ID
-                if (elements.length === 0) {
-                    elements = document.querySelectorAll('#' + fieldId);
+            // Erneutes Replacement nach Section-Toggle (falls Sections getoggelt werden)
+            // Warte auf postMessage für Section-Toggle
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'gutenblock-section-toggled') {
+                    // Nach Section-Toggle: Content erneut ersetzen (falls neue Sections sichtbar wurden)
+                    setTimeout(() => {
+                        console.log('GutenBlock Bridge: Erneutes Content-Replacement nach Section-Toggle');
+                        replaceContent(data);
+                    }, 100);
                 }
-                
-                if (elements.length > 0) {
-                    elements.forEach(element => {
-                        element.textContent = text;
-                        replacedCount++;
-                    });
-                    console.log('GutenBlock Bridge: Ersetzt', fieldId, '→', text.substring(0, 50) + '...');
-                } else {
-                    console.warn('GutenBlock Bridge: Element nicht gefunden:', fieldId);
-                }
-            }
-            
-            console.log(`GutenBlock Bridge: ${replacedCount} Felder ersetzt`);
+            });
         })
         .catch(error => {
             console.error('GutenBlock Bridge: Fehler beim Laden', error);
@@ -271,6 +291,12 @@ function gutenblock_bridge_disable_links() {
                     window.parent.postMessage({
                         type: 'gutenblock-section-ready-for-scroll',
                         sectionId: toShow[0].id
+                    }, '*');
+                    
+                    // Sende auch Signal für Content-Replacement
+                    window.parent.postMessage({
+                        type: 'gutenblock-section-toggled',
+                        hiddenSections: hiddenSections
                     }, '*');
                 }
                 
