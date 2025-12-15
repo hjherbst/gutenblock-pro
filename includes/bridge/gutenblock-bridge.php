@@ -2,7 +2,7 @@
 /**
  * GutenBlock Bridge (MU-Plugin)
  * Content-Replacement und Style-Preview für GutenBlock SaaS
- * Version: 2.0.1
+ * Version: 2.0.2
  * 
  * INSTALLATION: Wird automatisch von GutenBlock Pro nach /wp-content/mu-plugins/ kopiert
  * MU-Plugins werden automatisch geladen, kein Aktivieren nötig.
@@ -151,18 +151,182 @@ function gutenblock_bridge_disable_links() {
     }
     
     $script = <<<'JS'
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('a').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
+(function() {
+    'use strict';
+    
+    // Link-Deaktivierung
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'gutenblock-link-clicked',
+                        message: 'Links sind in der Vorschau deaktiviert. Nutze in der Werkzeugleiste "Seiten" für die Navigation.'
+                    }, '*');
+                }
+            });
         });
     });
-});
+    
+    // Section-Toggle Handler
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'gutenblock-toggle-sections') {
+            const { pageSlug, hiddenSections } = event.data;
+            
+            // Finde alle Sections
+            const allSections = document.querySelectorAll('[class*="gb-section-"]');
+            
+            // Track aktuell versteckte Sections
+            const currentlyHidden = new Set();
+            allSections.forEach(function(section) {
+                const style = window.getComputedStyle(section);
+                if (style.display === 'none') {
+                    const classList = Array.from(section.classList);
+                    const sectionClass = classList.find(function(cls) { return cls.startsWith('gb-section-'); });
+                    if (sectionClass) currentlyHidden.add(sectionClass);
+                }
+            });
+            
+            const newHidden = new Set(hiddenSections || []);
+            
+            // Sections die ausgeblendet werden sollen
+            const toHide = [];
+            // Sections die eingeblendet werden sollen
+            const toShow = [];
+            
+            allSections.forEach(function(section) {
+                const classList = Array.from(section.classList);
+                const sectionClass = classList.find(function(cls) { return cls.startsWith('gb-section-'); });
+                if (!sectionClass) return;
+                
+                const wasHidden = currentlyHidden.has(sectionClass);
+                const shouldBeHidden = newHidden.has(sectionClass);
+                
+                if (!wasHidden && shouldBeHidden) {
+                    toHide.push({ element: section, id: sectionClass });
+                } else if (wasHidden && !shouldBeHidden) {
+                    toShow.push({ element: section, id: sectionClass });
+                }
+            });
+            
+            // Fade out Sections die versteckt werden sollen
+            toHide.forEach(function(item) {
+                item.element.classList.add('gutenblock-fading-out');
+                item.element.classList.add('gutenblock-in-transition');
+            });
+            
+            // Nach Transition: Setze display: none
+            setTimeout(function() {
+                let styleTag = document.getElementById('gutenblock-hidden-sections');
+                if (!styleTag) {
+                    styleTag = document.createElement('style');
+                    styleTag.id = 'gutenblock-hidden-sections';
+                    document.head.appendChild(styleTag);
+                }
+                
+                let cssRules = '';
+                if (hiddenSections && hiddenSections.length > 0) {
+                    hiddenSections.forEach(function(sectionId) {
+                        cssRules += '.' + sectionId + ' { display: none !important; }\n';
+                    });
+                }
+                
+                styleTag.textContent = cssRules;
+                
+                // Entferne fading-out und transition Klassen
+                toHide.forEach(function(item) {
+                    item.element.classList.remove('gutenblock-fading-out');
+                    item.element.classList.remove('gutenblock-in-transition');
+                });
+            }, 600);
+            
+            // Fade in Sections die angezeigt werden sollen
+            if (toShow.length > 0) {
+                // Entferne display: none sofort (aber opacity ist noch 0)
+                let styleTag = document.getElementById('gutenblock-hidden-sections');
+                if (!styleTag) {
+                    styleTag = document.createElement('style');
+                    styleTag.id = 'gutenblock-hidden-sections';
+                    document.head.appendChild(styleTag);
+                }
+                
+                let cssRules = '';
+                if (hiddenSections && hiddenSections.length > 0) {
+                    hiddenSections.forEach(function(sectionId) {
+                        cssRules += '.' + sectionId + ' { display: none !important; }\n';
+                    });
+                }
+                
+                styleTag.textContent = cssRules;
+                
+                // Setze opacity auf 0 und zeige Section (damit scroll funktioniert)
+                toShow.forEach(function(item) {
+                    item.element.style.opacity = '0';
+                    item.element.style.visibility = 'visible';
+                });
+                
+                // Sende Signal an Parent: Section ist jetzt im Layout (kann gescrollt werden)
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'gutenblock-section-ready-for-scroll',
+                        sectionId: toShow[0].id
+                    }, '*');
+                }
+                
+                // Fade in nach kurzer Verzögerung
+                setTimeout(function() {
+                    toShow.forEach(function(item) {
+                        item.element.style.transition = 'opacity 0.4s ease-in';
+                        item.element.style.opacity = '1';
+                    });
+                }, 100);
+            }
+        }
+    });
+    
+    // Initial: Verstecke Sections mit gb-section-off Klasse
+    document.addEventListener('DOMContentLoaded', function() {
+        const offSections = document.querySelectorAll('.gb-section-off');
+        if (offSections.length > 0) {
+            let styleTag = document.getElementById('gutenblock-hidden-sections');
+            if (!styleTag) {
+                styleTag = document.createElement('style');
+                styleTag.id = 'gutenblock-hidden-sections';
+                document.head.appendChild(styleTag);
+            }
+            
+            let cssRules = styleTag.textContent || '';
+            offSections.forEach(function(section) {
+                const classList = Array.from(section.classList);
+                const sectionClass = classList.find(function(cls) { return cls.startsWith('gb-section-'); });
+                if (sectionClass && cssRules.indexOf('.' + sectionClass) === -1) {
+                    cssRules += '.' + sectionClass + ' { display: none !important; }\n';
+                }
+            });
+            styleTag.textContent = cssRules;
+        }
+    });
+})();
 JS;
     
     wp_register_script('gutenblock-disable-links', false);
     wp_enqueue_script('gutenblock-disable-links');
     wp_add_inline_script('gutenblock-disable-links', $script);
+    
+    // CSS für Fade-Animationen
+    $css = <<<'CSS'
+<style id="gutenblock-section-animations">
+.gutenblock-fading-out {
+    opacity: 0 !important;
+    transition: opacity 0.6s ease-out !important;
+}
+.gutenblock-in-transition {
+    pointer-events: none !important;
+}
+</style>
+CSS;
+    echo $css;
 }
 
 // ============================================================================
@@ -229,10 +393,16 @@ function gutenblock_bridge_register_api() {
         )
     ));
     
+    register_rest_route('gutenblock/v1', '/version', array(
+        'methods' => 'GET',
+        'callback' => 'gutenblock_bridge_get_version',
+        'permission_callback' => '__return_true'
+    ));
+    
     register_rest_route('gutenblock/v1', '/bridge-version', array(
         'methods' => 'GET',
         'callback' => function() {
-            return array('version' => '2.0.0');
+            return array('version' => '2.0.2');
         },
         'permission_callback' => '__return_true'
     ));
@@ -441,6 +611,32 @@ function gutenblock_bridge_get_sections($request) {
     }
     
     return new WP_REST_Response($sections, 200);
+}
+
+function gutenblock_bridge_get_version() {
+    // Prüfe ob GutenBlock Pro installiert ist
+    $gutenblock_pro_version = defined('GUTENBLOCK_PRO_VERSION') ? GUTENBLOCK_PRO_VERSION : null;
+    
+    if ($gutenblock_pro_version) {
+        // GutenBlock Pro ist installiert - zeige dessen Version
+        return new WP_REST_Response(array(
+            'version' => $gutenblock_pro_version,
+            'bridge_version' => '2.0.2',
+            'php_version' => PHP_VERSION,
+            'wp_version' => get_bloginfo('version'),
+            'site_url' => get_site_url(),
+            'plugin' => 'gutenblock-pro'
+        ), 200);
+    } else {
+        // Fallback: Nur Bridge-Version (für alte Installationen)
+        return new WP_REST_Response(array(
+            'version' => '2.0.2',
+            'php_version' => PHP_VERSION,
+            'wp_version' => get_bloginfo('version'),
+            'site_url' => get_site_url(),
+            'plugin' => 'bridge-only'
+        ), 200);
+    }
 }
 
 // ============================================================================
