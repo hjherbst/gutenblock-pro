@@ -264,6 +264,19 @@ function gutenblock_bridge_disable_links() {
             });
             
             // Fade out Sections die versteckt werden sollen
+            // WICHTIG: Erst scrollen, dann verstecken (nur wenn Section sichtbar ist)
+            if (toHide.length > 0) {
+                const firstToHide = toHide[0];
+                const sectionElement = document.querySelector('.' + firstToHide.id);
+                if (sectionElement) {
+                    // Scrolle zur Section, bevor sie versteckt wird
+                    sectionElement.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }
+            }
+            
             toHide.forEach(function(item) {
                 item.element.classList.add('gutenblock-fading-out');
                 item.element.classList.add('gutenblock-in-transition');
@@ -331,6 +344,17 @@ function gutenblock_bridge_disable_links() {
                         type: 'gutenblock-section-toggled',
                         hiddenSections: hiddenSections
                     }, '*');
+                    
+                    // Scrolle automatisch zur Section, die gerade angezeigt wurde
+                    setTimeout(() => {
+                        const sectionElement = document.querySelector('.' + toShow[0].id);
+                        if (sectionElement) {
+                            sectionElement.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start' 
+                            });
+                        }
+                    }, 150); // Kurze Verzögerung, damit Section im Layout ist
                 }
                 
                 // Fade in nach kurzer Verzögerung
