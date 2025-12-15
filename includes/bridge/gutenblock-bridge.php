@@ -2,7 +2,7 @@
 /**
  * GutenBlock Bridge (MU-Plugin)
  * Content-Replacement und Style-Preview für GutenBlock SaaS
- * Version: 2.0.4
+ * Version: 2.0.7
  * 
  * INSTALLATION: Wird automatisch von GutenBlock Pro nach /wp-content/mu-plugins/ kopiert
  * MU-Plugins werden automatisch geladen, kein Aktivieren nötig.
@@ -485,8 +485,14 @@ function gutenblock_bridge_register_api() {
     register_rest_route('gutenblock/v1', '/bridge-version', array(
         'methods' => 'GET',
         'callback' => function() {
-            return array('version' => '2.0.4');
+            return array('version' => '2.0.7');
         },
+        'permission_callback' => '__return_true'
+    ));
+    
+    register_rest_route('gutenblock/v1', '/clear-cache', array(
+        'methods' => 'POST',
+        'callback' => 'gutenblock_bridge_clear_cache',
         'permission_callback' => '__return_true'
     ));
 }
@@ -704,7 +710,7 @@ function gutenblock_bridge_get_version() {
         // GutenBlock Pro ist installiert - zeige dessen Version
         return new WP_REST_Response(array(
             'version' => $gutenblock_pro_version,
-            'bridge_version' => '2.0.4',
+            'bridge_version' => '2.0.7',
             'php_version' => PHP_VERSION,
             'wp_version' => get_bloginfo('version'),
             'site_url' => get_site_url(),
@@ -713,13 +719,63 @@ function gutenblock_bridge_get_version() {
     } else {
         // Fallback: Nur Bridge-Version (für alte Installationen)
         return new WP_REST_Response(array(
-            'version' => '2.0.4',
+            'version' => '2.0.7',
             'php_version' => PHP_VERSION,
             'wp_version' => get_bloginfo('version'),
             'site_url' => get_site_url(),
             'plugin' => 'bridge-only'
         ), 200);
     }
+}
+
+/**
+ * POST /wp-json/gutenblock/v1/clear-cache
+ * Löscht alle GutenBlock Caches (Pages, Sections, Style Variants)
+ */
+function gutenblock_bridge_clear_cache() {
+    global $wpdb;
+    
+    // Lösche alle GutenBlock-bezogenen Transients
+    $deleted = 0;
+    
+    // Pattern für unsere Transients
+    $patterns = array(
+        '_transient_gutenblock_pages_%',
+        '_transient_gutenblock_sections_%',
+        '_transient_gutenblock_style_variants_%'
+    );
+    
+    foreach ($patterns as $pattern) {
+        $result = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+                $pattern
+            )
+        );
+        $deleted += $result;
+    }
+    
+    // Lösche auch Timeout-Transients
+    $timeout_patterns = array(
+        '_transient_timeout_gutenblock_pages_%',
+        '_transient_timeout_gutenblock_sections_%',
+        '_transient_timeout_gutenblock_style_variants_%'
+    );
+    
+    foreach ($timeout_patterns as $pattern) {
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+                $pattern
+            )
+        );
+    }
+    
+    return new WP_REST_Response(array(
+        'success' => true,
+        'deleted' => $deleted,
+        'message' => 'Cache erfolgreich gelöscht'
+    ), 200);
 }
 
 // ============================================================================
