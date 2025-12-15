@@ -100,11 +100,11 @@ class GutenBlock_Pro_AI_Generator {
 	}
 
 	/**
-	 * Get SaaS API URL (with localhost detection for development)
+	 * Get AI Generate API URL (with localhost detection for development)
 	 *
 	 * @return string
 	 */
-	private function get_saas_api_url() {
+	private function get_ai_generate_url() {
 		// Check for filter override
 		$filtered = apply_filters( 'gutenblock_pro_saas_url', '' );
 		if ( ! empty( $filtered ) ) {
@@ -296,7 +296,7 @@ class GutenBlock_Pro_AI_Generator {
 			'content' => $prompt,
 		);
 
-		$api_url = $this->get_saas_api_url();
+		$api_url = $this->get_ai_generate_url();
 
 		$response = wp_remote_post( $api_url, array(
 			'headers' => array(
