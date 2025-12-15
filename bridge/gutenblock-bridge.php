@@ -1,12 +1,13 @@
 <?php
 /**
- * Plugin Name: GutenBlock Bridge
- * Description: Content-Replacement und Style-Preview für GutenBlock SaaS
+ * GutenBlock Bridge (MU-Plugin)
+ * Content-Replacement und Style-Preview für GutenBlock SaaS
  * Version: 2.0.0
- * Author: GutenBlock
  * 
- * INSTALLATION: Kopiere diese Datei nach /wp-content/mu-plugins/
+ * INSTALLATION: Wird automatisch von GutenBlock Pro nach /wp-content/mu-plugins/ kopiert
  * MU-Plugins werden automatisch geladen, kein Aktivieren nötig.
+ * 
+ * WICHTIG: Diese Datei hat KEINEN Plugin-Header, damit WordPress sie nicht als separates Plugin erkennt.
  */
 
 if (!defined('ABSPATH')) {
