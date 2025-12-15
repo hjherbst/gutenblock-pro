@@ -67,7 +67,7 @@ class GutenBlock_Pro_Bridge_Installer {
 	 * Kopiere Bridge nach mu-plugins
 	 */
 	private function copy_bridge_to_mu_plugins() {
-		$source = GUTENBLOCK_PRO_PATH . 'bridge/gutenblock-bridge.php';
+		$source = GUTENBLOCK_PRO_PATH . 'includes/bridge/gutenblock-bridge.php';
 		$mu_plugins_dir = WP_CONTENT_DIR . '/mu-plugins';
 		$target = $mu_plugins_dir . '/gutenblock-bridge.php';
 
