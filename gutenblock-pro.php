@@ -32,21 +32,27 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-generator.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-bridge-installer.php';
 
-// Plugin Update Checker - GitHub Releases
+// Plugin Update Checker - GitHub Releases (initialized in hook)
 require_once GUTENBLOCK_PRO_PATH . 'vendor/plugin-update-checker/plugin-update-checker.php';
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 
-$gutenblockProUpdateChecker = PucFactory::buildUpdateChecker(
-	'https://github.com/hjherbst/gutenblock-pro/',
-	__FILE__,
-	'gutenblock-pro'
-);
+/**
+ * Initialize Plugin Update Checker
+ */
+function gutenblock_pro_init_update_checker() {
+	$gutenblockProUpdateChecker = PucFactory::buildUpdateChecker(
+		'https://github.com/hjherbst/gutenblock-pro/',
+		GUTENBLOCK_PRO_PATH . 'gutenblock-pro.php',
+		'gutenblock-pro'
+	);
 
-// Set the branch that contains the stable release (default: master/main)
-$gutenblockProUpdateChecker->setBranch( 'main' );
+	// Set the branch that contains the stable release (default: master/main)
+	$gutenblockProUpdateChecker->setBranch( 'main' );
 
-// Optional: Enable release assets (ZIP file from GitHub Release)
-$gutenblockProUpdateChecker->getVcsApi()->enableReleaseAssets();
+	// Optional: Enable release assets (ZIP file from GitHub Release)
+	$gutenblockProUpdateChecker->getVcsApi()->enableReleaseAssets();
+}
+add_action( 'plugins_loaded', 'gutenblock_pro_init_update_checker', 5 );
 
 /**
  * Initialize the plugin
