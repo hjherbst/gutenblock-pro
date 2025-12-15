@@ -191,6 +191,39 @@ function gutenblock_bridge_disable_links() {
     
     // Section-Toggle Handler
     window.addEventListener('message', function(event) {
+        // SCROLL TO SECTION
+        if (event.data && event.data.type === 'gutenblock-scroll-to-section') {
+            const { sectionId } = event.data;
+            
+            // Finde Section mit dieser Klasse
+            const section = document.querySelector('.' + sectionId);
+            if (section) {
+                section.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }
+        }
+        
+        // GET SCROLL POSITION - Parent fragt nach aktueller Position
+        if (event.data && event.data.type === 'gutenblock-get-scroll') {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'gutenblock-scroll-position',
+                    scrollY: window.scrollY
+                }, '*');
+            }
+        }
+        
+        // SET SCROLL POSITION - Parent will Position wiederherstellen
+        if (event.data && event.data.type === 'gutenblock-set-scroll') {
+            const { scrollY } = event.data;
+            window.scrollTo({
+                top: scrollY,
+                behavior: 'instant'
+            });
+        }
+        
         if (event.data && event.data.type === 'gutenblock-toggle-sections') {
             const { pageSlug, hiddenSections } = event.data;
             
@@ -428,7 +461,7 @@ function gutenblock_bridge_register_api() {
     register_rest_route('gutenblock/v1', '/bridge-version', array(
         'methods' => 'GET',
         'callback' => function() {
-            return array('version' => '2.0.2');
+            return array('version' => '2.0.3');
         },
         'permission_callback' => '__return_true'
     ));
@@ -647,7 +680,7 @@ function gutenblock_bridge_get_version() {
         // GutenBlock Pro ist installiert - zeige dessen Version
         return new WP_REST_Response(array(
             'version' => $gutenblock_pro_version,
-            'bridge_version' => '2.0.2',
+            'bridge_version' => '2.0.3',
             'php_version' => PHP_VERSION,
             'wp_version' => get_bloginfo('version'),
             'site_url' => get_site_url(),
@@ -656,7 +689,7 @@ function gutenblock_bridge_get_version() {
     } else {
         // Fallback: Nur Bridge-Version (für alte Installationen)
         return new WP_REST_Response(array(
-            'version' => '2.0.2',
+            'version' => '2.0.3',
             'php_version' => PHP_VERSION,
             'wp_version' => get_bloginfo('version'),
             'site_url' => get_site_url(),
