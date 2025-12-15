@@ -1,0 +1,26 @@
+{
+	"name": "gutenblock-pro",
+	"version": "1.0.0",
+	"description": "Professional block patterns with conditional CSS/JS loading for the Full Site Editor",
+	"author": "Hans-Jürgen Herbst",
+	"license": "GPL-2.0-or-later",
+	"main": "build/index.js",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"build:patterns": "node scripts/build-patterns.js",
+		"bundle": "npm run build && npm run build:patterns"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^27.0.0"
+	},
+	"dependencies": {
+		"@wordpress/block-editor": "^12.0.0",
+		"@wordpress/blocks": "^12.0.0",
+		"@wordpress/components": "^25.0.0",
+		"@wordpress/element": "^5.0.0",
+		"@wordpress/hooks": "^3.0.0",
+		"@wordpress/i18n": "^4.0.0"
+	}
+}
+

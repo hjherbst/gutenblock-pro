@@ -1,0 +1,328 @@
+/**
+ * GutenBlock Pro - Editor Styles
+ *
+ * These styles are loaded in the block editor
+ */
+
+// Import all pattern styles for editor preview
+// The actual pattern styles are loaded via PHP (class-asset-loader.php)
+
+// Editor-specific adjustments
+.editor-styles-wrapper {
+	// Pattern preview adjustments
+	.gb-accordion-v1 {
+		// In editor, show full content without collapse
+		max-height: none !important;
+
+		&::after {
+			display: none !important;
+		}
+	}
+}
+
+// ==============================================
+// GutenBlock AI - Inspector Controls
+// ==============================================
+
+// Token Usage Display
+.gb-ai-tokens {
+	width: 100%;
+	padding: 8px 12px;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	border-radius: 8px;
+	border: 1px solid #e2e8f0;
+}
+
+.gb-ai-tokens-pro {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #7c3aed;
+	font-weight: 600;
+	
+	.dashicons {
+		color: #7c3aed;
+	}
+}
+
+.gb-ai-tokens-bar {
+	height: 8px;
+	background: #e2e8f0;
+	border-radius: 4px;
+	overflow: hidden;
+	margin-bottom: 6px;
+}
+
+.gb-ai-tokens-progress {
+	height: 100%;
+	background: linear-gradient(90deg, #7c3aed, #a78bfa);
+	border-radius: 4px;
+	transition: width 0.3s ease;
+	
+	&.warning {
+		background: linear-gradient(90deg, #FFC107, #FF9800);
+	}
+	
+	&.critical {
+		background: linear-gradient(90deg, #FF5722, #F44336);
+	}
+}
+
+.gb-ai-tokens-text {
+	font-size: 12px;
+	color: #64748b;
+	text-align: right;
+}
+
+// Button Layout
+.gb-ai-buttons {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	border-radius: 8px;
+	border: 1px solid #e2e8f0;
+}
+
+// Primary Generate Button
+.gb-ai-btn-generate {
+	width: 100%;
+	justify-content: center;
+	background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+	color: white !important;
+	box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2) !important;
+	height: 36px;
+	font-weight: 500;
+	border-radius: 6px;
+	transition: all 0.2s ease;
+	
+	&:hover:not(:disabled) {
+		background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%) !important;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(124, 58, 237, 0.3) !important;
+	}
+	
+	&:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none !important;
+		box-shadow: none !important;
+	}
+}
+
+// Button Rows
+.gb-ai-btn-row {
+	display: flex;
+	gap: 6px;
+	
+	.components-button {
+		flex: 1;
+		justify-content: center;
+		font-size: 12px;
+		padding: 4px 8px;
+		min-height: 32px;
+		height: 32px;
+		font-weight: 500;
+		border-radius: 6px;
+		transition: all 0.2s ease;
+		background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+		color: #475569 !important;
+		border: 1px solid #cbd5e1 !important;
+		box-shadow: none !important;
+		
+		&:hover:not(:disabled) {
+			background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%) !important;
+			color: #1e293b !important;
+			transform: translateY(-1px);
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+		}
+		
+		&:disabled {
+			opacity: 0.4;
+			cursor: not-allowed;
+			transform: none !important;
+		}
+	}
+}
+
+// Dark Theme Support
+.block-editor .is-dark-theme {
+	.gb-ai-tokens {
+		background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+		border-color: #475569;
+	}
+	
+	.gb-ai-tokens-text {
+		color: #94a3b8;
+	}
+	
+	.gb-ai-tokens-bar {
+		background: #475569;
+	}
+	
+	.gb-ai-buttons {
+		background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+		border-color: #475569;
+	}
+	
+	.gb-ai-btn-row .components-button {
+		background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+		color: #e2e8f0 !important;
+		border-color: #64748b !important;
+		
+		&:hover:not(:disabled) {
+			background: linear-gradient(135deg, #475569 0%, #64748b 100%) !important;
+			color: #f8fafc !important;
+		}
+	}
+}
+
+// ==============================================
+// Animated Gradient Border for generating blocks
+// ==============================================
+
+.gutenblock-ai-generating {
+	position: relative !important;
+	z-index: 0;
+	border-radius: 8px;
+	overflow: hidden;
+	padding: 3px;
+	margin: 3px;
+	display: block;
+	box-sizing: border-box;
+}
+
+.gutenblock-ai-generating::before {
+	content: "";
+	position: absolute;
+	z-index: -2;
+	left: -50%;
+	top: -50%;
+	width: 200%;
+	height: 200%;
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-size: 100% 100%, 50% 50%;
+	background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+	background-image: conic-gradient(from 0deg, #ffffff 0deg, #ffffff 135deg, #7c3aed 180deg, #7c3aed 225deg, #ffffff 270deg, #ffffff 360deg);
+	animation: gutenblock-ai-bgRotate 4s linear infinite;
+	pointer-events: none;
+}
+
+.gutenblock-ai-generating::after {
+	content: "";
+	position: absolute;
+	z-index: -1;
+	left: 3px;
+	top: 3px;
+	width: calc(100% - 6px);
+	height: calc(100% - 6px);
+	background: white;
+	border-radius: 5px;
+	pointer-events: none;
+}
+
+@keyframes gutenblock-ai-bgRotate {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+// Block type adjustments
+.gutenblock-ai-generating.wp-block-paragraph,
+.gutenblock-ai-generating.wp-block-heading {
+	display: block;
+	width: 100%;
+}
+
+.gutenblock-ai-generating.wp-block-button {
+	display: inline-block;
+}
+
+// Dark theme for generating animation
+.block-editor .is-dark-theme .gutenblock-ai-generating::after {
+	background: #1e1e1e;
+}
+
+// ==============================================
+// Content Field Selector
+// ==============================================
+
+.gb-ai-field-selector {
+	width: 100%;
+	
+	.components-combobox-control {
+		width: 100%;
+	}
+	
+	.components-base-control__label {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		color: #1e1e1e;
+		margin-bottom: 6px;
+	}
+	
+	.components-combobox-control__input {
+		border: 1px solid #cbd5e1;
+		border-radius: 6px;
+		font-size: 13px;
+		
+		&:focus {
+			border-color: #7c3aed;
+			box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+		}
+	}
+}
+
+.gb-ai-field-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 8px;
+	padding: 4px 10px;
+	background: #f1f5f9;
+	border: 1px solid #e2e8f0;
+	color: #334155;
+	border-radius: 4px;
+	font-size: 12px;
+	font-family: monospace;
+	font-weight: 500;
+	
+	.dashicons {
+		font-size: 16px;
+		width: 16px;
+		height: 16px;
+		color: #22c55e;
+	}
+}
+
+// Dark theme for field selector
+.block-editor .is-dark-theme {
+	.gb-ai-field-selector {
+		.components-base-control__label {
+			color: #e2e8f0;
+		}
+		
+		.components-combobox-control__input {
+			background: #334155;
+			border-color: #475569;
+			color: #f1f5f9;
+			
+			&:focus {
+				border-color: #7c3aed;
+				box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+			}
+		}
+	}
+	
+	.gb-ai-field-badge {
+		background: #334155;
+		border-color: #475569;
+		color: #e2e8f0;
+	}
+}
+

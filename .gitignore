@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build artifacts (optional - include if you want to deploy without building)
+# build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Optional: Lock file (remove this line if you want consistent builds)
+# package-lock.json
+

@@ -1,0 +1,60 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create plugin ZIP
+        run: |
+          # Erstelle temporären Ordner
+          mkdir -p dist/gutenblock-pro
+          
+          # Kopiere alle relevanten Dateien
+          cp -r assets dist/gutenblock-pro/
+          cp -r bridge dist/gutenblock-pro/
+          cp -r build dist/gutenblock-pro/
+          cp -r inc dist/gutenblock-pro/
+          cp -r languages dist/gutenblock-pro/ 2>/dev/null || true
+          cp -r patterns dist/gutenblock-pro/
+          cp -r vendor dist/gutenblock-pro/
+          cp gutenblock-pro.php dist/gutenblock-pro/
+          cp readme.txt dist/gutenblock-pro/ 2>/dev/null || true
+          
+          # Erstelle ZIP
+          cd dist
+          zip -r gutenblock-pro.zip gutenblock-pro
+          mv gutenblock-pro.zip ../
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: GutenBlock Pro v${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## GutenBlock Pro v${{ steps.get_version.outputs.VERSION }}
+            
+            ### Installation
+            1. ZIP herunterladen
+            2. WordPress Admin → Plugins → Installieren → Plugin hochladen
+            3. ZIP auswählen und aktivieren
+            
+            ### Auto-Update
+            Bestehende Installationen erhalten das Update automatisch im WordPress Admin.
+          files: gutenblock-pro.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

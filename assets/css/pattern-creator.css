@@ -1,0 +1,116 @@
+/**
+ * GutenBlock Pro - Pattern Creator Styles
+ */
+
+/* Toolbar Button */
+.gutenblock-pro-toolbar-button {
+	color: #2271b1 !important;
+}
+
+.gutenblock-pro-toolbar-button:hover {
+	color: #135e96 !important;
+}
+
+.gutenblock-pro-toolbar-button .dashicon {
+	color: inherit;
+}
+
+/* Modal */
+.gutenblock-pro-pattern-creator-modal {
+	max-width: 500px;
+}
+
+.gutenblock-pro-pattern-creator-modal .components-modal__header {
+	border-bottom: 1px solid #ddd;
+}
+
+.gutenblock-pro-pattern-creator-modal .components-modal__header-heading {
+	display: flex;
+	align-items: center;
+	font-size: 16px;
+}
+
+.gutenblock-pro-pattern-creator-modal .components-modal__header-heading .dashicons {
+	color: #2271b1;
+}
+
+/* Form */
+.gutenblock-pro-pattern-creator-form {
+	padding: 16px 0;
+}
+
+.gutenblock-pro-pattern-creator-form .components-base-control {
+	margin-bottom: 16px;
+}
+
+.gutenblock-pro-pattern-creator-form .components-base-control:last-of-type {
+	margin-bottom: 24px;
+}
+
+.gutenblock-pro-pattern-creator-form .components-base-control__label {
+	font-weight: 500;
+	margin-bottom: 6px;
+}
+
+.gutenblock-pro-pattern-creator-form .components-text-control__input,
+.gutenblock-pro-pattern-creator-form .components-textarea-control__input {
+	width: 100%;
+}
+
+.gutenblock-pro-pattern-creator-form .components-base-control__help {
+	color: #757575;
+	font-size: 12px;
+	margin-top: 4px;
+}
+
+/* Actions */
+.gutenblock-pro-pattern-creator-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	padding-top: 16px;
+	border-top: 1px solid #ddd;
+}
+
+.gutenblock-pro-pattern-creator-actions .components-button {
+	min-width: 100px;
+	justify-content: center;
+}
+
+.gutenblock-pro-pattern-creator-actions .components-spinner {
+	margin: 0;
+}
+
+/* Notice */
+.gutenblock-pro-pattern-creator-modal .components-notice {
+	margin: 0 0 16px;
+}
+
+/* Success state */
+.gutenblock-pro-pattern-creator-modal .components-notice.is-success {
+	background-color: #e7f5e7;
+	border-left-color: #00a32a;
+}
+
+/* Update mode styles */
+.gutenblock-pro-update-notice {
+	margin-bottom: 16px !important;
+	background: #fcf9e8 !important;
+}
+
+.gutenblock-pro-pattern-creator-form .slug-exists input {
+	border-color: #dba617 !important;
+	background: #fcf9e8 !important;
+}
+
+.gutenblock-pro-pattern-creator-actions .is-update-mode {
+	background: #dba617 !important;
+	border-color: #dba617 !important;
+	color: #1d2327 !important;
+}
+
+.gutenblock-pro-pattern-creator-actions .is-update-mode:hover {
+	background: #c9a617 !important;
+	border-color: #c9a617 !important;
+}
+

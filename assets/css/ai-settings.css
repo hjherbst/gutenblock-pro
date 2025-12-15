@@ -1,0 +1,275 @@
+/**
+ * GutenBlock Pro - AI Settings Styles
+ */
+
+.gutenblock-pro-ai-settings {
+	max-width: 900px;
+}
+
+.gutenblock-pro-ai-settings h1 {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.gutenblock-pro-ai-settings h1 .dashicons {
+	font-size: 28px;
+	width: 28px;
+	height: 28px;
+}
+
+/* Sections */
+.gb-settings-section {
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 20px 24px;
+	margin-bottom: 20px;
+}
+
+.gb-settings-section h2 {
+	margin-top: 0;
+	margin-bottom: 12px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.gb-settings-section h2 .button-small {
+	font-size: 12px;
+	padding: 2px 8px;
+	height: auto;
+}
+
+.gb-settings-section h2 .button-small .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+	margin-right: 2px;
+}
+
+/* License Box */
+.gb-license-box {
+	padding: 20px;
+	border-radius: 6px;
+	border: 2px solid #ddd;
+}
+
+.gb-license-box.is-pro {
+	border-color: #4CAF50;
+	background: linear-gradient(135deg, #f8fff8 0%, #e8f5e9 100%);
+}
+
+.gb-license-box.is-free {
+	border-color: #2196F3;
+	background: linear-gradient(135deg, #f8fbff 0%, #e3f2fd 100%);
+}
+
+.gb-license-status {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.gb-status-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border-radius: 20px;
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.gb-status-badge.pro {
+	background: #4CAF50;
+	color: #fff;
+}
+
+.gb-status-badge.free {
+	background: #2196F3;
+	color: #fff;
+}
+
+.gb-status-badge .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+.gb-license-key {
+	color: #666;
+	font-family: monospace;
+	font-size: 14px;
+}
+
+.gb-license-form {
+	display: flex;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.gb-license-form input {
+	text-transform: uppercase;
+	font-family: monospace;
+	letter-spacing: 1px;
+}
+
+/* Token Box */
+.gb-token-box {
+	padding: 20px;
+	background: #f9f9f9;
+	border-radius: 6px;
+}
+
+.gb-token-unlimited {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 18px;
+	font-weight: 600;
+	color: #4CAF50;
+}
+
+.gb-token-unlimited .dashicons {
+	font-size: 24px;
+	width: 24px;
+	height: 24px;
+}
+
+.gb-token-meter {
+	margin-bottom: 10px;
+}
+
+.gb-token-bar {
+	height: 24px;
+	background: #e0e0e0;
+	border-radius: 12px;
+	overflow: hidden;
+	margin-bottom: 10px;
+}
+
+.gb-token-progress {
+	height: 100%;
+	background: linear-gradient(90deg, #4CAF50, #8BC34A);
+	border-radius: 12px;
+	transition: width 0.3s ease;
+}
+
+.gb-token-progress.warning {
+	background: linear-gradient(90deg, #FFC107, #FF9800);
+}
+
+.gb-token-progress.critical {
+	background: linear-gradient(90deg, #FF5722, #F44336);
+}
+
+.gb-token-numbers {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+	font-size: 16px;
+}
+
+.gb-token-used {
+	font-weight: 700;
+	font-size: 24px;
+	color: #333;
+}
+
+.gb-token-separator {
+	color: #999;
+}
+
+.gb-token-limit {
+	font-weight: 500;
+	color: #666;
+}
+
+.gb-token-label {
+	margin-left: 6px;
+	color: #888;
+	font-size: 14px;
+}
+
+/* Prompts Table */
+.gb-prompts-table {
+	margin-top: 16px;
+}
+
+.gb-prompts-table th {
+	background: #f5f5f5;
+	font-weight: 600;
+}
+
+.gb-prompts-table td code {
+	background: #e8f5e9;
+	color: #2e7d32;
+	padding: 3px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+}
+
+.gb-prompts-table .gb-prompt-text {
+	color: #555;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+/* Messages */
+.gb-message {
+	padding: 12px 16px;
+	border-radius: 4px;
+	margin-top: 12px;
+}
+
+.gb-message.hidden {
+	display: none;
+}
+
+.gb-message.success {
+	background: #e8f5e9;
+	color: #2e7d32;
+	border: 1px solid #a5d6a7;
+}
+
+.gb-message.error {
+	background: #ffebee;
+	color: #c62828;
+	border: 1px solid #ef9a9a;
+}
+
+.gb-message.info {
+	background: #e3f2fd;
+	color: #1565c0;
+	border: 1px solid #90caf9;
+}
+
+/* Textarea */
+.gb-settings-section textarea {
+	margin-top: 8px;
+}
+
+/* Loading state */
+.gb-loading {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.gb-loading::after {
+	content: '';
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	border: 2px solid #ccc;
+	border-top-color: #333;
+	border-radius: 50%;
+	animation: gb-spin 0.8s linear infinite;
+	margin-left: 8px;
+	vertical-align: middle;
+}
+
+@keyframes gb-spin {
+	to { transform: rotate(360deg); }
+}
