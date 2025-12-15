@@ -643,26 +643,28 @@ function gutenblock_bridge_get_version() {
 // CUSTOM STYLES
 // ============================================================================
 
-add_action('wp_enqueue_scripts', 'gutenblock_bridge_enqueue_custom_styles', 999);
-add_action('enqueue_block_editor_assets', 'gutenblock_bridge_enqueue_custom_styles', 999);
-
-function gutenblock_bridge_enqueue_custom_styles() {
-    static $enqueued = false;
-    
-    if ($enqueued) {
-        return;
+if (!function_exists('gutenblock_bridge_enqueue_custom_styles')) {
+    function gutenblock_bridge_enqueue_custom_styles() {
+        static $enqueued = false;
+        
+        if ($enqueued) {
+            return;
+        }
+        
+        $css_file = get_stylesheet_directory() . '/css/gutenblock-custom-styles.css';
+        if (file_exists($css_file)) {
+            wp_enqueue_style(
+                'gutenblock-custom-styles',
+                get_stylesheet_directory_uri() . '/css/gutenblock-custom-styles.css',
+                array(),
+                filemtime($css_file)
+            );
+            $enqueued = true;
+        }
     }
     
-    $css_file = get_stylesheet_directory() . '/css/gutenblock-custom-styles.css';
-    if (file_exists($css_file)) {
-        wp_enqueue_style(
-            'gutenblock-custom-styles',
-            get_stylesheet_directory_uri() . '/css/gutenblock-custom-styles.css',
-            array(),
-            filemtime($css_file)
-        );
-        $enqueued = true;
-    }
+    add_action('wp_enqueue_scripts', 'gutenblock_bridge_enqueue_custom_styles', 999);
+    add_action('enqueue_block_editor_assets', 'gutenblock_bridge_enqueue_custom_styles', 999);
 }
 
 // ============================================================================
