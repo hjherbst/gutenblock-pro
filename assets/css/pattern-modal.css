@@ -1,0 +1,239 @@
+/**
+ * GutenBlock Pro - Pattern Modal Styles
+ * Modal interface for browsing patterns (Elementor-style)
+ */
+
+.gutenblock-pro-pattern-modal {
+	max-width: 90vw !important;
+	width: 1200px !important;
+	height: 85vh !important;
+}
+
+.gutenblock-pro-pattern-modal .components-modal__content {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 0;
+}
+
+.gutenblock-pro-modal-header {
+	/* padding: 12px 16px; */
+	border-bottom: 0;
+	border-bottom-width: 0px;
+	border-bottom-color: rgba(0, 0, 0, 0);
+	border-bottom-style: none;
+	border-image: none;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 16px;
+	flex-wrap: nowrap;
+	width: fit-content;
+}
+
+.gutenblock-pro-modal-title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: #1d2327;
+	flex-shrink: 0;
+}
+
+.gutenblock-pro-modal-search {
+	flex: 1;
+	min-width: 200px;
+	max-width: 350px;
+}
+
+.components-input-control__container {
+	border-radius: 12px;
+}
+
+.gutenblock-pro-modal-tabs {
+	flex: 0 0 auto;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.gutenblock-pro-modal-tab-button {
+	padding: 13px 27px;
+	border-radius: 10px;
+	font-weight: 500;
+	transition: all 0.2s;
+	white-space: nowrap;
+	height: auto;
+	font-size: 12px;
+}
+
+.gutenblock-pro-modal-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 24px;
+	padding-bottom: 130px;
+	background: #f6f7f7;
+	height: fit-content;
+}
+
+.gutenblock-pro-modal-loading,
+.gutenblock-pro-modal-empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 20px;
+	color: #646970;
+	font-size: 14px;
+}
+
+.gutenblock-pro-modal-group {
+	margin-bottom: 40px;
+}
+
+.gutenblock-pro-modal-group:last-child {
+	margin-bottom: 0;
+}
+
+.gutenblock-pro-modal-group-title {
+	font-size: 18px;
+	font-weight: 600;
+	margin: 0 0 20px 0;
+	color: #1d2327;
+	padding-bottom: 12px;
+	border-bottom: 2px solid #2271b1;
+}
+
+.gutenblock-pro-modal-patterns-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 20px;
+}
+
+.gutenblock-pro-modal-pattern-card {
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	overflow: hidden;
+	cursor: pointer;
+	transition: all 0.2s;
+	display: flex;
+	flex-direction: column;
+}
+
+.gutenblock-pro-modal-pattern-card:hover {
+	border-color: #2271b1;
+	box-shadow: 0 4px 12px rgba(34, 113, 177, 0.15);
+	transform: translateY(-2px);
+}
+
+.gutenblock-pro-modal-pattern-preview {
+	position: relative;
+	width: 100%;
+	height: 160px;
+	overflow: hidden;
+	background: #f0f0f1;
+	border-radius: 4px 4px 0 0;
+}
+
+.gutenblock-pro-modal-pattern-preview iframe {
+	width: 1400px;
+	height: 900px;
+	border: none;
+	transform: scale(0.19);
+	transform-origin: top left;
+	pointer-events: none;
+}
+
+.gutenblock-pro-modal-pattern-info {
+	padding: 16px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	height: 160px;
+}
+
+.gutenblock-pro-modal-pattern-title {
+	font-size: 14px;
+	font-weight: 600;
+	margin: 0 0 8px 0;
+	color: #1d2327;
+	line-height: 1.4;
+}
+
+.gutenblock-pro-modal-pattern-description {
+	font-size: 12px;
+	color: #646970;
+	margin: 0;
+	line-height: 1.5;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* Button to open modal next to inserter toggle (plus icon) */
+.gutenblock-pro-toolbar-modal-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-left: 4px;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border-radius: 2px;
+}
+
+.gutenblock-pro-toolbar-modal-button svg {
+	width: 24px;
+	height: 24px;
+	fill: currentColor;
+}
+
+.gutenblock-pro-toolbar-modal-button:hover {
+	background-color: rgba(0, 0, 0, 0.05);
+}
+
+.gutenblock-pro-toolbar-modal-button:focus {
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: 2px solid transparent;
+}
+
+/* Responsive */
+@media (max-width: 1300px) {
+	.gutenblock-pro-modal-patterns-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (max-width: 900px) {
+	.gutenblock-pro-modal-patterns-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 782px) {
+	.gutenblock-pro-pattern-modal {
+		width: 95vw !important;
+		height: 85vh !important;
+	}
+
+	.gutenblock-pro-modal-patterns-grid {
+		grid-template-columns: 1fr;
+		gap: 14px;
+	}
+
+	.gutenblock-pro-modal-header {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+		padding: 10px 12px;
+	}
+
+	.gutenblock-pro-modal-content {
+		padding: 16px;
+	}
+
+	.gutenblock-pro-modal-group {
+		margin-bottom: 24px;
+	}
+}
+

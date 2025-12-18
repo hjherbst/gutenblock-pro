@@ -204,26 +204,26 @@ class GutenBlock_Pro_Admin_Page {
 	private function render_patterns_tab( $patterns ) {
 		// Separate patterns by type
 		$pages = array_filter( $patterns, function( $p ) { return $p['type'] === 'page'; } );
-		$single_patterns = array_filter( $patterns, function( $p ) { return $p['type'] !== 'page'; } );
+		$sections = array_filter( $patterns, function( $p ) { return $p['type'] !== 'page'; } );
 		?>
 
 		<?php if ( empty( $patterns ) ) : ?>
 			<div class="notice notice-warning">
-				<p><?php _e( 'Keine Patterns gefunden.', 'gutenblock-pro' ); ?></p>
+				<p><?php _e( 'Keine Sections gefunden.', 'gutenblock-pro' ); ?></p>
 			</div>
 		<?php else : ?>
+
+			<?php if ( ! empty( $sections ) ) : ?>
+			<h2 class="patterns-section-title"><?php _e( 'Sections', 'gutenblock-pro' ); ?></h2>
+			<div class="gutenblock-pro-patterns-grid">
+				<?php $this->render_pattern_cards( $sections ); ?>
+			</div>
+			<?php endif; ?>
 
 			<?php if ( ! empty( $pages ) ) : ?>
 			<h2 class="patterns-section-title"><?php _e( 'Seiten', 'gutenblock-pro' ); ?></h2>
 			<div class="gutenblock-pro-patterns-grid">
 				<?php $this->render_pattern_cards( $pages ); ?>
-			</div>
-			<?php endif; ?>
-
-			<?php if ( ! empty( $single_patterns ) ) : ?>
-			<h2 class="patterns-section-title"><?php _e( 'Patterns', 'gutenblock-pro' ); ?></h2>
-			<div class="gutenblock-pro-patterns-grid">
-				<?php $this->render_pattern_cards( $single_patterns ); ?>
 			</div>
 			<?php endif; ?>
 
@@ -258,7 +258,7 @@ class GutenBlock_Pro_Admin_Page {
 				<?php if ( $pattern['has_content'] ) : ?>
 				<a href="<?php echo esc_url( $edit_url ); ?>" class="pattern-card-preview-link">
 					<div class="pattern-card-preview">
-						<iframe src="<?php echo esc_url( $preview_url ); ?>" loading="lazy" sandbox="allow-same-origin" tabindex="-1"></iframe>
+						<iframe src="<?php echo esc_url( $preview_url ); ?>" loading="lazy" sandbox="allow-same-origin allow-scripts" tabindex="-1"></iframe>
 						<div class="preview-overlay">
 							<span class="dashicons dashicons-edit"></span>
 						</div>
@@ -572,15 +572,47 @@ class GutenBlock_Pro_Admin_Page {
 		}
 
 		$pattern_dir = GUTENBLOCK_PRO_PATTERNS_PATH . $pattern_slug;
-		$content_file = $pattern_dir . '/content.html';
+		$pattern_file = $pattern_dir . '/pattern.php';
 		$style_file = $pattern_dir . '/style.css';
 
-		if ( ! file_exists( $content_file ) ) {
+		// Load content using same logic as load_localized_content()
+		// Try files in order of specificity: content-{locale}.html -> content-{lang}.html -> content.html
+		$locale = get_locale(); // e.g. de_DE
+		$lang = substr( $locale, 0, 2 ); // e.g. de
+		
+		$files_to_try = array(
+			$pattern_dir . '/content-' . $locale . '.html',  // content-de_DE.html
+			$pattern_dir . '/content-' . $lang . '.html',    // content-de.html
+			$pattern_dir . '/content.html',                   // content.html (fallback)
+		);
+
+		$content_file = null;
+		foreach ( $files_to_try as $file ) {
+			if ( file_exists( $file ) ) {
+				$content_file = $file;
+				break;
+			}
+		}
+
+		if ( ! $content_file || ! file_exists( $content_file ) ) {
 			wp_die( 'Pattern not found' );
+		}
+
+		// Check if this is a "page" type pattern
+		$is_page_type = false;
+		if ( file_exists( $pattern_file ) ) {
+			$pattern_data = require $pattern_file;
+			$is_page_type = isset( $pattern_data['type'] ) && $pattern_data['type'] === 'page';
 		}
 
 		// Get content and render blocks
 		$content = file_get_contents( $content_file );
+		
+		// For page type, ensure content is wrapped in a group for proper rendering
+		if ( $is_page_type && strpos( $content, '<!-- wp:group' ) === false ) {
+			$content = '<!-- wp:group {"align":"full","layout":{"type":"constrained"}} --><div class="wp-block-group alignfull"><!-- wp:group {"layout":{"type":"constrained"}} --><div class="wp-block-group">' . $content . '</div><!-- /wp:group --></div><!-- /wp:group -->';
+		}
+		
 		$rendered = do_blocks( $content );
 
 		// Get pattern styles
