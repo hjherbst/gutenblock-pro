@@ -105,6 +105,50 @@ function gutenblock_pro_register_category() {
 add_action( 'init', 'gutenblock_pro_register_category', 5 );
 
 /**
+ * Add premium class to premium pattern blocks
+ * This enables the premium lock JavaScript to identify and lock premium patterns
+ */
+function gutenblock_pro_add_premium_class( $block_content, $block ) {
+	// Only in editor/admin
+	if ( ! is_admin() ) {
+		return $block_content;
+	}
+	
+	// Check if block has className attribute
+	if ( ! isset( $block['attrs']['className'] ) ) {
+		return $block_content;
+	}
+	
+	$class_name = $block['attrs']['className'];
+	
+	// List of premium pattern identifiers
+	$premium_patterns = array( 'gb-section-hero-v2', 'gb-section-cta-v1' );
+	$is_premium = false;
+	
+	foreach ( $premium_patterns as $pattern_class ) {
+		if ( strpos( $class_name, $pattern_class ) !== false ) {
+			$is_premium = true;
+			break;
+		}
+	}
+	
+	if ( ! $is_premium ) {
+		return $block_content;
+	}
+	
+	// Add premium class to first HTML element
+	$block_content = preg_replace(
+		'/<(section|div|article|aside|header|footer)([^>]*class=")([^"]*)(")/i',
+		'<$1$2$3 gb-pattern-premium$4',
+		$block_content,
+		1
+	);
+	
+	return $block_content;
+}
+add_filter( 'render_block', 'gutenblock_pro_add_premium_class', 10, 2 );
+
+/**
  * Add data-content-field attribute to blocks with metadata.name
  * This enables content replacement via Bridge plugin and Migrator
  */
@@ -134,5 +178,5 @@ function gutenblock_pro_add_content_field_attribute( $block_content, $block ) {
 
 	return $block_content;
 }
-add_filter( 'render_block', 'gutenblock_pro_add_content_field_attribute', 10, 2 );
+add_filter( 'render_block', 'gutenblock_pro_add_content_field_attribute', 11, 2 );
 

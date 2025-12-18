@@ -54,6 +54,7 @@
 					const allPatterns = data.data.patterns || [];
 					
 					// Separate sections and pages
+					// Note: Premium patterns without access are still shown but locked
 					const sections = allPatterns.filter(p => 
 						p.type !== 'page'
 					);
@@ -110,6 +111,20 @@
 		}
 
 		const handleInsertPattern = (pattern) => {
+			// Block inserting premium patterns without access
+			const isPremium = pattern.premium === true;
+			const hasAccess = pattern.hasAccess !== false;
+			
+			if (isPremium && !hasAccess) {
+				// Show upgrade notice
+				const upgradeUrl = gutenblockProModal.upgradeUrl || 'https://app.gutenblock.com/licenses';
+				if (window.confirm('Dieses Pattern benötigt GutenBlock Pro Plus.\n\nMöchtest du jetzt upgraden?')) {
+					window.open(upgradeUrl, '_blank');
+				}
+				return; // Don't insert
+			}
+			
+			// Allow inserting non-premium or premium with access
 			if (!pattern.content) return;
 
 			try {
@@ -158,18 +173,39 @@
 		};
 
 		const renderPatternCard = (pattern) => {
+			const isPremium = pattern.premium === true;
+			const hasAccess = pattern.hasAccess !== false; // Default to true if not set
+			const isLocked = isPremium && !hasAccess;
+
 			return el('div', {
 				key: pattern.name,
-				className: 'gutenblock-pro-modal-pattern-card',
-				onClick: () => handleInsertPattern(pattern)
+				className: 'gutenblock-pro-modal-pattern-card' + (isLocked ? ' gutenblock-pro-pattern-locked' : ''),
+				onClick: () => {
+					if (isLocked) {
+						// Show upgrade notice on click
+						const upgradeUrl = gutenblockProModal.upgradeUrl || 'https://app.gutenblock.com/licenses';
+						if (window.confirm('Dieses Pattern benötigt GutenBlock Pro Plus.\n\nMöchtest du jetzt upgraden?')) {
+							window.open(upgradeUrl, '_blank');
+						}
+					} else {
+						handleInsertPattern(pattern);
+					}
+				}
 			}, [
 				renderPatternPreview(pattern),
 				el('div', {
 					className: 'gutenblock-pro-modal-pattern-info'
 				}, [
-					el('h3', {
-						className: 'gutenblock-pro-modal-pattern-title'
-					}, pattern.title || pattern.name),
+					el('div', {
+						className: 'gutenblock-pro-modal-pattern-title-row'
+					}, [
+						el('h3', {
+							className: 'gutenblock-pro-modal-pattern-title'
+						}, pattern.title || pattern.name),
+						isPremium && el('span', {
+							className: 'gutenblock-pro-pattern-badge gutenblock-pro-pattern-badge-premium'
+						}, 'Pro Plus')
+					]),
 					pattern.description && el('p', {
 						className: 'gutenblock-pro-modal-pattern-description'
 					}, pattern.description)

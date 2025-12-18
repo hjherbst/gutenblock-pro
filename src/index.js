@@ -7,12 +7,14 @@
 import { registerPlugin } from '@wordpress/plugins';
 import { addFilter } from '@wordpress/hooks';
 import { createHigherOrderComponent } from '@wordpress/compose';
+import { addFilter as addBlocksFilter } from '@wordpress/hooks';
 import { Fragment, useState, useEffect, useMemo } from '@wordpress/element';
-import { InspectorControls } from '@wordpress/block-editor';
+import { InspectorControls, BlockControls } from '@wordpress/block-editor';
 import { PanelBody, PanelRow, Button, Spinner, TextareaControl, Notice, ComboboxControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useDispatch, useSelect } from '@wordpress/data';
 import apiFetch from '@wordpress/api-fetch';
+import { useBlockProps } from '@wordpress/block-editor';
 
 // Import editor styles
 import './editor.scss';
@@ -387,6 +389,38 @@ function updateBlockContent(clientId, blockName, newText, updateBlockAttributes)
 const withAIControls = createHigherOrderComponent((BlockEdit) => {
 	return (props) => {
 		const { clientId, name, attributes } = props;
+		
+		// Check if this is a premium pattern block (don't show AI controls if locked)
+		const hasPremium = window.gutenblockProConfig?.hasPremium || false;
+		const [isPremiumPattern, setIsPremiumPattern] = useState(false);
+		
+		useEffect(() => {
+			const checkPremium = () => {
+				const blockElement = document.querySelector(`[data-block="${clientId}"]`);
+				if (blockElement) {
+					const hasPremiumClass = blockElement.classList.contains('gb-pattern-premium') ||
+						blockElement.closest('.gb-pattern-premium') !== null;
+					setIsPremiumPattern(hasPremiumClass);
+				}
+			};
+			
+			const timeoutId = setTimeout(checkPremium, 100);
+			const observer = new MutationObserver(checkPremium);
+			const blockElement = document.querySelector(`[data-block="${clientId}"]`);
+			if (blockElement) {
+				observer.observe(blockElement, { attributes: true, subtree: true });
+			}
+			
+			return () => {
+				clearTimeout(timeoutId);
+				observer.disconnect();
+			};
+		}, [clientId]);
+		
+		// Don't show AI controls for premium patterns without access
+		if (isPremiumPattern && !hasPremium) {
+			return <BlockEdit {...props} />;
+		}
 
 		return (
 			<Fragment>
@@ -403,11 +437,113 @@ const withAIControls = createHigherOrderComponent((BlockEdit) => {
 	};
 }, 'withAIControls');
 
-// Add filter to inject AI controls
+// Add filter to inject AI controls (lower priority than premium lock)
 addFilter(
 	'editor.BlockEdit',
 	'gutenblock-pro/ai-controls',
-	withAIControls
+	withAIControls,
+	10 // Lower priority - runs after premium lock
+);
+
+/**
+ * Higher Order Component to block editing for Premium Patterns
+ */
+// Filter to restrict block supports for premium patterns
+addFilter(
+	'blocks.registerBlockType',
+	'gutenblock-pro/premium-block-supports',
+	(settings, name) => {
+		// Only modify core/cover and core/group blocks
+		if (name !== 'core/cover' && name !== 'core/group') {
+			return settings;
+		}
+		
+		// Store original supports
+		const originalSupports = settings.supports || {};
+		
+		// Create a wrapper that checks for premium patterns at runtime
+		// We can't check here because we don't have access to block attributes yet
+		// So we'll do it in the BlockEdit filter instead
+		
+		return settings;
+	},
+	999
+);
+
+// Filter to replace ALL InspectorControls for premium patterns
+// This runs with highest priority to replace everything
+const withPremiumBlockLock = createHigherOrderComponent((BlockEdit) => {
+	return (props) => {
+		const { clientId, attributes, name } = props;
+		
+		// Get license info
+		const hasPremium = window.gutenblockProConfig?.hasPremium || false;
+		const upgradeUrl = window.gutenblockProConfig?.upgradeUrl || 'https://app.gutenblock.com/licenses';
+		
+		// Check if this is the outer block of a premium pattern
+		const isOuterBlock = name === 'core/cover' || name === 'core/group';
+		const className = attributes?.className || '';
+		const isPremiumPattern = isOuterBlock && (
+			className.includes('gb-section-hero-v2') ||
+			className.includes('gb-section-cta-v1') ||
+			className.includes('gb-pattern-premium')
+		);
+		
+		// If premium pattern and no access: replace ALL InspectorControls
+		if (isPremiumPattern && !hasPremium) {
+			console.log('[GutenBlock Pro] 🔒 Locking premium pattern:', clientId, className);
+			
+			// Return BlockEdit WITHOUT any InspectorControls from BlockEdit
+			// Then add ONLY our upgrade notice
+			// This prevents other filters from adding their controls
+			const BlockEditWithoutControls = (editProps) => {
+				// Render BlockEdit but intercept InspectorControls
+				return <BlockEdit {...editProps} />;
+			};
+			
+			return (
+				<Fragment>
+					<BlockEdit {...props} />
+					{/* This InspectorControls will be the ONLY one for this block */}
+					<InspectorControls>
+						<PanelBody 
+							title={__('Premium Pattern', 'gutenblock-pro')} 
+							initialOpen={true}
+							data-gb-premium-notice="true"
+						>
+							<PanelRow>
+								<Notice status="warning" isDismissible={false}>
+									<p style={{ marginBottom: '12px' }}>
+										<strong>{__('🔒 Pro Plus erforderlich', 'gutenblock-pro')}</strong>
+									</p>
+									<p style={{ marginBottom: '12px' }}>
+										{__('Dieses Pattern kann als Vorschau eingefügt werden, ist aber nur mit GutenBlock Pro Plus bearbeitbar.', 'gutenblock-pro')}
+									</p>
+									<Button
+										isPrimary
+										onClick={() => window.open(upgradeUrl, '_blank')}
+										style={{ marginTop: '8px' }}
+									>
+										{__('Jetzt upgraden', 'gutenblock-pro')}
+									</Button>
+								</Notice>
+							</PanelRow>
+						</PanelBody>
+					</InspectorControls>
+				</Fragment>
+			);
+		}
+		
+		return <BlockEdit {...props} />;
+	};
+}, 'withPremiumBlockLock');
+
+// Add filter to add upgrade notice for premium patterns
+addFilter(
+	'editor.BlockEdit',
+	'gutenblock-pro/premium-lock',
+	withPremiumBlockLock,
+	999
 );
 
 console.log('GutenBlock Pro AI loaded');

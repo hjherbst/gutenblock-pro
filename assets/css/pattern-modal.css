@@ -170,6 +170,46 @@
 	overflow: hidden;
 }
 
+/* Premium Pattern Badge */
+.gutenblock-pro-modal-pattern-title-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.gutenblock-pro-pattern-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 8px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.gutenblock-pro-pattern-badge-premium {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: #fff;
+	box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+/* Locked Pattern Styles */
+.gutenblock-pro-pattern-locked {
+	position: relative;
+	cursor: not-allowed;
+}
+
+.gutenblock-pro-pattern-locked:hover {
+	border-color: #ddd;
+	box-shadow: none;
+	transform: none;
+}
+
 /* Button to open modal next to inserter toggle (plus icon) */
 .gutenblock-pro-toolbar-modal-button {
 	display: inline-flex;

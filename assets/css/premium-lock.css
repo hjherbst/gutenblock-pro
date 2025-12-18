@@ -1,0 +1,54 @@
+/**
+ * GutenBlock Pro - Premium Pattern Lock Styles
+ * Dezenter Hinweis statt aufdringlichem Overlay
+ */
+
+/* Locked block styling */
+.gb-premium-locked {
+	position: relative !important;
+	pointer-events: none !important;
+	user-select: none !important;
+	opacity: 0.7 !important;
+}
+
+/* Dezenter Hinweis oben rechts */
+.gb-premium-lock-badge {
+	position: absolute !important;
+	top: 12px !important;
+	right: 12px !important;
+	background: rgba(102, 126, 234, 0.95) !important;
+	color: white !important;
+	padding: 8px 16px !important;
+	border-radius: 6px !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	z-index: 999999 !important;
+	pointer-events: auto !important;
+	cursor: pointer !important;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+	transition: all 0.2s ease !important;
+	backdrop-filter: blur(4px) !important;
+}
+
+.gb-premium-lock-badge:hover {
+	background: rgba(85, 104, 211, 0.95) !important;
+	transform: translateY(-1px) !important;
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Icon im Badge */
+.gb-premium-lock-icon {
+	font-size: 16px !important;
+	line-height: 1 !important;
+}
+
+/* Text im Badge */
+.gb-premium-lock-text {
+	font-size: 13px !important;
+	line-height: 1 !important;
+	white-space: nowrap !important;
+}
+

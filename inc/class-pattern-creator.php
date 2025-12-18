@@ -100,7 +100,7 @@ class GutenBlock_Pro_Pattern_Creator {
 				'languageHelp'     => __( 'Für welche Sprache ist dieser Content?', 'gutenblock-pro' ),
 				'languageDefault'  => __( 'Default (Fallback)', 'gutenblock-pro' ),
 				'typeLabel'        => __( 'Typ', 'gutenblock-pro' ),
-				'typePattern'      => __( 'Pattern', 'gutenblock-pro' ),
+				'typePattern'      => __( 'Section', 'gutenblock-pro' ),
 				'typePage'         => __( 'Seite', 'gutenblock-pro' ),
 				'groupLabel'       => __( 'Gruppe', 'gutenblock-pro' ),
 				'groupNone'        => __( '— Keine Gruppe —', 'gutenblock-pro' ),
@@ -148,6 +148,7 @@ class GutenBlock_Pro_Pattern_Creator {
 		$language = sanitize_text_field( $_POST['language'] );
 		$type = isset( $_POST['type'] ) ? sanitize_text_field( $_POST['type'] ) : 'pattern';
 		$group = isset( $_POST['group'] ) ? sanitize_key( $_POST['group'] ) : '';
+		$premium = isset( $_POST['premium'] ) && $_POST['premium'] === 'true';
 		$content = wp_unslash( $_POST['content'] );
 
 		if ( empty( $name ) || empty( $slug ) ) {
@@ -185,7 +186,7 @@ class GutenBlock_Pro_Pattern_Creator {
 		// Only create pattern.php and asset files for NEW patterns (not updates)
 		if ( $is_new_pattern ) {
 			// Create pattern.php
-			$pattern_php = $this->generate_pattern_php( $name, $description, $keywords, $type, $group );
+			$pattern_php = $this->generate_pattern_php( $name, $description, $keywords, $type, $group, $premium );
 			file_put_contents( $pattern_dir . '/pattern.php', $pattern_php );
 
 			// Create empty style.css
@@ -253,6 +254,7 @@ class GutenBlock_Pro_Pattern_Creator {
 			if ( file_exists( $pattern_file ) ) {
 				$pattern_data = require $pattern_file;
 				$pattern_info['title'] = isset( $pattern_data['title'] ) ? $pattern_data['title'] : $slug;
+				$pattern_info['premium'] = isset( $pattern_data['premium'] ) ? $pattern_data['premium'] : false;
 			}
 			$pattern_info['has_style'] = file_exists( $pattern_dir . '/style.css' );
 			$pattern_info['has_script'] = file_exists( $pattern_dir . '/script.js' );
@@ -305,7 +307,7 @@ class GutenBlock_Pro_Pattern_Creator {
 	/**
 	 * Generate pattern.php content
 	 */
-	private function generate_pattern_php( $name, $description, $keywords, $type = 'pattern', $group = '' ) {
+	private function generate_pattern_php( $name, $description, $keywords, $type = 'pattern', $group = '', $premium = false ) {
 		$keywords_array = array_map( 'trim', explode( ',', $keywords ) );
 		$keywords_php = "array( '" . implode( "', '", array_filter( $keywords_array ) ) . "' )";
 		
@@ -314,6 +316,7 @@ class GutenBlock_Pro_Pattern_Creator {
 		}
 
 		$group_line = $group ? "\n\t'group'       => '{$group}'," : "\n\t'group'       => '',";
+		$premium_line = $premium ? "\n\t'premium'     => true, // true = benötigt Pro Plus Lizenz für Bearbeitung" : "\n\t'premium'     => false, // true = benötigt Pro Plus Lizenz für Bearbeitung";
 
 		return "<?php
 /**
@@ -326,7 +329,7 @@ return array(
 	'type'        => '{$type}', // 'pattern' or 'page'{$group_line}
 	'categories'  => array( 'gutenblock-pro' ),
 	'keywords'    => {$keywords_php},
-	'content'     => '', // Loaded from content.html
+	'content'     => '', // Loaded from content.html{$premium_line}
 );
 ";
 	}

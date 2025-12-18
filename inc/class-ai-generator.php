@@ -89,13 +89,35 @@ class GutenBlock_Pro_AI_Generator {
 			array(),
 			$asset['version']
 		);
+		
+		// Enqueue premium lock script (simple, robust locking)
+		wp_enqueue_script(
+			'gutenblock-pro-premium-lock',
+			GUTENBLOCK_PRO_URL . 'assets/js/premium-lock.js',
+			array( 'wp-dom-ready' ),
+			GUTENBLOCK_PRO_VERSION,
+			true
+		);
+		
+		// Enqueue premium lock styles
+		wp_enqueue_style(
+			'gutenblock-pro-premium-lock',
+			GUTENBLOCK_PRO_URL . 'assets/css/premium-lock.css',
+			array(),
+			GUTENBLOCK_PRO_VERSION
+		);
 
+		// Get license info
+		$license = GutenBlock_Pro_License::get_instance();
+		
 		// Localize script with config
 		wp_localize_script( 'gutenblock-pro-ai-editor', 'gutenblockProConfig', array(
-			'restUrl'  => rest_url( 'gutenblock-pro/v1/' ),
-			'nonce'    => wp_create_nonce( 'wp_rest' ),
-			'isPro'    => $this->license->is_pro(),
-			'hasKey'   => $this->has_api_key(),
+			'restUrl'    => rest_url( 'gutenblock-pro/v1/' ),
+			'nonce'      => wp_create_nonce( 'wp_rest' ),
+			'isPro'      => $license->is_pro(),
+			'hasPremium' => $license->has_premium_access(),
+			'hasKey'     => $this->has_api_key(),
+			'upgradeUrl' => 'https://app.gutenblock.com/licenses',
 		) );
 	}
 
@@ -177,29 +199,30 @@ class GutenBlock_Pro_AI_Generator {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function api_generate_text( $request ) {
-		$params = $request->get_json_params();
-		$prompt = isset( $params['prompt'] ) ? sanitize_textarea_field( $params['prompt'] ) : '';
-		$block_name = isset( $params['blockName'] ) ? sanitize_text_field( $params['blockName'] ) : '';
-		$current_text = isset( $params['currentText'] ) ? sanitize_textarea_field( $params['currentText'] ) : '';
-		$feedback = isset( $params['feedback'] ) ? sanitize_textarea_field( $params['feedback'] ) : '';
+		try {
+			$params = $request->get_json_params();
+			$prompt = isset( $params['prompt'] ) ? sanitize_textarea_field( $params['prompt'] ) : '';
+			$block_name = isset( $params['blockName'] ) ? sanitize_text_field( $params['blockName'] ) : '';
+			$current_text = isset( $params['currentText'] ) ? sanitize_textarea_field( $params['currentText'] ) : '';
+			$feedback = isset( $params['feedback'] ) ? sanitize_textarea_field( $params['feedback'] ) : '';
 
-		if ( empty( $prompt ) && empty( $block_name ) ) {
-			return new WP_Error( 'missing_prompt', __( 'Prompt ist erforderlich', 'gutenblock-pro' ), array( 'status' => 400 ) );
-		}
+			if ( empty( $prompt ) && empty( $block_name ) ) {
+				return new WP_Error( 'missing_prompt', __( 'Prompt ist erforderlich', 'gutenblock-pro' ), array( 'status' => 400 ) );
+			}
 
-		// Check token limit for free users
-		if ( ! $this->license->can_generate() ) {
-			return new WP_Error( 
-				'token_limit_reached', 
-				__( 'Monatliches Token-Limit erreicht. Upgrade auf Pro für unbegrenzte Generierung.', 'gutenblock-pro' ), 
-				array( 'status' => 403 ) 
-			);
-		}
+			// Check token limit for free users
+			if ( ! $this->license->can_generate() ) {
+				return new WP_Error( 
+					'token_limit_reached', 
+					__( 'Monatliches Token-Limit erreicht. Upgrade auf Pro für unbegrenzte Generierung.', 'gutenblock-pro' ), 
+					array( 'status' => 403 ) 
+				);
+			}
 
-		// Check API key
-		if ( ! $this->has_api_key() ) {
-			return new WP_Error( 'no_api_key', __( 'API-Key nicht konfiguriert', 'gutenblock-pro' ), array( 'status' => 500 ) );
-		}
+			// Check API key
+			if ( ! $this->has_api_key() ) {
+				return new WP_Error( 'no_api_key', __( 'API-Key nicht konfiguriert', 'gutenblock-pro' ), array( 'status' => 500 ) );
+			}
 
 		// Build the prompt
 		$full_prompt = $prompt;
@@ -234,11 +257,19 @@ class GutenBlock_Pro_AI_Generator {
 			$this->license->add_token_usage( $result['usage']['total_tokens'] );
 		}
 
-		return rest_ensure_response( array(
-			'success' => true,
-			'text'    => $result['text'],
-			'usage'   => $this->license->get_token_usage(),
-		) );
+			return rest_ensure_response( array(
+				'success' => true,
+				'text'    => $result['text'],
+				'usage'   => $this->license->get_token_usage(),
+			) );
+		} catch ( Exception $e ) {
+			error_log( '[GutenBlock Pro AI] Error in api_generate_text: ' . $e->getMessage() );
+			return new WP_Error( 
+				'ai_error', 
+				__( 'Fehler bei der AI-Generierung: ', 'gutenblock-pro' ) . $e->getMessage(), 
+				array( 'status' => 500 ) 
+			);
+		}
 	}
 
 	/**

@@ -22,7 +22,7 @@
 		CheckboxControl
 	} = wp.components;
 	const { BlockControls } = wp.blockEditor;
-	const { useSelect } = wp.data;
+	const { useSelect, useDispatch } = wp.data;
 	const { serialize } = wp.blocks;
 	const strings = gutenblockProCreator.strings;
 
@@ -89,12 +89,20 @@
 		const [patternType, setPatternType] = useState('pattern');
 		const [group, setGroup] = useState('');
 		const [replaceImages, setReplaceImages] = useState(true);
+		const [isPremium, setIsPremium] = useState(false);
 		const [isCreating, setIsCreating] = useState(false);
 		const [notice, setNotice] = useState(null);
 		const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 		const [patternExists, setPatternExists] = useState(false);
 		const [existingPatternInfo, setExistingPatternInfo] = useState(null);
 		const [isChecking, setIsChecking] = useState(false);
+
+		// Load premium status from existing pattern if it exists
+		useEffect(() => {
+			if (existingPatternInfo && existingPatternInfo.premium !== undefined) {
+				setIsPremium(existingPatternInfo.premium);
+			}
+		}, [existingPatternInfo]);
 
 		// Check if pattern exists when slug changes
 		useEffect(() => {
@@ -136,6 +144,7 @@
 			setPatternType('pattern');
 			setGroup('');
 			setReplaceImages(true);
+			setIsPremium(false);
 			setNotice(null);
 			setSlugManuallyEdited(false);
 			setPatternExists(false);
@@ -174,6 +183,7 @@
 			formData.append('type', patternType);
 			formData.append('group', group);
 			formData.append('replace_images', replaceImages ? 'true' : 'false');
+			formData.append('premium', isPremium ? 'true' : 'false');
 			formData.append('update_mode', patternExists ? 'true' : 'false');
 			formData.append('content', content);
 
@@ -297,6 +307,9 @@
 						{ value: 'pattern', label: strings.typePattern || 'Pattern' },
 						{ value: 'page', label: strings.typePage || 'Seite' },
 					],
+					help: patternType === 'page' 
+						? 'Alle markierten Blöcke werden als eine zusammenhängende Seite gespeichert.'
+						: 'Einzelnes wiederverwendbares Pattern.',
 				}),
 				!isUpdateMode && el(SelectControl, {
 					label: strings.groupLabel || 'Gruppe',
@@ -311,6 +324,12 @@
 					checked: replaceImages,
 					onChange: setReplaceImages,
 					help: strings.replaceImagesHelp,
+				}),
+				!isUpdateMode && el(CheckboxControl, {
+					label: 'Premium Pattern (Pro Plus erforderlich)',
+					checked: isPremium,
+					onChange: setIsPremium,
+					help: 'Wenn aktiviert, benötigt dieses Pattern eine Pro Plus Lizenz für die Bearbeitung. Kann aber als Vorschau eingefügt werden.',
 				}),
 				el(
 					'div',
@@ -363,34 +382,180 @@
 	}
 
 	/**
+	 * Get selected blocks from editor or sidebar patterns
+	 * For page type, all blocks are combined into one pattern
+	 */
+	function getSelectedBlocksOrPatterns() {
+		if (!wp.data || !wp.data.select) {
+			return [];
+		}
+
+		const blockEditor = wp.data.select('core/block-editor');
+		if (!blockEditor) {
+			return [];
+		}
+
+		// First try: Get selected blocks from editor
+		const selectedIds = blockEditor.getSelectedBlockClientIds();
+		if (selectedIds.length > 0) {
+			const blocks = blockEditor.getBlocksByClientId(selectedIds).filter(Boolean);
+			// Sort blocks by their order in the editor
+			return blocks.sort((a, b) => {
+				const aIndex = selectedIds.indexOf(a.clientId);
+				const bIndex = selectedIds.indexOf(b.clientId);
+				return aIndex - bIndex;
+			});
+		}
+
+		// Second try: Check for selected patterns in sidebar
+		const sidebar = document.querySelector('.edit-site-sidebar, .edit-post-sidebar, .interface-complementary-area');
+		if (sidebar) {
+			const selectedPatterns = sidebar.querySelectorAll(
+				'.block-editor-block-patterns-list__item.is-selected, ' +
+				'.block-editor-block-patterns-list__item[aria-selected="true"], ' +
+				'.block-editor-block-patterns-list__item:focus-within, ' +
+				'.block-editor-block-patterns-list__item[class*="selected"]'
+			);
+
+			if (selectedPatterns.length > 0) {
+				const blocks = [];
+				// Process patterns in order
+				Array.from(selectedPatterns).forEach((patternEl) => {
+					const patternPreview = patternEl.querySelector('.block-editor-block-preview__content, .block-editor-block-preview');
+					if (patternPreview && wp.blocks && wp.blocks.parse) {
+						// Try to get HTML content
+						let patternHTML = '';
+						
+						// Method 1: Get from preview content
+						if (patternPreview.innerHTML) {
+							patternHTML = patternPreview.innerHTML;
+						} else if (patternPreview.textContent) {
+							patternHTML = patternPreview.textContent;
+						}
+						
+						// Method 2: Try to get from data attribute
+						if (!patternHTML) {
+							const patternName = patternEl.getAttribute('data-pattern-name') || 
+								patternEl.querySelector('[data-pattern-name]')?.getAttribute('data-pattern-name');
+							if (patternName) {
+								// Try to get pattern content from WordPress registry
+								if (wp.data && wp.data.select('core/block-editor')) {
+									const patterns = wp.data.select('core/block-editor').getPatterns();
+									const pattern = patterns?.find(p => p.name === patternName);
+									if (pattern && pattern.content) {
+										patternHTML = pattern.content;
+									}
+								}
+							}
+						}
+						
+						if (patternHTML) {
+							try {
+								const parsed = wp.blocks.parse(patternHTML);
+								if (parsed && parsed.length > 0) {
+									// Add all blocks from this pattern
+									blocks.push(...parsed);
+								}
+							} catch (e) {
+								console.warn('Could not parse pattern content:', e);
+							}
+						}
+					}
+				});
+				
+				if (blocks.length > 0) {
+					return blocks;
+				}
+			}
+		}
+
+		return [];
+	}
+
+	/**
 	 * Add GB Pro button to block toolbar via filter
 	 */
-	const withGBProToolbarButton = createHigherOrderComponent((BlockEdit) => {
+		const withGBProToolbarButton = createHigherOrderComponent((BlockEdit) => {
 		return (props) => {
 			const { isSelected, clientId } = props;
 
+			// Get selected blocks from editor - this includes ALL selected blocks (multi-select)
 			const selectedBlocks = useSelect((select) => {
 				const { getSelectedBlockClientIds, getBlocksByClientId } = select('core/block-editor');
 				const clientIds = getSelectedBlockClientIds();
 				return getBlocksByClientId(clientIds).filter(Boolean);
 			}, []);
 
+			// Check if current block is part of selection (for multi-select)
+			const isInSelection = useSelect((select) => {
+				const { getSelectedBlockClientIds } = select('core/block-editor');
+				const selectedIds = getSelectedBlockClientIds();
+				return selectedIds.includes(clientId);
+			}, [clientId]);
+
+			// Also check for patterns in sidebar
+			const [hasSidebarSelection, setHasSidebarSelection] = useState(false);
+			
+			useEffect(() => {
+				const checkSidebar = () => {
+					const sidebar = document.querySelector('.edit-site-sidebar, .edit-post-sidebar, .interface-complementary-area');
+					if (sidebar) {
+						const selectedPatterns = sidebar.querySelectorAll(
+							'.block-editor-block-patterns-list__item.is-selected, ' +
+							'.block-editor-block-patterns-list__item[aria-selected="true"], ' +
+							'.block-editor-block-patterns-list__item:focus-within'
+						);
+						setHasSidebarSelection(selectedPatterns.length > 0);
+					} else {
+						setHasSidebarSelection(false);
+					}
+				};
+
+				// Check initially
+				checkSidebar();
+
+				// Listen for changes
+				const observer = new MutationObserver(checkSidebar);
+				observer.observe(document.body, {
+					childList: true,
+					subtree: true,
+					attributes: true,
+					attributeFilter: ['class', 'aria-selected']
+				});
+
+				// Also check periodically
+				const interval = setInterval(checkSidebar, 500);
+
+				return () => {
+					observer.disconnect();
+					clearInterval(interval);
+				};
+			}, []);
+
 			// Update current blocks for modal
-			if (selectedBlocks.length > 0) {
-				currentSelectedBlocks = selectedBlocks;
+			const allSelectedBlocks = selectedBlocks.length > 0 ? selectedBlocks : getSelectedBlocksOrPatterns();
+			if (allSelectedBlocks.length > 0) {
+				currentSelectedBlocks = allSelectedBlocks;
 			}
 
 			const handleClick = () => {
-				if (openModalCallback && selectedBlocks.length > 0) {
-					openModalCallback(selectedBlocks);
+				const blocks = selectedBlocks.length > 0 ? selectedBlocks : getSelectedBlocksOrPatterns();
+				if (openModalCallback && blocks.length > 0) {
+					openModalCallback(blocks);
 				}
 			};
+
+			// Show button if:
+			// 1. Current block is selected (single or multi-select)
+			// 2. OR patterns are selected in sidebar (show on any block when patterns are selected)
+			// Note: isInSelection includes isSelected, so we can use isInSelection
+			const shouldShowButton = isInSelection || hasSidebarSelection;
 
 			return el(
 				Fragment,
 				null,
 				el(BlockEdit, props),
-				isSelected && el(
+				shouldShowButton && el(
 					BlockControls,
 					{ group: 'other' },
 					el(
@@ -414,6 +579,98 @@
 		'gutenblock-pro/toolbar-button',
 		withGBProToolbarButton
 	);
+
+	/**
+	 * Add icon button to toolbar when patterns are selected in sidebar
+	 * This appears as a small icon, not a large button
+	 */
+	function addPatternToolbarIcon() {
+		// Wait for editor to be ready
+		const checkEditor = setInterval(() => {
+			const editorToolbar = document.querySelector('.block-editor-block-toolbar, .block-editor-block-toolbar__group');
+			if (!editorToolbar) {
+				return;
+			}
+
+			clearInterval(checkEditor);
+
+			// Check if icon already exists
+			if (document.getElementById('gutenblock-pro-pattern-icon')) {
+				return;
+			}
+
+			// Create icon button
+			const iconButton = document.createElement('button');
+			iconButton.id = 'gutenblock-pro-pattern-icon';
+			iconButton.className = 'components-button components-icon-button gutenblock-pro-toolbar-button';
+			iconButton.innerHTML = '<span class="dashicons dashicons-layout"></span>';
+			iconButton.setAttribute('aria-label', strings.menuLabel);
+			iconButton.style.display = 'none';
+			iconButton.onclick = (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				const blocks = getSelectedBlocksOrPatterns();
+				if (blocks.length > 0 && openModalCallback) {
+					openModalCallback(blocks);
+				}
+			};
+
+			// Insert into toolbar
+			editorToolbar.appendChild(iconButton);
+
+			// Function to update icon visibility
+			function updateIconVisibility() {
+				const sidebar = document.querySelector('.edit-site-sidebar, .edit-post-sidebar, .interface-complementary-area');
+				let hasPatternSelection = false;
+				
+				if (sidebar) {
+					const selectedPatterns = sidebar.querySelectorAll(
+						'.block-editor-block-patterns-list__item.is-selected, ' +
+						'.block-editor-block-patterns-list__item[aria-selected="true"], ' +
+						'.block-editor-block-patterns-list__item:focus-within'
+					);
+					hasPatternSelection = selectedPatterns.length > 0;
+				}
+
+				// Only show if patterns are selected AND no blocks are selected
+				// (blocks use the existing button in BlockControls)
+				if (wp.data && wp.data.select) {
+					const blockEditor = wp.data.select('core/block-editor');
+					if (blockEditor) {
+						const selectedIds = blockEditor.getSelectedBlockClientIds();
+						const hasBlockSelection = selectedIds.length > 0;
+						iconButton.style.display = (hasPatternSelection && !hasBlockSelection) ? 'inline-flex' : 'none';
+					}
+				}
+			}
+
+			// Listen for changes
+			if (wp.data && wp.data.subscribe) {
+				wp.data.subscribe(updateIconVisibility);
+			}
+
+			const observer = new MutationObserver(updateIconVisibility);
+			observer.observe(document.body, {
+				childList: true,
+				subtree: true,
+				attributes: true,
+				attributeFilter: ['class', 'aria-selected']
+			});
+
+			updateIconVisibility();
+			setInterval(updateIconVisibility, 500);
+		}, 500);
+
+		setTimeout(() => clearInterval(checkEditor), 10000);
+	}
+
+	// Initialize pattern toolbar icon
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', addPatternToolbarIcon);
+	} else {
+		addPatternToolbarIcon();
+	}
+
 
 	// Render global modal container
 	const modalContainer = document.createElement('div');

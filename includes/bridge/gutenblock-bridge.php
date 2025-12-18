@@ -82,38 +82,38 @@ function gutenblock_bridge_get_replacement_script() {
     
     // Funktion zum Ersetzen von Content (wird mehrfach aufgerufen)
     function replaceContent(data) {
-        if (!data.content || typeof data.content !== 'object') {
-            console.warn('GutenBlock Bridge: Keine Content-Felder gefunden');
-            return;
-        }
-        
-        let replacedCount = 0;
-        
-        for (const [fieldId, text] of Object.entries(data.content)) {
-            if (!text) continue;
+            if (!data.content || typeof data.content !== 'object') {
+                console.warn('GutenBlock Bridge: Keine Content-Felder gefunden');
+                return;
+            }
             
-            // Primär: data-content-field Attribut
+            let replacedCount = 0;
+            
+            for (const [fieldId, text] of Object.entries(data.content)) {
+                if (!text) continue;
+                
+                // Primär: data-content-field Attribut
             // WICHTIG: querySelectorAll findet auch Elemente mit display:none
-            let elements = document.querySelectorAll(`[data-content-field="${fieldId}"]`);
-            
-            // Fallback: CSS-ID
-            if (elements.length === 0) {
-                elements = document.querySelectorAll('#' + fieldId);
-            }
-            
-            if (elements.length > 0) {
-                elements.forEach(element => {
+                let elements = document.querySelectorAll(`[data-content-field="${fieldId}"]`);
+                
+                // Fallback: CSS-ID
+                if (elements.length === 0) {
+                    elements = document.querySelectorAll('#' + fieldId);
+                }
+                
+                if (elements.length > 0) {
+                    elements.forEach(element => {
                     // Ersetze Text in ALLEN gefundenen Elementen (auch in ausgeblendeten Sections)
-                    element.textContent = text;
-                    replacedCount++;
-                });
+                        element.textContent = text;
+                        replacedCount++;
+                    });
                 console.log('GutenBlock Bridge: Ersetzt', fieldId, 'in', elements.length, 'Element(en) →', text.substring(0, 50) + '...');
-            } else {
-                console.warn('GutenBlock Bridge: Element nicht gefunden:', fieldId);
+                } else {
+                    console.warn('GutenBlock Bridge: Element nicht gefunden:', fieldId);
+                }
             }
-        }
-        
-        console.log(`GutenBlock Bridge: ${replacedCount} Felder ersetzt`);
+            
+            console.log(`GutenBlock Bridge: ${replacedCount} Felder ersetzt`);
     }
     
     if (typeof gutenblockContent === 'undefined') {
@@ -175,19 +175,19 @@ function gutenblock_bridge_disable_links() {
     'use strict';
     
     // Link-Deaktivierung
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('a').forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
                 if (window.parent && window.parent !== window) {
                     window.parent.postMessage({
                         type: 'gutenblock-link-clicked',
                         message: 'Links sind in der Vorschau deaktiviert. Nutze in der Werkzeugleiste "Seiten" für die Navigation.'
                     }, '*');
                 }
-            });
         });
     });
+});
     
     // Section-Toggle Handler
     window.addEventListener('message', function(event) {

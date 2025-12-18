@@ -1,0 +1,54 @@
+/**
+ * GutenBlock Pro - Pattern Navigation Styles
+ * Creates nested visual structure for pattern categories
+ */
+
+/* Indent subsection categories */
+.block-editor-inserter__panel-content button[data-category*="gutenblock-pro-sections-"],
+.block-editor-inserter__panel-content [role="tab"][data-category*="gutenblock-pro-sections-"],
+.block-editor-block-patterns-list [data-category*="gutenblock-pro-sections-"] {
+	padding-left: 24px !important;
+	font-size: 13px !important;
+	opacity: 0.9;
+}
+
+/* Style main Sections category */
+.block-editor-inserter__panel-content button[data-category="gutenblock-pro-sections"],
+.block-editor-inserter__panel-content [role="tab"][data-category="gutenblock-pro-sections"] {
+	font-weight: 600;
+}
+
+/* Container for subsections */
+.gutenblock-pro-sections-subs {
+	margin-left: 20px;
+	margin-top: 4px;
+	margin-bottom: 8px;
+}
+
+.gutenblock-pro-sections-subs button,
+.gutenblock-pro-sections-subs [role="tab"] {
+	padding-left: 12px !important;
+	font-size: 13px !important;
+}
+
+/* Collapse icon */
+.gutenblock-pro-collapse-icon {
+	margin-left: 8px;
+	font-size: 16px;
+	vertical-align: middle;
+	transition: transform 0.2s ease;
+	display: inline-block;
+}
+
+.gutenblock-pro-collapse-icon.collapsed {
+	transform: rotate(-90deg);
+}
+
+/* Visual separator */
+.block-editor-inserter__panel-content button[data-category="gutenblock-pro-pages"],
+.block-editor-inserter__panel-content [role="tab"][data-category="gutenblock-pro-pages"] {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid #ddd;
+}
+

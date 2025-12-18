@@ -18,4 +18,5 @@ return array (
   ),
   'content' => '',
   'group' => 'hero',
+  'premium' => false, // true = benötigt Pro Plus Lizenz
 );

@@ -204,6 +204,33 @@ class GutenBlock_Pro_License {
 	}
 
 	/**
+	 * Check if user has Premium access (Pro Plus or Lifetime)
+	 * Premium access allows using premium patterns
+	 *
+	 * @return bool
+	 */
+	public function has_premium_access() {
+		if ( ! $this->is_pro() ) {
+			return false;
+		}
+
+		$plan = get_option( self::OPTION_LICENSE_PLAN, '' );
+		$features = get_option( self::OPTION_LICENSE_FEATURES, array() );
+
+		// Check if plan is "plus", "lifetime", or "agency"
+		if ( in_array( $plan, array( 'plus', 'lifetime', 'agency' ), true ) ) {
+			return true;
+		}
+
+		// Check if features include premium access
+		if ( is_array( $features ) && in_array( 'premium-patterns', $features, true ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Get current license status
 	 *
 	 * @return array License info
