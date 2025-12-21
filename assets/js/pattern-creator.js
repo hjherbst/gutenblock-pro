@@ -581,6 +581,252 @@
 	);
 
 	/**
+	 * Add randomize image button to Image block toolbar for picsum.photos images
+	 */
+	const withImageRandomizer = createHigherOrderComponent((BlockEdit) => {
+		return (props) => {
+			const { name, attributes, clientId } = props;
+			const { updateBlockAttributes } = useDispatch('core/block-editor');
+			const [isModalOpen, setIsModalOpen] = useState(false);
+			const [searchInput, setSearchInput] = useState('');
+
+			// Only for image blocks
+			if (name !== 'core/image') {
+				return el(BlockEdit, props);
+			}
+
+			// Only show for allowed user (hjherbst)
+			if (!gutenblockProCreator.isAllowedUser) {
+				return el(BlockEdit, props);
+			}
+
+			const imageUrl = attributes?.url || '';
+			const isPlaceholderImage = imageUrl && (
+				imageUrl.includes('picsum.photos') || 
+				imageUrl.includes('pexels.com') ||
+				imageUrl.includes('unsplash.com')
+			);
+
+			if (!isPlaceholderImage) {
+				return el(BlockEdit, props);
+			}
+
+			const openModal = () => {
+				// Extract current search query from URL
+				let currentQuery = '';
+				const picsumMatch = imageUrl.match(/picsum\.photos\/seed\/([^\/]+)\/(\d+)\/(\d+)/);
+				if (picsumMatch) {
+					const seed = picsumMatch[1];
+					if (seed.includes('query-')) {
+						const queryPart = seed.split('query-')[1];
+						if (queryPart) {
+							try {
+								currentQuery = decodeURIComponent(queryPart.split('-')[0]);
+							} catch (e) {
+								// Invalid encoding, ignore
+							}
+						}
+					}
+				}
+
+				// Load last used keyword from localStorage
+				const lastKeyword = localStorage.getItem('gutenblock_pro_last_image_keyword') || '';
+				// Use current query from URL if available, otherwise use last keyword
+				const defaultQuery = currentQuery || lastKeyword;
+				
+				setSearchInput(defaultQuery);
+				setIsModalOpen(true);
+			};
+
+			const handleRandomize = () => {
+				// Extract dimensions and search query from current URL
+				let width = 800;
+				let height = 600;
+				let searchQuery = '';
+				let isPexelsImage = false;
+
+				// Try to extract from picsum.photos URL (with optional query in seed)
+				const picsumMatch = imageUrl.match(/picsum\.photos\/seed\/([^\/]+)\/(\d+)\/(\d+)/);
+				if (picsumMatch) {
+					const seed = picsumMatch[1];
+					width = picsumMatch[2];
+					height = picsumMatch[3];
+					
+					// Check if seed contains encoded search query (format: query-encoded-...)
+					if (seed.includes('query-')) {
+						const queryPart = seed.split('query-')[1];
+						if (queryPart) {
+							try {
+								searchQuery = decodeURIComponent(queryPart.split('-')[0]);
+							} catch (e) {
+								// Invalid encoding, ignore
+							}
+						}
+					}
+				}
+
+				// Check if it's a Pexels or Unsplash image
+				if (imageUrl.includes('pexels.com') || imageUrl.includes('unsplash.com')) {
+					isPexelsImage = true;
+					// Try to extract dimensions from URL or use defaults
+					const dimensionMatch = imageUrl.match(/(\d+)x(\d+)/);
+					if (dimensionMatch) {
+						width = parseInt(dimensionMatch[1]);
+						height = parseInt(dimensionMatch[2]);
+					}
+				}
+
+				// Use the input value from modal
+				const query = searchInput.trim();
+				
+				if (query) {
+					// New query entered
+					searchQuery = query;
+					// Save to localStorage
+					localStorage.setItem('gutenblock_pro_last_image_keyword', searchQuery);
+				} else {
+					// Empty input - clear search query
+					searchQuery = '';
+					// Clear from localStorage
+					localStorage.removeItem('gutenblock_pro_last_image_keyword');
+				}
+				
+				setIsModalOpen(false);
+
+				// If search query provided, use image API (if available)
+				const provider = gutenblockProCreator.imageApiProvider || 'pexels';
+				const hasPexelsKey = gutenblockProCreator.pexelsApiKey && provider === 'pexels';
+				const hasUnsplashKey = gutenblockProCreator.unsplashApiKey && provider === 'unsplash';
+				
+				if (searchQuery && (hasPexelsKey || hasUnsplashKey)) {
+					// Determine which API to use
+					const apiAction = provider === 'unsplash' 
+						? 'gutenblock_pro_search_unsplash_image'
+						: 'gutenblock_pro_search_pexels_image';
+					
+					// Search image API
+					fetch(gutenblockProCreator.ajaxUrl, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
+						},
+						body: new URLSearchParams({
+							action: apiAction,
+							nonce: gutenblockProCreator.adminNonce,
+							query: searchQuery,
+							width: width,
+							height: height,
+						})
+					})
+					.then(response => response.json())
+					.then(data => {
+						if (data.success && data.data && data.data.url) {
+							// Use image URL directly (these are direct image URLs, no API requests)
+							updateBlockAttributes(clientId, { url: data.data.url });
+						} else {
+							// Fallback to picsum.photos with query encoded
+							alert(data.data?.message || 'Fehler bei Bildsuche. Verwende picsum.photos als Fallback.');
+							const encodedQuery = encodeURIComponent(searchQuery).replace(/%/g, '-');
+							const seed = 'query-' + encodedQuery + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+							const newUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
+							updateBlockAttributes(clientId, { url: newUrl });
+						}
+					})
+					.catch(error => {
+						console.error('Image API error:', error);
+						alert('Fehler bei Bild-API. Verwende picsum.photos als Fallback.');
+						// Fallback to picsum.photos
+						const encodedQuery = encodeURIComponent(searchQuery).replace(/%/g, '-');
+						const seed = 'query-' + encodedQuery + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+						const newUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
+						updateBlockAttributes(clientId, { url: newUrl });
+					});
+				} else {
+					// No search query or no API key - use picsum.photos
+					let seed;
+					if (searchQuery) {
+						// Encode search query in seed: query-{encoded}-{random}
+						const encodedQuery = encodeURIComponent(searchQuery).replace(/%/g, '-');
+						seed = 'query-' + encodedQuery + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+					} else {
+						// Random seed without query
+						seed = 'random-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+					}
+
+					const newUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
+					updateBlockAttributes(clientId, { url: newUrl });
+				}
+			};
+
+			return el(
+				Fragment,
+				null,
+				el(BlockEdit, props),
+				el(
+					BlockControls,
+					{ group: 'other' },
+					el(
+						ToolbarGroup,
+						null,
+						el(ToolbarButton, {
+							icon: 'update',
+							label: 'Neues zufälliges Bild',
+							onClick: openModal,
+							className: 'gutenblock-pro-randomize-image',
+						})
+					)
+				),
+				isModalOpen && el(
+					Modal,
+					{
+						title: 'Bild-Suchbegriff',
+						onRequestClose: () => setIsModalOpen(false),
+						className: 'gutenblock-pro-image-search-modal',
+					},
+					el('div', { style: { marginBottom: '16px' } },
+						el(TextControl, {
+							label: 'Suchbegriff (optional)',
+							value: searchInput,
+							onChange: (value) => setSearchInput(value),
+							placeholder: 'z.B. Natur, Stadt, Business...',
+							help: 'Leer lassen für ein zufälliges Bild. Das Keyword wird gespeichert und beim nächsten Mal automatisch verwendet.',
+						}),
+						searchInput && el(
+							Button,
+							{
+								isDestructive: true,
+								isSmall: true,
+								onClick: () => setSearchInput(''),
+								style: { marginTop: '8px' },
+								icon: 'dismiss',
+							},
+							' Leeren'
+						)
+					),
+					el('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: '8px' } },
+						el(Button, {
+							isSecondary: true,
+							onClick: () => setIsModalOpen(false),
+						}, 'Abbrechen'),
+						el(Button, {
+							isPrimary: true,
+							onClick: handleRandomize,
+						}, 'Bild generieren')
+					)
+				)
+			);
+		};
+	}, 'withImageRandomizer');
+
+	// Add filter to inject image randomizer button
+	addFilter(
+		'editor.BlockEdit',
+		'gutenblock-pro/image-randomizer',
+		withImageRandomizer,
+		20
+	);
+
+	/**
 	 * Add icon button to toolbar when patterns are selected in sidebar
 	 * This appears as a small icon, not a large button
 	 */

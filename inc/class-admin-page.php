@@ -23,6 +23,10 @@ class GutenBlock_Pro_Admin_Page {
 		add_action( 'wp_ajax_gutenblock_pro_preview_pattern', array( $this, 'ajax_preview_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_delete_pattern', array( $this, 'ajax_delete_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_update_group', array( $this, 'ajax_update_group' ) );
+		add_action( 'wp_ajax_gutenblock_pro_update_premium', array( $this, 'ajax_update_premium' ) );
+		add_action( 'wp_ajax_gutenblock_pro_randomize_images', array( $this, 'ajax_randomize_images' ) );
+		add_action( 'wp_ajax_gutenblock_pro_search_pexels_image', array( $this, 'ajax_search_pexels_image' ) );
+		add_action( 'wp_ajax_gutenblock_pro_search_unsplash_image', array( $this, 'ajax_search_unsplash_image' ) );
 	}
 
 	/**
@@ -114,6 +118,7 @@ class GutenBlock_Pro_Admin_Page {
 				'description' => isset( $pattern_data['description'] ) ? $pattern_data['description'] : '',
 				'type'        => isset( $pattern_data['type'] ) ? $pattern_data['type'] : 'pattern',
 				'group'       => isset( $pattern_data['group'] ) ? $pattern_data['group'] : '',
+				'premium'     => isset( $pattern_data['premium'] ) ? (bool) $pattern_data['premium'] : false,
 				'enabled'     => ! in_array( $slug, $disabled_patterns ),
 				'has_style'   => file_exists( $folder . '/style.css' ),
 				'has_editor'  => file_exists( $folder . '/editor.css' ),
@@ -236,6 +241,8 @@ class GutenBlock_Pro_Admin_Page {
 	 */
 	private function render_pattern_cards( $patterns ) {
 		$groups = GutenBlock_Pro_Pattern_Loader::$groups;
+		$current_user = wp_get_current_user();
+		$is_admin_user = $current_user->exists() && $current_user->user_login === 'hjherbst';
 		
 		foreach ( $patterns as $slug => $pattern ) :
 			$preview_url = admin_url( 'admin-ajax.php?action=gutenblock_pro_preview_pattern&pattern=' . $slug );
@@ -243,8 +250,19 @@ class GutenBlock_Pro_Admin_Page {
 		?>
 			<div class="pattern-card <?php echo $pattern['enabled'] ? 'enabled' : 'disabled'; ?>" data-slug="<?php echo esc_attr( $slug ); ?>">
 				<div class="pattern-card-header">
-					<h3><?php echo esc_html( $pattern['title'] ); ?></h3>
+					<h3>
+						<?php echo esc_html( $pattern['title'] ); ?>
+						<?php if ( isset( $pattern['premium'] ) && $pattern['premium'] ) : ?>
+							<span class="premium-badge" title="<?php esc_attr_e( 'Premium Pattern', 'gutenblock-pro' ); ?>">Pro Plus</span>
+						<?php endif; ?>
+					</h3>
 					<div class="pattern-card-actions">
+						<?php if ( $is_admin_user ) : ?>
+							<label class="switch premium-toggle" title="<?php esc_attr_e( 'Premium/Free', 'gutenblock-pro' ); ?>">
+								<input type="checkbox" class="premium-toggle-input" data-slug="<?php echo esc_attr( $slug ); ?>" <?php checked( isset( $pattern['premium'] ) && $pattern['premium'] ); ?>>
+								<span class="slider premium-slider"></span>
+							</label>
+						<?php endif; ?>
 						<label class="switch">
 							<input type="checkbox" class="pattern-toggle" data-slug="<?php echo esc_attr( $slug ); ?>" <?php checked( $pattern['enabled'] ); ?>>
 							<span class="slider"></span>
@@ -758,6 +776,309 @@ class GutenBlock_Pro_Admin_Page {
 		} else {
 			wp_send_json_error( array( 'message' => 'Could not save pattern file' ) );
 		}
+	}
+
+	/**
+	 * AJAX: Randomize images in pattern
+	 */
+	public function ajax_randomize_images() {
+		check_ajax_referer( 'gutenblock_pro_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		// Only allow user "hjherbst"
+		$current_user = wp_get_current_user();
+		if ( $current_user->user_login !== 'hjherbst' ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$pattern_slug = sanitize_key( $_POST['pattern'] ?? '' );
+
+		if ( empty( $pattern_slug ) ) {
+			wp_send_json_error( array( 'message' => 'No pattern specified' ) );
+		}
+
+		$pattern_dir = GUTENBLOCK_PRO_PATTERNS_PATH . $pattern_slug;
+		
+		if ( ! is_dir( $pattern_dir ) ) {
+			wp_send_json_error( array( 'message' => 'Pattern not found' ) );
+		}
+
+		// Find all content files (default and language-specific)
+		$content_files = glob( $pattern_dir . '/content*.html' );
+		$updated_files = array();
+
+		foreach ( $content_files as $content_file ) {
+			$content = file_get_contents( $content_file );
+			$original_content = $content;
+			
+			// Replace all picsum.photos URLs with new random seeds
+			$image_counter = 0;
+			
+			// Replace in img src attributes (picsum.photos)
+			$content = preg_replace_callback(
+				'/(<img[^>]+src=["\'])(https:\/\/picsum\.photos\/seed\/[^\/]+\/(\d+)\/(\d+))(["\'])/i',
+				function( $matches ) use ( $pattern_slug, &$image_counter ) {
+					$width = $matches[3];
+					$height = $matches[4];
+					// Extract search query from seed if present
+					$old_seed = $matches[2];
+					$search_query = '';
+					if (preg_match('/seed\/(query-[^\/]+)\//', $old_seed, $seed_matches)) {
+						$query_part = str_replace('query-', '', $seed_matches[1]);
+						$query_parts = explode('-', $query_part, 2);
+						if (!empty($query_parts[0])) {
+							$search_query = str_replace('-', '%', $query_parts[0]);
+							$search_query = urldecode($search_query);
+						}
+					}
+					
+					// Generate new random seed (preserve search query if present)
+					if ($search_query) {
+						$encoded_query = urlencode($search_query);
+						$new_seed = 'query-' . str_replace('%', '-', $encoded_query) . '-' . time() . '-' . wp_rand( 1000, 9999 );
+					} else {
+						$new_seed = $pattern_slug . '-' . $image_counter . '-' . time() . '-' . wp_rand( 1000, 9999 );
+					}
+					$image_counter++;
+					$new_url = "https://picsum.photos/seed/{$new_seed}/{$width}/{$height}";
+					return $matches[1] . $new_url . $matches[5];
+				},
+				$content
+			);
+
+			// Replace in wp:image block JSON attributes
+			$content = preg_replace_callback(
+				'/"url":"(https:\/\/picsum\.photos\/seed\/([^\/]+)\/(\d+)\/(\d+))"/',
+				function( $matches ) use ( $pattern_slug, &$image_counter ) {
+					$width = $matches[3];
+					$height = $matches[4];
+					$old_seed = $matches[2];
+					
+					// Extract search query from seed if present
+					$search_query = '';
+					if (strpos($old_seed, 'query-') === 0) {
+						$query_part = str_replace('query-', '', $old_seed);
+						$query_parts = explode('-', $query_part, 2);
+						if (!empty($query_parts[0])) {
+							$search_query = str_replace('-', '%', $query_parts[0]);
+							$search_query = urldecode($search_query);
+						}
+					}
+					
+					// Generate new random seed (preserve search query if present)
+					if ($search_query) {
+						$encoded_query = urlencode($search_query);
+						$new_seed = 'query-' . str_replace('%', '-', $encoded_query) . '-' . time() . '-' . wp_rand( 1000, 9999 );
+					} else {
+						$new_seed = $pattern_slug . '-' . $image_counter . '-' . time() . '-' . wp_rand( 1000, 9999 );
+					}
+					$image_counter++;
+					$new_url = "https://picsum.photos/seed/{$new_seed}/{$width}/{$height}";
+					return '"url":"' . $new_url . '"';
+				},
+				$content
+			);
+
+			// Only save if content changed
+			if ( $content !== $original_content ) {
+				file_put_contents( $content_file, $content );
+				$updated_files[] = basename( $content_file );
+			}
+		}
+
+		if ( ! empty( $updated_files ) ) {
+			wp_send_json_success( array(
+				'message' => __( 'Bilder erfolgreich aktualisiert', 'gutenblock-pro' ),
+				'files'   => $updated_files,
+				'count'   => count( $updated_files ),
+			) );
+		} else {
+			wp_send_json_error( array(
+				'message' => __( 'Keine picsum.photos Bilder gefunden', 'gutenblock-pro' ),
+			) );
+		}
+	}
+
+	/**
+	 * AJAX: Search Pexels image by query
+	 */
+	public function ajax_search_pexels_image() {
+		check_ajax_referer( 'gutenblock_pro_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		// Only allow user "hjherbst"
+		$current_user = wp_get_current_user();
+		if ( $current_user->user_login !== 'hjherbst' ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$api_key = get_option( 'gutenblock_pro_pexels_api_key', '' );
+		if ( empty( $api_key ) ) {
+			wp_send_json_error( array( 'message' => 'Pexels API Key nicht konfiguriert' ) );
+		}
+
+		$query = isset( $_POST['query'] ) ? sanitize_text_field( $_POST['query'] ) : '';
+		$width = isset( $_POST['width'] ) ? intval( $_POST['width'] ) : 800;
+		$height = isset( $_POST['height'] ) ? intval( $_POST['height'] ) : 600;
+
+		if ( empty( $query ) ) {
+			wp_send_json_error( array( 'message' => 'Kein Suchbegriff angegeben' ) );
+		}
+
+		// Search Pexels API
+		// Note: Pexels API only returns photos under Pexels License (free for commercial use)
+		// All photos from the API are guaranteed to be free to use without restrictions
+		// Improve search by adding more results and orientation for better contextual matching
+		$api_url = 'https://api.pexels.com/v1/search?query=' . urlencode( $query ) . '&per_page=30&orientation=landscape&size=large';
+		
+		$response = wp_remote_get( $api_url, array(
+			'timeout' => 15,
+			'headers' => array(
+				'Authorization' => $api_key,
+			),
+		) );
+
+		if ( is_wp_error( $response ) ) {
+			wp_send_json_error( array( 'message' => 'Fehler beim Abrufen von Pexels: ' . $response->get_error_message() ) );
+		}
+
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		if ( ! isset( $body['photos'] ) || empty( $body['photos'] ) ) {
+			wp_send_json_error( array( 'message' => 'Keine Bilder gefunden für: ' . $query ) );
+		}
+
+		// Filter photos - only use photos that are free to use
+		// Pexels API returns photos under Pexels License (free for commercial use)
+		// We only use photos from the API which are guaranteed to be free
+		$available_photos = array();
+		foreach ( $body['photos'] as $photo ) {
+			// Pexels API only returns free photos, but we verify it's a valid photo object
+			if ( isset( $photo['src'] ) && isset( $photo['src']['original'] ) ) {
+				$available_photos[] = $photo;
+			}
+		}
+
+		if ( empty( $available_photos ) ) {
+			wp_send_json_error( array( 'message' => 'Keine verwendbaren Bilder gefunden für: ' . $query ) );
+		}
+
+		// Pick a random photo from available photos
+		$random_photo = $available_photos[ array_rand( $available_photos ) ];
+		
+		// Get image URL - Pexels provides different sizes
+		// Use large (2048px) or medium (1280px) for better quality
+		$image_url = $random_photo['src']['original'];
+		if ( isset( $random_photo['src']['large'] ) ) {
+			$image_url = $random_photo['src']['large'];
+		} elseif ( isset( $random_photo['src']['medium'] ) ) {
+			$image_url = $random_photo['src']['medium'];
+		}
+
+		wp_send_json_success( array(
+			'url'    => $image_url,
+			'width'  => $width,
+			'height' => $height,
+			'photographer' => $random_photo['photographer'] ?? '',
+			'photographer_url' => $random_photo['photographer_url'] ?? '',
+		) );
+	}
+
+	/**
+	 * AJAX: Search Unsplash image by query
+	 */
+	public function ajax_search_unsplash_image() {
+		check_ajax_referer( 'gutenblock_pro_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		// Only allow user "hjherbst"
+		$current_user = wp_get_current_user();
+		if ( $current_user->user_login !== 'hjherbst' ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$api_key = get_option( 'gutenblock_pro_unsplash_api_key', '' );
+		if ( empty( $api_key ) ) {
+			wp_send_json_error( array( 'message' => 'Unsplash API Key nicht konfiguriert' ) );
+		}
+
+		$query = isset( $_POST['query'] ) ? sanitize_text_field( $_POST['query'] ) : '';
+		$width = isset( $_POST['width'] ) ? intval( $_POST['width'] ) : 800;
+		$height = isset( $_POST['height'] ) ? intval( $_POST['height'] ) : 600;
+
+		if ( empty( $query ) ) {
+			wp_send_json_error( array( 'message' => 'Kein Suchbegriff angegeben' ) );
+		}
+
+		// Search Unsplash API
+		// Note: Unsplash API returns photos under Unsplash License (free for commercial use)
+		// All photos from the API are guaranteed to be free to use
+		$api_url = 'https://api.unsplash.com/search/photos?query=' . urlencode( $query ) . '&per_page=20&orientation=landscape';
+		
+		$response = wp_remote_get( $api_url, array(
+			'timeout' => 15,
+			'headers' => array(
+				'Authorization' => 'Client-ID ' . $api_key,
+			),
+		) );
+
+		if ( is_wp_error( $response ) ) {
+			wp_send_json_error( array( 'message' => 'Fehler beim Abrufen von Unsplash: ' . $response->get_error_message() ) );
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		if ( $response_code !== 200 ) {
+			$body = json_decode( wp_remote_retrieve_body( $response ), true );
+			$error_message = isset( $body['errors'] ) ? implode( ', ', $body['errors'] ) : 'HTTP ' . $response_code;
+			wp_send_json_error( array( 'message' => 'Unsplash API Fehler: ' . $error_message ) );
+		}
+
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		if ( ! isset( $body['results'] ) || empty( $body['results'] ) ) {
+			wp_send_json_error( array( 'message' => 'Keine Bilder gefunden für: ' . $query ) );
+		}
+
+		// Filter photos - only use photos that are free to use
+		// Unsplash API returns photos under Unsplash License (free for commercial use)
+		$available_photos = array();
+		foreach ( $body['results'] as $photo ) {
+			// Unsplash API only returns free photos, but we verify it's a valid photo object
+			if ( isset( $photo['urls'] ) && isset( $photo['urls']['regular'] ) ) {
+				$available_photos[] = $photo;
+			}
+		}
+
+		if ( empty( $available_photos ) ) {
+			wp_send_json_error( array( 'message' => 'Keine verwendbaren Bilder gefunden für: ' . $query ) );
+		}
+
+		// Pick a random photo from available photos
+		$random_photo = $available_photos[ array_rand( $available_photos ) ];
+		
+		// Get image URL - Unsplash provides different sizes
+		// Use regular (1080px) for good quality, or full if available
+		$image_url = $random_photo['urls']['regular'];
+		if ( isset( $random_photo['urls']['full'] ) ) {
+			$image_url = $random_photo['urls']['full'];
+		}
+
+		wp_send_json_success( array(
+			'url'    => $image_url,
+			'width'  => $width,
+			'height' => $height,
+			'photographer' => $random_photo['user']['name'] ?? '',
+			'photographer_url' => $random_photo['user']['links']['html'] ?? '',
+		) );
 	}
 }
 

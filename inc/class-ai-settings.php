@@ -51,6 +51,7 @@ class GutenBlock_Pro_AI_Settings {
 		add_action( 'wp_ajax_gutenblock_pro_activate_license', array( $this, 'ajax_activate_license' ) );
 		add_action( 'wp_ajax_gutenblock_pro_deactivate_license', array( $this, 'ajax_deactivate_license' ) );
 		add_action( 'wp_ajax_gutenblock_pro_refresh_prompts', array( $this, 'ajax_refresh_prompts' ) );
+		add_action( 'wp_ajax_gutenblock_pro_save_custom_prompts', array( $this, 'ajax_save_custom_prompts' ) );
 	}
 
 	/**
@@ -73,9 +74,48 @@ class GutenBlock_Pro_AI_Settings {
 	public function register_settings() {
 		register_setting( 'gutenblock_pro_ai_settings', 'gutenblock_pro_system_prompt', array(
 			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_textarea_field',
+			'sanitize_callback' => array( $this, 'sanitize_system_prompt' ),
+			'default'           => 'Texte Elemente für eine Website.
+Einfache Sätze bevorzugen, nicht zu gestelzt, hochtrabend oder zu förmlich. Formuliere für die Zielgruppe Branchentypisch per Sie (z.B. Dienstleistungsbranchen, Berater) und per du bei (Coaches, Vereinen und weniger förmliche Branchen.
+Response niemals mit Icons, Trennlinien oder in Anführungszeichen außer es ist im prompt für das Feld gefordert.
+Responses für Titel, CTA und Listen nicht mit Punkt am Ende.',
+		) );
+		register_setting( 'gutenblock_pro_ai_settings', 'gutenblock_pro_ai_context', array(
+			'type'              => 'string',
+			'sanitize_callback' => array( $this, 'sanitize_ai_context' ),
 			'default'           => '',
 		) );
+		register_setting( 'gutenblock_pro_ai_settings', 'gutenblock_pro_pexels_api_key', array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		) );
+		register_setting( 'gutenblock_pro_ai_settings', 'gutenblock_pro_unsplash_api_key', array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		) );
+		register_setting( 'gutenblock_pro_ai_settings', 'gutenblock_pro_image_api_provider', array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => 'pexels',
+		) );
+	}
+
+	/**
+	 * Sanitize system prompt and update last modified timestamp
+	 */
+	public function sanitize_system_prompt( $value ) {
+		update_option( 'gutenblock_pro_system_prompt_modified', time() );
+		return sanitize_textarea_field( $value );
+	}
+
+	/**
+	 * Sanitize AI context and update last modified timestamp
+	 */
+	public function sanitize_ai_context( $value ) {
+		update_option( 'gutenblock_pro_system_prompt_modified', time() );
+		return sanitize_textarea_field( $value );
 	}
 
 	/**
@@ -122,8 +162,19 @@ class GutenBlock_Pro_AI_Settings {
 
 		$license_info = $this->license->get_license_info();
 		$token_usage = $this->license->get_token_usage();
-		$system_prompt = get_option( 'gutenblock_pro_system_prompt', '' );
+		
+		// Get style prompt with default prefill
+		$style_prompt = get_option( 'gutenblock_pro_system_prompt', '' );
+		if ( empty( $style_prompt ) ) {
+			$style_prompt = 'Texte Elemente für eine Website.
+Einfache Sätze bevorzugen, nicht zu gestelzt, hochtrabend oder zu förmlich. Formuliere für die Zielgruppe Branchentypisch per Sie (z.B. Dienstleistungsbranchen, Berater) und per du bei (Coaches, Vereinen und weniger förmliche Branchen.
+Response niemals mit Icons, Trennlinien oder in Anführungszeichen außer es ist im prompt für das Feld gefordert.
+Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
+		}
+		
+		$context_prompt = get_option( 'gutenblock_pro_ai_context', '' );
 		$prompts = $this->ai_generator->get_prompts();
+		$custom_prompts = get_option( 'gutenblock_pro_custom_prompts', array() );
 		?>
 		<div class="wrap gutenblock-pro-ai-settings">
 			<h1>
@@ -159,6 +210,7 @@ class GutenBlock_Pro_AI_Settings {
 							       id="gb-license-key" 
 							       placeholder="GBPRO-XXXX-XXXX-XXXX" 
 							       pattern="GBPRO-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}"
+							       maxlength="20"
 							       class="regular-text">
 							<button type="button" class="button button-primary" id="gb-activate-license">
 								<?php esc_html_e( 'Lizenz aktivieren', 'gutenblock-pro' ); ?>
@@ -225,24 +277,117 @@ class GutenBlock_Pro_AI_Settings {
 
 			<!-- System Prompt Section -->
 			<div class="gb-settings-section">
-				<h2><?php esc_html_e( 'System-Prompt', 'gutenblock-pro' ); ?></h2>
+				<h2><?php esc_html_e( 'KI-Prompts', 'gutenblock-pro' ); ?></h2>
 				<p class="description">
-					<?php esc_html_e( 'Definiere den Grundton und Stil für alle KI-generierten Texte. Dieser Prompt wird bei jeder Generierung als Kontext verwendet.', 'gutenblock-pro' ); ?>
+					<?php esc_html_e( 'Definiere den Stil und Kontext für alle KI-generierten Texte. Diese Prompts werden bei jeder Generierung kombiniert verwendet.', 'gutenblock-pro' ); ?>
 				</p>
 				
 				<form method="post" action="options.php">
 					<?php settings_fields( 'gutenblock_pro_ai_settings' ); ?>
 					
-					<textarea name="gutenblock_pro_system_prompt" 
-					          id="gutenblock_pro_system_prompt" 
-					          rows="6" 
-					          class="large-text code"
-					          placeholder="<?php esc_attr_e( 'Du bist ein professioneller Copywriter für Webseiten...', 'gutenblock-pro' ); ?>"
-					><?php echo esc_textarea( $system_prompt ); ?></textarea>
-					
-					<p class="description">
-						<?php esc_html_e( 'Tipp: Beschreibe dein Unternehmen, deine Zielgruppe und den gewünschten Schreibstil.', 'gutenblock-pro' ); ?>
-					</p>
+					<table class="form-table">
+						<tr>
+							<th scope="row">
+								<label for="gutenblock_pro_system_prompt"><?php esc_html_e( 'Stil', 'gutenblock-pro' ); ?></label>
+							</th>
+							<td>
+								<textarea name="gutenblock_pro_system_prompt" 
+								          id="gutenblock_pro_system_prompt" 
+								          rows="6" 
+								          class="large-text code"
+								><?php echo esc_textarea( $style_prompt ); ?></textarea>
+								<p class="description">
+									<?php esc_html_e( 'Definiere den Schreibstil und technische Vorgaben für die Texte.', 'gutenblock-pro' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="gutenblock_pro_ai_context"><?php esc_html_e( 'Kontext', 'gutenblock-pro' ); ?></label>
+							</th>
+							<td>
+								<textarea name="gutenblock_pro_ai_context" 
+								          id="gutenblock_pro_ai_context" 
+								          rows="4" 
+								          class="large-text code"
+								          placeholder="<?php esc_attr_e( 'z.B. Ich bin ein Marketing-Berater und helfe Unternehmen bei der digitalen Transformation...', 'gutenblock-pro' ); ?>"
+								><?php echo esc_textarea( $context_prompt ); ?></textarea>
+								<p class="description">
+									<?php esc_html_e( 'Beschreibe wer du bist und was du machst. Diese Informationen werden mit dem Stil kombiniert.', 'gutenblock-pro' ); ?>
+								</p>
+							</td>
+						</tr>
+						<?php
+						// Only show image API settings for user "hjherbst"
+						$current_user = wp_get_current_user();
+						if ( $current_user->user_login === 'hjherbst' ) :
+						?>
+						<tr>
+							<th scope="row">
+								<label for="gutenblock_pro_image_api_provider"><?php esc_html_e( 'Bild-API Anbieter', 'gutenblock-pro' ); ?></label>
+							</th>
+							<td>
+								<select name="gutenblock_pro_image_api_provider" id="gutenblock_pro_image_api_provider">
+									<option value="pexels" <?php selected( get_option( 'gutenblock_pro_image_api_provider', 'pexels' ), 'pexels' ); ?>>
+										<?php esc_html_e( 'Pexels', 'gutenblock-pro' ); ?>
+									</option>
+									<option value="unsplash" <?php selected( get_option( 'gutenblock_pro_image_api_provider', 'pexels' ), 'unsplash' ); ?>>
+										<?php esc_html_e( 'Unsplash', 'gutenblock-pro' ); ?>
+									</option>
+								</select>
+								<p class="description">
+									<?php esc_html_e( 'Wähle den API-Anbieter für die Bildsuche. Ohne API Key wird picsum.photos verwendet.', 'gutenblock-pro' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="gutenblock_pro_pexels_api_key"><?php esc_html_e( 'Pexels API Key', 'gutenblock-pro' ); ?></label>
+							</th>
+							<td>
+								<input type="text" 
+								       name="gutenblock_pro_pexels_api_key" 
+								       id="gutenblock_pro_pexels_api_key" 
+								       value="<?php echo esc_attr( get_option( 'gutenblock_pro_pexels_api_key', '' ) ); ?>"
+								       class="regular-text"
+								       placeholder="Pexels API Key (optional)">
+								<p class="description">
+									<?php 
+									printf(
+										/* translators: %1$s: link to pexels.com/api, %2$s: link to pexels license */
+										esc_html__( 'Optional: API Key von %1$s. Alle über die API bezogenen Bilder sind unter der Pexels-Lizenz frei verwendbar (kommerziell erlaubt, keine Attribution erforderlich). Siehe %2$s für Details.', 'gutenblock-pro' ),
+										'<a href="https://www.pexels.com/api/" target="_blank">pexels.com/api</a>',
+										'<a href="https://www.pexels.com/license/" target="_blank">Pexels-Lizenz</a>'
+									); 
+									?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="gutenblock_pro_unsplash_api_key"><?php esc_html_e( 'Unsplash API Key', 'gutenblock-pro' ); ?></label>
+							</th>
+							<td>
+								<input type="text" 
+								       name="gutenblock_pro_unsplash_api_key" 
+								       id="gutenblock_pro_unsplash_api_key" 
+								       value="<?php echo esc_attr( get_option( 'gutenblock_pro_unsplash_api_key', '' ) ); ?>"
+								       class="regular-text"
+								       placeholder="Unsplash Access Key (optional)">
+								<p class="description">
+									<?php 
+									printf(
+										/* translators: %1$s: link to unsplash.com/developers, %2$s: link to unsplash license */
+										esc_html__( 'Optional: Access Key von %1$s. Alle über die API bezogenen Bilder sind unter der Unsplash-Lizenz frei verwendbar. Siehe %2$s für Details.', 'gutenblock-pro' ),
+										'<a href="https://unsplash.com/developers" target="_blank">unsplash.com/developers</a>',
+										'<a href="https://unsplash.com/license" target="_blank">Unsplash-Lizenz</a>'
+									); 
+									?>
+								</p>
+							</td>
+						</tr>
+						<?php endif; ?>
+					</table>
 					
 					<?php submit_button( __( 'Einstellungen speichern', 'gutenblock-pro' ) ); ?>
 				</form>
@@ -253,33 +398,46 @@ class GutenBlock_Pro_AI_Settings {
 				<h2>
 					<?php esc_html_e( 'Block-Prompts', 'gutenblock-pro' ); ?>
 					<button type="button" class="button button-secondary button-small" id="gb-refresh-prompts">
-						<span class="dashicons dashicons-update"></span>
-						<?php esc_html_e( 'Aktualisieren', 'gutenblock-pro' ); ?>
+						<?php esc_html_e( 'Prompts mit API synchronisieren', 'gutenblock-pro' ); ?>
 					</button>
 				</h2>
 				<p class="description">
-					<?php esc_html_e( 'Diese Prompts werden automatisch von gutenblock.com geladen und definieren, welcher Text für welches Block-Element generiert wird.', 'gutenblock-pro' ); ?>
+					<?php esc_html_e( 'Diese Prompts werden mit der API von gutenblock.com synchronisiert und definieren, welcher Text für welches Block-Element generiert wird. Custom Prompts überschreiben die API-Prompts.', 'gutenblock-pro' ); ?>
 				</p>
 
 				<?php if ( ! empty( $prompts ) ) : ?>
 					<table class="widefat gb-prompts-table">
 						<thead>
 							<tr>
-								<th style="width: 25%;"><?php esc_html_e( 'Block-ID', 'gutenblock-pro' ); ?></th>
-								<th style="width: 25%;"><?php esc_html_e( 'Name', 'gutenblock-pro' ); ?></th>
-								<th><?php esc_html_e( 'Prompt', 'gutenblock-pro' ); ?></th>
+								<th style="width: 20%;"><?php esc_html_e( 'Block-ID', 'gutenblock-pro' ); ?></th>
+								<th style="width: 40%;"><?php esc_html_e( 'Prompt (API)', 'gutenblock-pro' ); ?></th>
+								<th style="width: 40%;"><?php esc_html_e( 'Custom Prompt', 'gutenblock-pro' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ( $prompts as $field_id => $prompt_data ) : ?>
-								<tr>
+							<?php foreach ( $prompts as $field_id => $prompt_data ) : 
+								$custom_prompt = isset( $custom_prompts[ $field_id ] ) ? $custom_prompts[ $field_id ] : '';
+							?>
+								<tr data-field-id="<?php echo esc_attr( $field_id ); ?>">
 									<td><code><?php echo esc_html( $field_id ); ?></code></td>
-									<td><?php echo esc_html( $prompt_data['name'] ?? $field_id ); ?></td>
 									<td class="gb-prompt-text"><?php echo esc_html( $prompt_data['prompt'] ?? '' ); ?></td>
+									<td>
+										<textarea 
+											class="gb-custom-prompt large-text" 
+											rows="3" 
+											data-field-id="<?php echo esc_attr( $field_id ); ?>"
+											placeholder="<?php esc_attr_e( 'Optional: Eigener Prompt (überschreibt API-Prompt)', 'gutenblock-pro' ); ?>"
+										><?php echo esc_textarea( $custom_prompt ); ?></textarea>
+									</td>
 								</tr>
 							<?php endforeach; ?>
 						</tbody>
 					</table>
+					<p>
+						<button type="button" class="button button-primary" id="gb-save-custom-prompts">
+							<?php esc_html_e( 'Custom Prompts speichern', 'gutenblock-pro' ); ?>
+						</button>
+					</p>
 				<?php else : ?>
 					<div class="notice notice-info inline">
 						<p><?php esc_html_e( 'Keine Prompts geladen. Klicke auf "Aktualisieren" um die Prompts von gutenblock.com zu laden.', 'gutenblock-pro' ); ?></p>
@@ -352,5 +510,41 @@ class GutenBlock_Pro_AI_Settings {
 				'message' => __( 'Keine Prompts gefunden. Prüfe die Verbindung zu gutenblock.com', 'gutenblock-pro' ),
 			) );
 		}
+	}
+
+	/**
+	 * AJAX: Save custom prompts
+	 */
+	public function ajax_save_custom_prompts() {
+		check_ajax_referer( 'gutenblock_pro_ai', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Keine Berechtigung', 'gutenblock-pro' ) ) );
+		}
+
+		$custom_prompts = array();
+		
+		if ( isset( $_POST['custom_prompts'] ) && is_array( $_POST['custom_prompts'] ) ) {
+			foreach ( $_POST['custom_prompts'] as $field_id => $prompt ) {
+				$field_id = sanitize_key( $field_id );
+				$prompt = sanitize_textarea_field( $prompt );
+				
+				// Only save non-empty prompts
+				if ( ! empty( trim( $prompt ) ) ) {
+					$custom_prompts[ $field_id ] = $prompt;
+				}
+			}
+		}
+
+		// Save custom prompts (empty array removes all)
+		update_option( 'gutenblock_pro_custom_prompts', $custom_prompts );
+
+		// Clear prompts cache to force refresh
+		$this->ai_generator->clear_prompts_cache();
+
+		wp_send_json_success( array(
+			'message' => __( 'Custom Prompts erfolgreich gespeichert', 'gutenblock-pro' ),
+			'count'   => count( $custom_prompts ),
+		) );
 	}
 }

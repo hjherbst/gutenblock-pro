@@ -198,10 +198,10 @@
 				}, [
 					el('div', {
 						className: 'gutenblock-pro-modal-pattern-title-row'
-					}, [
-						el('h3', {
-							className: 'gutenblock-pro-modal-pattern-title'
-						}, pattern.title || pattern.name),
+				}, [
+					el('h3', {
+						className: 'gutenblock-pro-modal-pattern-title'
+					}, pattern.title || pattern.name),
 						isPremium && el('span', {
 							className: 'gutenblock-pro-pattern-badge gutenblock-pro-pattern-badge-premium'
 						}, 'Pro Plus')

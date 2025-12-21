@@ -1,12 +1,12 @@
 /**
- * Cta v1 - Frontend Script
+ * Process v3 - Frontend Script
  */
 
 (function () {
 	'use strict';
 
-	function initCtaV1() {
-		const elements = document.querySelectorAll('.gb-pattern-cta-v1');
+	function initProcessV3() {
+		const elements = document.querySelectorAll('.gb-pattern-process-v3');
 		
 		if (!elements.length) return;
 
@@ -17,8 +17,8 @@
 
 	// Initialize on DOM ready
 	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', initCtaV1);
+		document.addEventListener('DOMContentLoaded', initProcessV3);
 	} else {
-		initCtaV1();
+		initProcessV3();
 	}
 })();

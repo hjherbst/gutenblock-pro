@@ -38,6 +38,7 @@ class GutenBlock_Pro_AI_Generator {
 	 */
 	private $prompts = null;
 
+
 	/**
 	 * Get singleton instance
 	 */
@@ -224,38 +225,38 @@ class GutenBlock_Pro_AI_Generator {
 				return new WP_Error( 'no_api_key', __( 'API-Key nicht konfiguriert', 'gutenblock-pro' ), array( 'status' => 500 ) );
 			}
 
-		// Build the prompt
-		$full_prompt = $prompt;
+			// Build the prompt
+			$full_prompt = $prompt;
 
-		// If we have a block name, try to get the specific prompt
-		if ( ! empty( $block_name ) && empty( $prompt ) ) {
-			$prompts = $this->get_prompts();
-			if ( isset( $prompts[ $block_name ] ) ) {
-				$full_prompt = $prompts[ $block_name ]['prompt'];
-			} else {
-				$full_prompt = sprintf( __( 'Schreibe einen passenden Text für das Element „%s".', 'gutenblock-pro' ), $block_name );
+			// If we have a block name, try to get the specific prompt
+			if ( ! empty( $block_name ) && empty( $prompt ) ) {
+				$prompts = $this->get_prompts();
+				if ( isset( $prompts[ $block_name ] ) ) {
+					$full_prompt = $prompts[ $block_name ]['prompt'];
+				} else {
+					$full_prompt = sprintf( __( 'Schreibe einen passenden Text für das Element „%s".', 'gutenblock-pro' ), $block_name );
+				}
 			}
-		}
 
-		// Add context if there's current text and feedback
-		if ( ! empty( $current_text ) && ! empty( $feedback ) ) {
-			$full_prompt .= "\n\nAktueller Text:\n" . $current_text . "\n\nFeedback: " . $feedback;
-		}
+			// Add context if there's current text and feedback
+			if ( ! empty( $current_text ) && ! empty( $feedback ) ) {
+				$full_prompt .= "\n\nAktueller Text:\n" . $current_text . "\n\nFeedback: " . $feedback;
+			}
 
-		// Get system prompt
-		$system_prompt = $this->get_system_prompt();
+			// Get system prompt
+			$system_prompt = $this->get_system_prompt();
 
-		// Call OpenAI
-		$result = $this->call_openai( $full_prompt, $system_prompt );
+			// Call OpenAI
+			$result = $this->call_openai( $full_prompt, $system_prompt );
 
-		if ( is_wp_error( $result ) ) {
-			return $result;
-		}
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
 
-		// Track token usage
-		if ( isset( $result['usage']['total_tokens'] ) ) {
-			$this->license->add_token_usage( $result['usage']['total_tokens'] );
-		}
+			// Track token usage
+			if ( isset( $result['usage']['total_tokens'] ) ) {
+				$this->license->add_token_usage( $result['usage']['total_tokens'] );
+			}
 
 			return rest_ensure_response( array(
 				'success' => true,
@@ -306,26 +307,12 @@ class GutenBlock_Pro_AI_Generator {
 	}
 
 	/**
-	 * Call SaaS AI API (routes to OpenAI, key stays on server)
+	 * Call SaaS AI API with messages array (for session support)
 	 *
-	 * @param string $prompt User prompt
-	 * @param string $system_prompt System prompt
+	 * @param array $messages Messages array with role and content
 	 * @return array|WP_Error
 	 */
-	private function call_openai( $prompt, $system_prompt = '' ) {
-		$messages = array();
-
-		if ( ! empty( $system_prompt ) ) {
-			$messages[] = array(
-				'role'    => 'system',
-				'content' => $system_prompt,
-			);
-		}
-
-		$messages[] = array(
-			'role'    => 'user',
-			'content' => $prompt,
-		);
+	private function call_openai_with_messages( $messages ) {
 
 		$api_url = $this->get_ai_generate_url();
 
@@ -364,20 +351,46 @@ class GutenBlock_Pro_AI_Generator {
 	}
 
 	/**
+	 * Call SaaS AI API (routes to OpenAI, key stays on server)
+	 * Legacy method for backwards compatibility
+	 *
+	 * @param string $prompt User prompt
+	 * @param string $system_prompt System prompt
+	 * @return array|WP_Error
+	 */
+	private function call_openai( $prompt, $system_prompt = '' ) {
+		$messages = array();
+
+		if ( ! empty( $system_prompt ) ) {
+			$messages[] = array(
+				'role'    => 'system',
+				'content' => $system_prompt,
+			);
+		}
+
+		$messages[] = array(
+			'role'    => 'user',
+			'content' => $prompt,
+		);
+
+		return $this->call_openai_with_messages( $messages );
+	}
+
+	/**
 	 * Get prompts (from SaaS or local cache)
 	 *
 	 * @return array
 	 */
 	public function get_prompts() {
 		if ( null !== $this->prompts ) {
-			return $this->prompts;
+			return $this->apply_custom_prompts( $this->prompts );
 		}
 
 		// Try to get from cache
 		$cached = get_transient( 'gutenblock_pro_prompts' );
 		if ( false !== $cached ) {
 			$this->prompts = $cached;
-			return $this->prompts;
+			return $this->apply_custom_prompts( $this->prompts );
 		}
 
 		// Fetch from SaaS API
@@ -392,7 +405,39 @@ class GutenBlock_Pro_AI_Generator {
 			$this->prompts = $this->get_default_prompts();
 		}
 
-		return $this->prompts;
+		return $this->apply_custom_prompts( $this->prompts );
+	}
+
+	/**
+	 * Apply custom prompts to API prompts
+	 * Custom prompts override API prompts if they exist
+	 *
+	 * @param array $prompts API prompts
+	 * @return array Prompts with custom overrides applied
+	 */
+	private function apply_custom_prompts( $prompts ) {
+		$custom_prompts = get_option( 'gutenblock_pro_custom_prompts', array() );
+		
+		if ( empty( $custom_prompts ) ) {
+			return $prompts;
+		}
+
+		// Apply custom prompts (only if they exist and are not empty)
+		foreach ( $custom_prompts as $field_id => $custom_prompt ) {
+			if ( isset( $prompts[ $field_id ] ) && ! empty( trim( $custom_prompt ) ) ) {
+				$prompts[ $field_id ]['prompt'] = $custom_prompt;
+			}
+		}
+
+		return $prompts;
+	}
+
+	/**
+	 * Clear prompts cache
+	 */
+	public function clear_prompts_cache() {
+		$this->prompts = null;
+		delete_transient( 'gutenblock_pro_prompts' );
 	}
 
 	/**
@@ -483,18 +528,35 @@ class GutenBlock_Pro_AI_Generator {
 	 * @return string
 	 */
 	public function get_system_prompt() {
-		// User-defined system prompt
-		$user_prompt = get_option( 'gutenblock_pro_system_prompt', '' );
-
-		if ( ! empty( $user_prompt ) ) {
-			return $user_prompt;
+		// Get style prompt (technical/stylistic guidelines)
+		$style_prompt = get_option( 'gutenblock_pro_system_prompt', '' );
+		
+		// Get context prompt (user's personal information)
+		$context_prompt = get_option( 'gutenblock_pro_ai_context', '' );
+		
+		// Combine both prompts
+		$combined_prompt = '';
+		
+		if ( ! empty( $style_prompt ) ) {
+			$combined_prompt = $style_prompt;
 		}
-
-		// Default system prompt
-		return 'Du bist ein professioneller Copywriter für Webseiten. ' .
-		       'Schreibe prägnante, überzeugende Texte in deutscher Sprache. ' .
-		       'Verwende keine Emojis oder Icons. ' .
-		       'Antworte nur mit dem gewünschten Text, ohne Erklärungen oder Anführungszeichen.';
+		
+		if ( ! empty( $context_prompt ) ) {
+			if ( ! empty( $combined_prompt ) ) {
+				$combined_prompt .= "\n\n";
+			}
+			$combined_prompt .= $context_prompt;
+		}
+		
+		// If both are empty, use default
+		if ( empty( $combined_prompt ) ) {
+			$combined_prompt = 'Du bist ein professioneller Copywriter für Webseiten. ' .
+			       'Schreibe prägnante, überzeugende Texte in deutscher Sprache. ' .
+			       'Verwende keine Emojis oder Icons. ' .
+			       'Antworte nur mit dem gewünschten Text, ohne Erklärungen oder Anführungszeichen.';
+		}
+		
+		return $combined_prompt;
 	}
 
 	/**

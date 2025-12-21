@@ -40,17 +40,17 @@ use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
  * Initialize Plugin Update Checker
  */
 function gutenblock_pro_init_update_checker() {
-	$gutenblockProUpdateChecker = PucFactory::buildUpdateChecker(
-		'https://github.com/hjherbst/gutenblock-pro/',
+$gutenblockProUpdateChecker = PucFactory::buildUpdateChecker(
+	'https://github.com/hjherbst/gutenblock-pro/',
 		GUTENBLOCK_PRO_PATH . 'gutenblock-pro.php',
-		'gutenblock-pro'
-	);
+	'gutenblock-pro'
+);
 
-	// Set the branch that contains the stable release (default: master/main)
-	$gutenblockProUpdateChecker->setBranch( 'main' );
+// Set the branch that contains the stable release (default: master/main)
+$gutenblockProUpdateChecker->setBranch( 'main' );
 
-	// Optional: Enable release assets (ZIP file from GitHub Release)
-	$gutenblockProUpdateChecker->getVcsApi()->enableReleaseAssets();
+// Optional: Enable release assets (ZIP file from GitHub Release)
+$gutenblockProUpdateChecker->getVcsApi()->enableReleaseAssets();
 }
 add_action( 'plugins_loaded', 'gutenblock_pro_init_update_checker', 5 );
 

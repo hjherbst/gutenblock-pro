@@ -111,7 +111,7 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 
 	/**
 	 * Build options for ComboboxControl
-	 */
+ */
 	const contentFieldOptions = useMemo(() => {
 		const options = Object.entries(prompts).map(([fieldId]) => ({
 			value: fieldId,

@@ -16,8 +16,30 @@ class GutenBlock_Pro_License {
 
 	/**
 	 * License API URL
+	 * Auto-detect local development
 	 */
-	const API_URL = 'https://app.gutenblock.com/api/v1/license';
+	private static function get_api_url() {
+		// Check for constant first (useful for wp-config.php)
+		if ( defined( 'GUTENBLOCK_PRO_API_URL' ) ) {
+			return rtrim( GUTENBLOCK_PRO_API_URL, '/' ) . '/api/v1/license';
+		}
+
+		// Allow override via filter
+		$url = apply_filters( 'gutenblock_pro_api_url', '' );
+		if ( ! empty( $url ) ) {
+			return rtrim( $url, '/' ) . '/api/v1/license';
+		}
+
+		// Auto-detect local development (LocalWP uses .local domains)
+		$home_url = home_url();
+		if ( strpos( $home_url, '.local' ) !== false || strpos( $home_url, 'localhost' ) !== false ) {
+			// Local development - use localhost:3000
+			return 'http://localhost:3000/api/v1/license';
+		}
+
+		// Production
+		return 'https://app.gutenblock.com/api/v1/license';
+	}
 
 	/**
 	 * Monthly token limit for free users
@@ -80,7 +102,7 @@ class GutenBlock_Pro_License {
 	 * @return array Result with success status and message
 	 */
 	public function activate( $license_key ) {
-		$response = wp_remote_post( self::API_URL . '/activate', array(
+		$response = wp_remote_post( self::get_api_url() . '/activate', array(
 			'headers' => array( 'Content-Type' => 'application/json' ),
 			'body'    => wp_json_encode( array(
 				'license_key'    => $license_key,
@@ -134,7 +156,7 @@ class GutenBlock_Pro_License {
 			return null;
 		}
 
-		$response = wp_remote_post( self::API_URL . '/verify', array(
+		$response = wp_remote_post( self::get_api_url() . '/verify', array(
 			'headers' => array( 'Content-Type' => 'application/json' ),
 			'body'    => wp_json_encode( array(
 				'license_key' => $license_key,
@@ -170,7 +192,7 @@ class GutenBlock_Pro_License {
 		$license_key = get_option( self::OPTION_LICENSE_KEY );
 
 		if ( ! empty( $license_key ) ) {
-			wp_remote_post( self::API_URL . '/deactivate', array(
+			wp_remote_post( self::get_api_url() . '/deactivate', array(
 				'headers' => array( 'Content-Type' => 'application/json' ),
 				'body'    => wp_json_encode( array(
 					'license_key' => $license_key,

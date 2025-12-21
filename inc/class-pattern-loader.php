@@ -305,12 +305,12 @@ class GutenBlock_Pro_Pattern_Loader {
 		
 		// Simple, robust approach: Add class to first HTML element directly
 		// This works regardless of block type (cover, group, etc.)
-		$content = preg_replace(
+			$content = preg_replace(
 			'/<(section|div|article|aside|header|footer)\s+class="([^"]*)"/',
 			'<$1 class="$2 ' . esc_attr( $css_class ) . '"',
-			$content,
-			1
-		);
+				$content,
+				1
+			);
 		
 		// Debug logging
 		if ( $is_premium ) {

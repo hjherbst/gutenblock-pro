@@ -82,6 +82,21 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pattern-card-header h3 .premium-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	background: #8b5cf6;
+	color: #fff;
+	border-radius: 3px;
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
 }
 
 .pattern-card-actions {
@@ -351,6 +366,23 @@ input:checked + .slider:before {
 	transform: translateX(18px);
 }
 
+/* Premium Toggle */
+.premium-toggle {
+	margin-right: 5px;
+}
+
+.premium-toggle .premium-slider {
+	background-color: #8b5cf6;
+}
+
+.premium-toggle input:checked + .premium-slider {
+	background-color: #8b5cf6;
+}
+
+.premium-toggle input:not(:checked) + .premium-slider {
+	background-color: #ccc;
+}
+
 /* Add Pattern Info */
 .gutenblock-pro-add-pattern {
 	background: #fff;
@@ -445,16 +477,32 @@ input:checked + .slider:before {
 .editor-header {
 	padding: 15px;
 	border-bottom: 1px solid #c3c4c7;
+}
+
+.editor-header-top {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	flex-wrap: wrap;
-	gap: 10px;
+	gap: 15px;
+	margin-bottom: 15px;
 }
 
 .editor-header h2 {
 	margin: 0;
 	font-size: 16px;
+}
+
+.editor-header-top #gb-randomize-images {
+	margin: 0;
+}
+
+.editor-header-top #gb-randomize-images .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	margin-right: 5px;
+	vertical-align: middle;
 }
 
 .file-tabs {
@@ -619,6 +667,17 @@ input:checked + .slider:before {
 	
 	.file-tabs {
 		flex-wrap: wrap;
+	}
+}
+
+/* Spinning animation */
+.dashicons.spinning {
+	animation: dashicons-spin 1s linear infinite;
+}
+
+@keyframes dashicons-spin {
+	100% {
+		transform: rotate(360deg);
 	}
 }
 

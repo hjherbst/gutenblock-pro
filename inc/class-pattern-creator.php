@@ -80,9 +80,20 @@ class GutenBlock_Pro_Pattern_Creator {
 			$groups[] = array( 'value' => $slug, 'label' => $label );
 		}
 
+		$pexels_api_key = get_option( 'gutenblock_pro_pexels_api_key', '' );
+		$unsplash_api_key = get_option( 'gutenblock_pro_unsplash_api_key', '' );
+		$image_api_provider = get_option( 'gutenblock_pro_image_api_provider', 'pexels' );
+		$current_user = wp_get_current_user();
+		$is_allowed_user = ( $current_user->user_login === 'hjherbst' );
+		
 		wp_localize_script( 'gutenblock-pro-pattern-creator', 'gutenblockProCreator', array(
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 			'nonce'   => wp_create_nonce( 'gutenblock_pro_create_pattern' ),
+			'adminNonce' => wp_create_nonce( 'gutenblock_pro_admin' ),
+			'pexelsApiKey' => $pexels_api_key,
+			'unsplashApiKey' => $unsplash_api_key,
+			'imageApiProvider' => $image_api_provider,
+			'isAllowedUser' => $is_allowed_user,
 			'currentLocale' => get_locale(),
 			'groups'  => $groups,
 			'strings' => array(
@@ -431,7 +442,8 @@ return array(
 				$width = $dimensions['width'] ?: 800;
 				$height = $dimensions['height'] ?: 600;
 
-				// Generate consistent placeholder URL using picsum.photos
+				// Generate placeholder URL using picsum.photos
+				// Search queries can be added via the randomize button in editor (encoded in seed)
 				$seed = $slug . '-' . $image_counter;
 				$placeholder_url = "https://picsum.photos/seed/{$seed}/{$width}/{$height}";
 				$image_counter++;
@@ -456,6 +468,7 @@ return array(
 				$width = $dimensions['width'] ?: 800;
 				$height = $dimensions['height'] ?: 600;
 
+				// Generate placeholder URL using picsum.photos
 				$seed = $slug . '-' . $image_counter;
 				$placeholder_url = "https://picsum.photos/seed/{$seed}/{$width}/{$height}";
 				$image_counter++;
