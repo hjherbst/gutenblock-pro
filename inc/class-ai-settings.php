@@ -221,10 +221,24 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 							printf(
 								/* translators: %s: link to gutenblock.com */
 								esc_html__( 'Noch keine Lizenz? %s', 'gutenblock-pro' ),
-								'<a href="https://gutenblock.com/pro" target="_blank">' . esc_html__( 'Jetzt kaufen', 'gutenblock-pro' ) . '</a>'
+								'<a href="https://app.gutenblock.com/gutenblock-pro" target="_blank">' . esc_html__( 'Jetzt kaufen', 'gutenblock-pro' ) . '</a>'
 							); 
 							?>
 						</p>
+						<div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; font-size: 12px; color: #646970;">
+							<span style="display: inline-flex; align-items: center; gap: 4px;">
+								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
+								<?php esc_html_e( '1 Mio. AI-Tokens monatlich', 'gutenblock-pro' ); ?>
+							</span>
+							<span style="display: inline-flex; align-items: center; gap: 4px;">
+								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
+								<?php esc_html_e( 'Alle Premium-Patterns freigeschalten', 'gutenblock-pro' ); ?>
+							</span>
+							<span style="display: inline-flex; align-items: center; gap: 4px;">
+								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
+								<?php esc_html_e( 'Einmalig zahlen, lebenslang nutzen', 'gutenblock-pro' ); ?>
+							</span>
+						</div>
 					<?php endif; ?>
 					<div id="gb-license-message" class="gb-message hidden"></div>
 				</div>
