@@ -204,7 +204,7 @@
 					}, pattern.title || pattern.name),
 						isPremium && el('span', {
 							className: 'gutenblock-pro-pattern-badge gutenblock-pro-pattern-badge-premium'
-						}, 'Pro Plus')
+						}, 'plus')
 					]),
 					pattern.description && el('p', {
 						className: 'gutenblock-pro-modal-pattern-description'
@@ -311,7 +311,20 @@
 						variant: selectedCategory === 'pages' ? 'primary' : 'secondary',
 						className: 'gutenblock-pro-modal-tab-button'
 					}, 'Seiten')
-				])
+				]),
+				el('a', {
+					href: 'http://app.gutenblock.com/gutenblock-pro',
+					target: '_blank',
+					rel: 'noopener noreferrer',
+					className: 'gutenblock-pro-modal-link',
+					style: {
+						marginLeft: 'auto',
+						fontSize: '13px',
+						textDecoration: 'none',
+						color: '#2271b1',
+						fontWeight: '500'
+					}
+				}, 'GutenBlock Pro →')
 			]),
 			onRequestClose: onClose,
 			className: 'gutenblock-pro-pattern-modal',

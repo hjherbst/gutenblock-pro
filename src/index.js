@@ -68,6 +68,51 @@ const TokenUsage = ({ usage }) => {
 };
 
 /**
+ * Recursively get all blocks with content fields from a group/wrapper block
+ * IMPORTANT: Only processes blocks that are passed in - does NOT search the entire page
+ */
+function getAllContentFields(blocks, prompts) {
+	const contentFields = [];
+	const seenClientIds = new Set(); // Track already processed blocks by clientId
+	
+	function traverse(blockList) {
+		if (!blockList || !Array.isArray(blockList)) return;
+		
+		blockList.forEach(block => {
+			// Skip if we've already processed this block by clientId
+			if (!block || !block.clientId || seenClientIds.has(block.clientId)) {
+				return;
+			}
+			
+			seenClientIds.add(block.clientId);
+			
+			const metadataName = block.attributes?.metadata?.name;
+			if (metadataName && prompts[metadataName]) {
+				// Add ALL blocks with content fields, even if they have the same fieldName
+				// (because the same fieldName can appear multiple times in a group)
+				const blockText = getBlockText(block.name, block.attributes);
+				contentFields.push({
+					clientId: block.clientId,
+					blockName: block.name,
+					fieldName: metadataName,
+					prompt: prompts[metadataName].prompt || '',
+					currentText: blockText,
+					attributes: block.attributes,
+				});
+			}
+			
+			// Recursively check inner blocks
+			if (block.innerBlocks && block.innerBlocks.length > 0) {
+				traverse(block.innerBlocks);
+			}
+		});
+	}
+	
+	traverse(blocks);
+	return contentFields;
+}
+
+/**
  * AI Panel Component for Block Inspector
  */
 const AIPanel = ({ clientId, blockName, attributes }) => {
@@ -79,9 +124,15 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 	const [searchTerm, setSearchTerm] = useState('');
 
 	const { updateBlockAttributes } = useDispatch('core/block-editor');
+	const { getBlocks } = useSelect((select) => ({
+		getBlocks: select('core/block-editor').getBlocks,
+	}));
 
 	// Get block metadata name (if set)
 	const metadataName = attributes?.metadata?.name || '';
+	
+	// Check if this is a group/wrapper block
+	const isGroupBlock = ['core/group', 'core/columns', 'core/cover', 'core/column'].includes(blockName);
 
 	// Load prompts and usage on mount
 	useEffect(() => {
@@ -235,6 +286,14 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 
 	// Check if this block type is supported
 	const supportedBlocks = ['core/paragraph', 'core/heading', 'core/button', 'core/list-item'];
+	const supportedGroupBlocks = ['core/group', 'core/columns', 'core/cover', 'core/column'];
+	
+	// If it's a group block, show group AI panel (always show, even if no fields found)
+	if (isGroupBlock) {
+		return <GroupAIPanel clientId={clientId} blockName={blockName} attributes={attributes} />;
+	}
+	
+	// Otherwise, show single block AI panel only for supported blocks
 	if (!supportedBlocks.includes(blockName)) {
 		return null;
 	}
@@ -257,6 +316,8 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 						onChange={handleFieldSelect}
 						options={contentFieldOptions}
 						onFilterValueChange={(inputValue) => setSearchTerm(inputValue)}
+						__next40pxDefaultSize={true}
+						__nextHasNoMarginBottom={true}
 					/>
 					{metadataName && (
 						<div className="gb-ai-field-badge">
@@ -276,6 +337,7 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 					placeholder={__('Wähle ein Content-Feld oder schreibe einen eigenen Prompt...', 'gutenblock-pro')}
 					rows={3}
 					help={metadataName ? __('Der Prompt wird aus dem Content-Feld geladen. Du kannst ihn hier temporär anpassen.', 'gutenblock-pro') : null}
+					__nextHasNoMarginBottom={true}
 				/>
 			</PanelRow>
 
@@ -366,6 +428,216 @@ function getBlockText(blockName, attributes) {
 			return '';
 	}
 }
+
+/**
+ * Group AI Panel Component - for generating multiple content fields at once
+ */
+const GroupAIPanel = ({ clientId, blockName, attributes }) => {
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState('');
+	const [groupPrompt, setGroupPrompt] = useState('');
+	const [prompts, setPrompts] = useState({});
+	const [usage, setUsage] = useState(null);
+	
+	const { updateBlockAttributes } = useDispatch('core/block-editor');
+	
+	// Get the block directly from the store with its innerBlocks
+	const block = useSelect((select) => {
+		return select('core/block-editor').getBlock(clientId);
+	}, [clientId]);
+	
+	// Load prompts and usage on mount
+	useEffect(() => {
+		apiFetch({ path: '/gutenblock-pro/v1/prompts' })
+			.then(data => setPrompts(data || {}))
+			.catch(err => console.error('Error loading prompts:', err));
+
+		apiFetch({ path: '/gutenblock-pro/v1/ai/usage' })
+			.then(data => setUsage(data))
+			.catch(err => console.error('Error loading usage:', err));
+	}, []);
+	
+	// Calculate content fields using useMemo to avoid recalculation and duplicates
+	const contentFields = useMemo(() => {
+		if (!block || !block.innerBlocks || Object.keys(prompts).length === 0) {
+			return [];
+		}
+		
+		// Use Map to ensure each clientId appears only once
+		const fieldsMap = new Map();
+		
+		// Recursively collect all fields from innerBlocks
+		function collectFields(blocks) {
+			if (!blocks || !Array.isArray(blocks)) return;
+			
+			blocks.forEach(innerBlock => {
+				if (!innerBlock || !innerBlock.clientId) return;
+				
+				// Skip if already processed
+				if (fieldsMap.has(innerBlock.clientId)) return;
+				
+				const metadataName = innerBlock.attributes?.metadata?.name;
+				if (metadataName && prompts[metadataName]) {
+					const blockText = getBlockText(innerBlock.name, innerBlock.attributes);
+					fieldsMap.set(innerBlock.clientId, {
+						clientId: innerBlock.clientId,
+						blockName: innerBlock.name,
+						fieldName: metadataName,
+						prompt: prompts[metadataName].prompt || '',
+						currentText: blockText,
+						attributes: innerBlock.attributes,
+					});
+				}
+				
+				// Recursively check inner blocks
+				if (innerBlock.innerBlocks && innerBlock.innerBlocks.length > 0) {
+					collectFields(innerBlock.innerBlocks);
+				}
+			});
+		}
+		
+		collectFields(block.innerBlocks);
+		return Array.from(fieldsMap.values());
+	}, [block, prompts]);
+	
+	// Update group prompt when fields are first found
+	useEffect(() => {
+		if (contentFields.length > 0 && !groupPrompt) {
+			const fieldNames = [...new Set(contentFields.map(f => f.fieldName))].join(', ');
+			setGroupPrompt(`Generiere passende Inhalte für alle folgenden Content-Felder: ${fieldNames}`);
+		}
+	}, [contentFields, groupPrompt]);
+	
+	/**
+	 * Generate content for all fields in the group
+	 */
+	const generateGroupContent = async (feedback = null) => {
+		if (contentFields.length === 0) {
+			setError(__('Keine Content-Felder in dieser Gruppe gefunden.', 'gutenblock-pro'));
+			return;
+		}
+		
+		setIsLoading(true);
+		setError('');
+		
+		// Mark all blocks as generating
+		contentFields.forEach(field => {
+			setGeneratingAnimation(field.clientId, true);
+		});
+		
+		try {
+			// Build request with all fields
+			const fieldsData = contentFields.map(field => ({
+				clientId: field.clientId,
+				blockName: field.blockName,
+				fieldName: field.fieldName,
+				prompt: field.prompt,
+				currentText: field.currentText,
+			}));
+			
+			const response = await apiFetch({
+				path: '/gutenblock-pro/v1/ai/generate-group',
+				method: 'POST',
+				data: {
+					groupPrompt: groupPrompt || '',
+					fields: fieldsData,
+					feedback: feedback,
+				},
+			});
+			
+			if (response.success && response.fields) {
+				// Update all blocks with their generated content
+				response.fields.forEach((fieldData) => {
+					const field = contentFields.find(f => f.clientId === fieldData.clientId);
+					if (field) {
+						updateBlockContent(field.clientId, field.blockName, fieldData.text, updateBlockAttributes);
+					}
+				});
+				
+				if (response.usage) {
+					// Usage is handled globally
+				}
+			} else {
+				setError(response.message || __('Fehler bei der Generierung', 'gutenblock-pro'));
+			}
+		} catch (err) {
+			setError(err.message || __('Fehler bei der Generierung', 'gutenblock-pro'));
+		} finally {
+			setIsLoading(false);
+			contentFields.forEach(field => {
+				setGeneratingAnimation(field.clientId, false);
+			});
+		}
+	};
+	
+	return (
+		<PanelBody title={__('GutenBlock AI - Gruppe', 'gutenblock-pro')} initialOpen={true}>
+			{/* Token Usage */}
+			<PanelRow>
+				<TokenUsage usage={usage} />
+			</PanelRow>
+			
+			{/* Content Fields Overview */}
+			<PanelRow>
+				<div className="gb-ai-group-fields">
+					<strong>{__('Gefundene Content-Felder:', 'gutenblock-pro')}</strong>
+					{contentFields.length === 0 ? (
+						<p style={{ color: '#757575', fontSize: '12px', marginTop: '8px' }}>
+							{__('Keine Content-Felder mit metadata.name in dieser Gruppe gefunden.', 'gutenblock-pro')}
+						</p>
+					) : (
+						<ul style={{ marginTop: '8px', marginBottom: '16px', paddingLeft: '20px' }}>
+							{contentFields.map((field, index) => (
+								<li key={index} style={{ marginBottom: '4px', fontSize: '12px' }}>
+									<strong>{field.fieldName}</strong> ({field.blockName})
+								</li>
+							))}
+						</ul>
+					)}
+				</div>
+			</PanelRow>
+			
+			{/* Group Prompt */}
+			<PanelRow>
+				<TextareaControl
+					label={__('Gruppen-Prompt', 'gutenblock-pro')}
+					value={groupPrompt}
+					onChange={setGroupPrompt}
+					placeholder={__('Beschreibe, was für alle Content-Felder generiert werden soll...', 'gutenblock-pro')}
+					rows={3}
+					help={__('Dieser Prompt wird für alle Content-Felder in der Gruppe verwendet.', 'gutenblock-pro')}
+					__nextHasNoMarginBottom={true}
+				/>
+			</PanelRow>
+			
+			{/* Generate Button */}
+			<PanelRow>
+				<Button
+					isPrimary
+					onClick={() => generateGroupContent()}
+					disabled={isLoading || contentFields.length === 0 || !groupPrompt.trim()}
+					className="gb-ai-btn-generate"
+				>
+					{isLoading ? <Spinner /> : __('Alle Felder generieren', 'gutenblock-pro')}
+				</Button>
+				{contentFields.length === 0 && (
+					<p style={{ color: '#757575', fontSize: '12px', marginTop: '8px' }}>
+						{__('Hinweis: Füge Blöcke mit metadata.name in diese Gruppe ein, um sie hier zu sehen.', 'gutenblock-pro')}
+					</p>
+				)}
+			</PanelRow>
+			
+			{/* Error Message */}
+			{error && (
+				<PanelRow>
+					<Notice status="error" isDismissible={false}>
+						{error}
+					</Notice>
+				</PanelRow>
+			)}
+		</PanelBody>
+	);
+};
 
 /**
  * Update block content based on type

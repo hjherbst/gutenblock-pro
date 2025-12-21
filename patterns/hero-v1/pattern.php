@@ -18,5 +18,5 @@ return array (
   ),
   'content' => '',
   'group' => 'hero',
-  'premium' => false,
+  'premium' => true,
 );

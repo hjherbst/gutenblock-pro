@@ -165,6 +165,15 @@ class GutenBlock_Pro_AI_Generator {
 			},
 		) );
 
+		// Generate group content (multiple fields)
+		register_rest_route( 'gutenblock-pro/v1', '/ai/generate-group', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'api_generate_group' ),
+			'permission_callback' => function() {
+				return current_user_can( 'edit_posts' );
+			},
+		) );
+
 		// Get token usage
 		register_rest_route( 'gutenblock-pro/v1', '/ai/usage', array(
 			'methods'             => 'GET',
@@ -265,6 +274,137 @@ class GutenBlock_Pro_AI_Generator {
 			) );
 		} catch ( Exception $e ) {
 			error_log( '[GutenBlock Pro AI] Error in api_generate_text: ' . $e->getMessage() );
+			return new WP_Error( 
+				'ai_error', 
+				__( 'Fehler bei der AI-Generierung: ', 'gutenblock-pro' ) . $e->getMessage(), 
+				array( 'status' => 500 ) 
+			);
+		}
+	}
+
+	/**
+	 * API: Generate content for multiple fields in a group
+	 *
+	 * @param WP_REST_Request $request Request object
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function api_generate_group( $request ) {
+		try {
+			$params = $request->get_json_params();
+			$group_prompt = isset( $params['groupPrompt'] ) ? sanitize_textarea_field( $params['groupPrompt'] ) : '';
+			$fields = isset( $params['fields'] ) ? $params['fields'] : array();
+			$feedback = isset( $params['feedback'] ) ? sanitize_textarea_field( $params['feedback'] ) : '';
+
+			if ( empty( $fields ) || ! is_array( $fields ) ) {
+				return new WP_Error( 'missing_fields', __( 'Keine Content-Felder angegeben', 'gutenblock-pro' ), array( 'status' => 400 ) );
+			}
+
+			// Check token limit for free users
+			if ( ! $this->license->can_generate() ) {
+				return new WP_Error( 
+					'token_limit_reached', 
+					__( 'Monatliches Token-Limit erreicht. Upgrade auf Pro für unbegrenzte Generierung.', 'gutenblock-pro' ), 
+					array( 'status' => 403 ) 
+				);
+			}
+
+			// Check API key
+			if ( ! $this->has_api_key() ) {
+				return new WP_Error( 'no_api_key', __( 'API-Key nicht konfiguriert', 'gutenblock-pro' ), array( 'status' => 500 ) );
+			}
+
+			// Get system prompt
+			$system_prompt = $this->get_system_prompt();
+
+			// Build a comprehensive prompt for all fields
+			$fields_description = '';
+			foreach ( $fields as $index => $field ) {
+				$field_name = isset( $field['fieldName'] ) ? sanitize_text_field( $field['fieldName'] ) : '';
+				$field_prompt = isset( $field['prompt'] ) ? sanitize_textarea_field( $field['prompt'] ) : '';
+				$current_text = isset( $field['currentText'] ) ? sanitize_textarea_field( $field['currentText'] ) : '';
+				
+				$fields_description .= "\n\nFeld " . ( $index + 1 ) . ": " . $field_name;
+				if ( ! empty( $field_prompt ) ) {
+					$fields_description .= "\nPrompt: " . $field_prompt;
+				}
+				if ( ! empty( $current_text ) ) {
+					$fields_description .= "\nAktueller Text: " . $current_text;
+				}
+			}
+
+			// Build the full prompt
+			$full_prompt = $group_prompt;
+			if ( ! empty( $fields_description ) ) {
+				$full_prompt .= "\n\nFolgende Content-Felder müssen generiert werden:" . $fields_description;
+			}
+			
+			if ( ! empty( $feedback ) ) {
+				$full_prompt .= "\n\nFeedback: " . $feedback;
+			}
+
+			// Add instruction to return JSON
+			$full_prompt .= "\n\nAntworte NUR mit einem JSON-Objekt im folgenden Format (ohne zusätzlichen Text):\n{\n  \"fields\": [\n    { \"fieldName\": \"feld-name-1\", \"text\": \"generierter Text\" },\n    { \"fieldName\": \"feld-name-2\", \"text\": \"generierter Text\" }\n  ]\n}";
+
+			// Call OpenAI
+			$result = $this->call_openai( $full_prompt, $system_prompt );
+
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+
+			// Track token usage
+			if ( isset( $result['usage']['total_tokens'] ) ) {
+				$this->license->add_token_usage( $result['usage']['total_tokens'] );
+			}
+
+			// Parse JSON response
+			$response_text = $result['text'];
+			
+			// Try to extract JSON from response (might have markdown code blocks)
+			if ( preg_match( '/```(?:json)?\s*(\{.*?\})\s*```/s', $response_text, $matches ) ) {
+				$response_text = $matches[1];
+			} elseif ( preg_match( '/\{.*\}/s', $response_text, $matches ) ) {
+				$response_text = $matches[0];
+			}
+
+			$json_data = json_decode( $response_text, true );
+
+			if ( ! $json_data || ! isset( $json_data['fields'] ) || ! is_array( $json_data['fields'] ) ) {
+				return new WP_Error( 
+					'invalid_response', 
+					__( 'Ungültige JSON-Response von der API. Response: ' . substr( $response_text, 0, 200 ), 'gutenblock-pro' ), 
+					array( 'status' => 500 ) 
+				);
+			}
+
+			// Map field names to clientIds
+			$field_map = array();
+			foreach ( $fields as $field ) {
+				$field_map[ $field['fieldName'] ] = $field['clientId'];
+			}
+
+			// Build response with clientIds
+			$response_fields = array();
+			foreach ( $json_data['fields'] as $field_data ) {
+				$field_name = isset( $field_data['fieldName'] ) ? $field_data['fieldName'] : '';
+				$field_text = isset( $field_data['text'] ) ? $field_data['text'] : '';
+				
+				if ( isset( $field_map[ $field_name ] ) ) {
+					$response_fields[] = array(
+						'clientId' => $field_map[ $field_name ],
+						'fieldName' => $field_name,
+						'text' => $field_text,
+					);
+				}
+			}
+
+			return rest_ensure_response( array(
+				'success' => true,
+				'fields'  => $response_fields,
+				'usage'   => $this->license->get_token_usage(),
+			) );
+		} catch ( Exception $e ) {
+			error_log( '[GutenBlock Pro AI] Error in api_generate_group: ' . $e->getMessage() );
 			return new WP_Error( 
 				'ai_error', 
 				__( 'Fehler bei der AI-Generierung: ', 'gutenblock-pro' ) . $e->getMessage(), 

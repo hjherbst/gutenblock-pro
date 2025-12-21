@@ -170,7 +170,27 @@
 	overflow: hidden;
 }
 
-/* Premium Pattern Badge */
+/* Premium Pattern Badge on Preview */
+.gutenblock-pro-pattern-preview-badge {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 10px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: #fff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	z-index: 10;
+	pointer-events: none;
+}
+
+/* Premium Pattern Badge in Title Row */
 .gutenblock-pro-modal-pattern-title-row {
 	display: flex;
 	align-items: center;

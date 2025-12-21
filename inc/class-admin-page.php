@@ -276,7 +276,7 @@ class GutenBlock_Pro_Admin_Page {
 				<?php if ( $pattern['has_content'] ) : ?>
 				<a href="<?php echo esc_url( $edit_url ); ?>" class="pattern-card-preview-link">
 					<div class="pattern-card-preview">
-						<iframe src="<?php echo esc_url( $preview_url ); ?>" loading="lazy" sandbox="allow-same-origin allow-scripts" tabindex="-1"></iframe>
+						<iframe src="<?php echo esc_url( $preview_url ); ?>" loading="lazy" sandbox="allow-same-origin allow-scripts allow-popups" tabindex="-1"></iframe>
 						<div class="preview-overlay">
 							<span class="dashicons dashicons-edit"></span>
 						</div>
@@ -773,6 +773,48 @@ class GutenBlock_Pro_Admin_Page {
 
 		if ( $result !== false ) {
 			wp_send_json_success( array( 'message' => 'Group updated' ) );
+		} else {
+			wp_send_json_error( array( 'message' => 'Could not save pattern file' ) );
+		}
+	}
+
+	/**
+	 * AJAX: Update pattern premium status
+	 */
+	public function ajax_update_premium() {
+		check_ajax_referer( 'gutenblock_pro_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$pattern_slug = sanitize_key( $_POST['pattern'] );
+		$premium = filter_var( $_POST['premium'], FILTER_VALIDATE_BOOLEAN );
+
+		if ( empty( $pattern_slug ) ) {
+			wp_send_json_error( array( 'message' => 'No pattern specified' ) );
+		}
+
+		$pattern_file = GUTENBLOCK_PRO_PATTERNS_PATH . $pattern_slug . '/pattern.php';
+
+		if ( ! file_exists( $pattern_file ) ) {
+			wp_send_json_error( array( 'message' => 'Pattern not found' ) );
+		}
+
+		// Read current pattern data
+		$pattern_data = require $pattern_file;
+
+		// Update premium status
+		$pattern_data['premium'] = $premium;
+
+		// Generate PHP file content
+		$php_content = "<?php\n/**\n * Pattern: " . ( $pattern_data['title'] ?? $pattern_slug ) . "\n */\n\nreturn " . var_export( $pattern_data, true ) . ";\n";
+
+		// Save file
+		$result = file_put_contents( $pattern_file, $php_content );
+
+		if ( $result !== false ) {
+			wp_send_json_success( array( 'message' => 'Premium status updated' ) );
 		} else {
 			wp_send_json_error( array( 'message' => 'Could not save pattern file' ) );
 		}

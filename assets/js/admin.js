@@ -117,7 +117,7 @@
 				if (response.success) {
 					if (premium) {
 						if (!$card.find('.premium-badge').length) {
-							$card.find('h3').append('<span class="premium-badge" title="Premium Pattern">Pro Plus</span>');
+							$card.find('h3').append('<span class="premium-badge" title="Premium Pattern">plus</span>');
 						}
 					} else {
 						$card.find('.premium-badge').remove();
@@ -268,45 +268,6 @@
 		// Pattern toggle
 		$('.pattern-toggle').on('change', function () {
 			togglePattern($(this));
-		});
-
-		// Premium toggle
-		$('.premium-toggle-input').on('change', function () {
-			const $toggle = $(this);
-			const slug = $toggle.data('slug');
-			const premium = $toggle.is(':checked');
-			const $card = $toggle.closest('.pattern-card');
-
-			$.ajax({
-				url: gutenblockProAdmin.ajaxUrl,
-				type: 'POST',
-				data: {
-					action: 'gutenblock_pro_update_premium',
-					nonce: gutenblockProAdmin.nonce,
-					pattern: slug,
-					premium: premium,
-				},
-				success: function (response) {
-					if (response.success) {
-						if (premium) {
-							if (!$card.find('.premium-badge').length) {
-								$card.find('h3').append('<span class="premium-badge" title="Premium Pattern">Pro Plus</span>');
-							}
-						} else {
-							$card.find('.premium-badge').remove();
-						}
-					} else {
-						// Revert toggle on error
-						$toggle.prop('checked', !premium);
-						alert(response.data?.message || 'Fehler beim Aktualisieren');
-					}
-				},
-				error: function () {
-					// Revert toggle on error
-					$toggle.prop('checked', !premium);
-					alert('Fehler beim Aktualisieren');
-				},
-			});
 		});
 
 		// Delete pattern
