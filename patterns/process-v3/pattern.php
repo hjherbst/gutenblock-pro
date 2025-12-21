@@ -16,5 +16,5 @@ return array (
   array (
   ),
   'content' => '',
-  'premium' => true,
+  'premium' => false,
 );
