@@ -21,6 +21,7 @@ define( 'GUTENBLOCK_PRO_VERSION', '1.3.4' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
+define( 'GUTENBLOCK_PRO_BLOCKS_PATH', GUTENBLOCK_PRO_PATH . 'blocks/' );
 
 // Load classes
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-pattern-loader.php';
@@ -31,6 +32,7 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-license.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-generator.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-bridge-installer.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-block-registry.php';
 
 // Plugin Update Checker - GitHub Releases (initialized in hook)
 require_once GUTENBLOCK_PRO_PATH . 'vendor/plugin-update-checker/plugin-update-checker.php';
@@ -74,6 +76,10 @@ function gutenblock_pro_init() {
 	// Initialize Asset Loader
 	$asset_loader = new GutenBlock_Pro_Asset_Loader();
 	$asset_loader->init();
+
+	// Initialize Block Registry
+	$block_registry = new GutenBlock_Pro_Block_Registry();
+	$block_registry->init();
 
 	// Initialize Admin Page
 	if ( is_admin() ) {

@@ -14,20 +14,31 @@
 		const textarea = document.getElementById('gutenblock-pro-code-editor');
 		if (!textarea) return;
 
+		const type = textarea.dataset.type || 'pattern';
 		const pattern = textarea.dataset.pattern;
+		const block = textarea.dataset.block;
 		const file = textarea.dataset.file;
-		const type = textarea.dataset.type;
+		const fileType = textarea.dataset.fileType || (file === 'script' ? 'javascript' : (file === 'content' ? 'html' : 'css'));
+
+		// Build AJAX data
+		const ajaxData = {
+			action: 'gutenblock_pro_get_file_content',
+			nonce: gutenblockProAdmin.nonce,
+			type: type,
+			file: file,
+		};
+
+		if (type === 'block') {
+			ajaxData.block = block;
+		} else {
+			ajaxData.pattern = pattern;
+		}
 
 		// Load file content
 		$.ajax({
 			url: gutenblockProAdmin.ajaxUrl,
 			type: 'POST',
-			data: {
-				action: 'gutenblock_pro_get_file_content',
-				nonce: gutenblockProAdmin.nonce,
-				pattern: pattern,
-				file: file,
-			},
+			data: ajaxData,
 			success: function (response) {
 				if (response.success) {
 					textarea.value = response.data.content;
@@ -38,7 +49,7 @@
 						: {};
 
 					editorSettings.codemirror = _.extend({}, editorSettings.codemirror, {
-						mode: type === 'javascript' ? 'javascript' : type === 'html' ? 'htmlmixed' : 'css',
+						mode: fileType === 'javascript' ? 'javascript' : fileType === 'html' ? 'htmlmixed' : 'css',
 						lineNumbers: true,
 						lineWrapping: true,
 						indentUnit: 2,
@@ -58,7 +69,9 @@
 		const textarea = document.getElementById('gutenblock-pro-code-editor');
 		if (!textarea || !codeEditor) return;
 
+		const type = textarea.dataset.type || 'pattern';
 		const pattern = textarea.dataset.pattern;
+		const block = textarea.dataset.block;
 		const file = textarea.dataset.file;
 		const content = codeEditor.codemirror.getValue();
 		const $status = $('.save-status');
@@ -67,16 +80,25 @@
 		$button.prop('disabled', true);
 		$status.removeClass('error').text('Speichert...');
 
+		// Build AJAX data
+		const ajaxData = {
+			action: 'gutenblock_pro_save_file',
+			nonce: gutenblockProAdmin.nonce,
+			type: type,
+			file: file,
+			content: content,
+		};
+
+		if (type === 'block') {
+			ajaxData.block = block;
+		} else {
+			ajaxData.pattern = pattern;
+		}
+
 		$.ajax({
 			url: gutenblockProAdmin.ajaxUrl,
 			type: 'POST',
-			data: {
-				action: 'gutenblock_pro_save_file',
-				nonce: gutenblockProAdmin.nonce,
-				pattern: pattern,
-				file: file,
-				content: content,
-			},
+			data: ajaxData,
 			success: function (response) {
 				$button.prop('disabled', false);
 				if (response.success) {
@@ -279,6 +301,17 @@
 		// Group dropdown change
 		$('.group-dropdown').on('change', function () {
 			updateGroup($(this));
+		});
+
+		// Sidebar tab switching
+		$('.sidebar-tab').on('click', function () {
+			const type = $(this).data('type');
+			const currentUrl = new URL(window.location.href);
+			currentUrl.searchParams.set('type', type);
+			// Remove pattern/block param to reset selection
+			currentUrl.searchParams.delete('pattern');
+			currentUrl.searchParams.delete('block');
+			window.location.href = currentUrl.toString();
 		});
 
 		// Keyboard shortcuts

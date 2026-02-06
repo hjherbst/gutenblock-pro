@@ -1,0 +1,7 @@
+{
+	"block": "core/list",
+	"name": "checkmark-list",
+	"label": "Checkmark",
+	"type": "variant",
+	"description": "Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente"
+}

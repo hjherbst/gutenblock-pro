@@ -177,6 +177,9 @@ class GutenBlock_Pro_Admin_Page {
 				<a href="?page=gutenblock-pro&tab=patterns" class="nav-tab <?php echo $active_tab === 'patterns' ? 'nav-tab-active' : ''; ?>">
 					<?php _e( 'Patterns', 'gutenblock-pro' ); ?>
 				</a>
+				<a href="?page=gutenblock-pro&tab=blocks" class="nav-tab <?php echo $active_tab === 'blocks' ? 'nav-tab-active' : ''; ?>">
+					<?php _e( 'Blöcke', 'gutenblock-pro' ); ?>
+				</a>
 				<a href="?page=gutenblock-pro&tab=editor" class="nav-tab <?php echo $active_tab === 'editor' ? 'nav-tab-active' : ''; ?>">
 					<?php _e( 'CSS/JS Editor', 'gutenblock-pro' ); ?>
 				</a>
@@ -188,6 +191,9 @@ class GutenBlock_Pro_Admin_Page {
 			<div class="tab-content">
 				<?php
 				switch ( $active_tab ) {
+					case 'blocks':
+						$this->render_blocks_tab();
+						break;
 					case 'editor':
 						$this->render_editor_tab( $patterns );
 						break;
@@ -314,47 +320,80 @@ class GutenBlock_Pro_Admin_Page {
 	 * Render editor tab
 	 */
 	private function render_editor_tab( $patterns ) {
-		$selected_pattern = isset( $_GET['pattern'] ) ? sanitize_key( $_GET['pattern'] ) : '';
+		$selected_type = isset( $_GET['type'] ) ? sanitize_key( $_GET['type'] ) : 'pattern';
+		$selected_item = isset( $_GET['pattern'] ) ? sanitize_key( $_GET['pattern'] ) : ( isset( $_GET['block'] ) ? sanitize_key( $_GET['block'] ) : '' );
 		$selected_file = isset( $_GET['file'] ) ? sanitize_key( $_GET['file'] ) : 'style';
 		
-		if ( empty( $selected_pattern ) && ! empty( $patterns ) ) {
-			$selected_pattern = array_key_first( $patterns );
+		// Get block variants
+		$block_registry = new GutenBlock_Pro_Block_Registry();
+		$block_variants = $block_registry->get_block_variants();
+		
+		// Auto-select first item if none selected
+		if ( empty( $selected_item ) ) {
+			if ( $selected_type === 'block' && ! empty( $block_variants ) ) {
+				$selected_item = $block_variants[0]['slug'];
+			} elseif ( ! empty( $patterns ) ) {
+				$selected_item = array_key_first( $patterns );
+				$selected_type = 'pattern';
+			}
 		}
 		?>
 		<div class="gutenblock-pro-editor">
 			<div class="editor-sidebar">
-				<h3><?php _e( 'Patterns', 'gutenblock-pro' ); ?></h3>
-				<ul class="pattern-list">
-					<?php foreach ( $patterns as $slug => $pattern ) : ?>
-						<li class="<?php echo $slug === $selected_pattern ? 'active' : ''; ?>">
-							<a href="?page=gutenblock-pro&tab=editor&pattern=<?php echo esc_attr( $slug ); ?>">
-								<?php echo esc_html( $pattern['title'] ); ?>
-							</a>
-						</li>
-					<?php endforeach; ?>
-				</ul>
+				<div class="editor-sidebar-tabs">
+					<button type="button" class="sidebar-tab <?php echo $selected_type === 'pattern' ? 'active' : ''; ?>" data-type="pattern">
+						<?php _e( 'Patterns', 'gutenblock-pro' ); ?>
+					</button>
+					<button type="button" class="sidebar-tab <?php echo $selected_type === 'block' ? 'active' : ''; ?>" data-type="block">
+						<?php _e( 'Blöcke', 'gutenblock-pro' ); ?>
+					</button>
+				</div>
+				
+				<?php if ( $selected_type === 'pattern' ) : ?>
+					<h3><?php _e( 'Patterns', 'gutenblock-pro' ); ?></h3>
+					<ul class="pattern-list">
+						<?php foreach ( $patterns as $slug => $pattern ) : ?>
+							<li class="<?php echo $slug === $selected_item ? 'active' : ''; ?>">
+								<a href="?page=gutenblock-pro&tab=editor&type=pattern&pattern=<?php echo esc_attr( $slug ); ?>">
+									<?php echo esc_html( $pattern['title'] ); ?>
+								</a>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				<?php else : ?>
+					<h3><?php _e( 'Block-Varianten', 'gutenblock-pro' ); ?></h3>
+					<ul class="pattern-list">
+						<?php foreach ( $block_variants as $variant ) : ?>
+							<li class="<?php echo $variant['slug'] === $selected_item ? 'active' : ''; ?>">
+								<a href="?page=gutenblock-pro&tab=editor&type=block&block=<?php echo esc_attr( $variant['slug'] ); ?>">
+									<?php echo esc_html( $variant['label'] ); ?>
+								</a>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				<?php endif; ?>
 			</div>
 
 			<div class="editor-main">
-				<?php if ( $selected_pattern && isset( $patterns[ $selected_pattern ] ) ) : 
-					$pattern = $patterns[ $selected_pattern ];
+				<?php if ( $selected_type === 'pattern' && $selected_item && isset( $patterns[ $selected_item ] ) ) : 
+					$pattern = $patterns[ $selected_item ];
 				?>
 					<div class="editor-header">
 						<h2><?php echo esc_html( $pattern['title'] ); ?></h2>
 						<div class="file-tabs">
-							<a href="?page=gutenblock-pro&tab=editor&pattern=<?php echo esc_attr( $selected_pattern ); ?>&file=style" 
+							<a href="?page=gutenblock-pro&tab=editor&type=pattern&pattern=<?php echo esc_attr( $selected_item ); ?>&file=style" 
 							   class="file-tab <?php echo $selected_file === 'style' ? 'active' : ''; ?> <?php echo $pattern['has_style'] ? '' : 'no-file'; ?>">
 								style.css
 							</a>
-							<a href="?page=gutenblock-pro&tab=editor&pattern=<?php echo esc_attr( $selected_pattern ); ?>&file=editor" 
+							<a href="?page=gutenblock-pro&tab=editor&type=pattern&pattern=<?php echo esc_attr( $selected_item ); ?>&file=editor" 
 							   class="file-tab <?php echo $selected_file === 'editor' ? 'active' : ''; ?> <?php echo $pattern['has_editor'] ? '' : 'no-file'; ?>">
 								editor.css
 							</a>
-							<a href="?page=gutenblock-pro&tab=editor&pattern=<?php echo esc_attr( $selected_pattern ); ?>&file=script" 
+							<a href="?page=gutenblock-pro&tab=editor&type=pattern&pattern=<?php echo esc_attr( $selected_item ); ?>&file=script" 
 							   class="file-tab <?php echo $selected_file === 'script' ? 'active' : ''; ?> <?php echo $pattern['has_script'] ? '' : 'no-file'; ?>">
 								script.js
 							</a>
-							<a href="?page=gutenblock-pro&tab=editor&pattern=<?php echo esc_attr( $selected_pattern ); ?>&file=content" 
+							<a href="?page=gutenblock-pro&tab=editor&type=pattern&pattern=<?php echo esc_attr( $selected_item ); ?>&file=content" 
 							   class="file-tab <?php echo $selected_file === 'content' ? 'active' : ''; ?> <?php echo $pattern['has_content'] ? '' : 'no-file'; ?>">
 								content.html
 							</a>
@@ -364,7 +403,7 @@ class GutenBlock_Pro_Admin_Page {
 								if ( $lang === 'default' ) continue;
 								$lang_file = 'content_' . $lang;
 							?>
-							<a href="?page=gutenblock-pro&tab=editor&pattern=<?php echo esc_attr( $selected_pattern ); ?>&file=<?php echo esc_attr( $lang_file ); ?>" 
+							<a href="?page=gutenblock-pro&tab=editor&type=pattern&pattern=<?php echo esc_attr( $selected_item ); ?>&file=<?php echo esc_attr( $lang_file ); ?>" 
 							   class="file-tab lang-file <?php echo $selected_file === $lang_file ? 'active' : ''; ?>">
 								<?php echo strtoupper( $lang ); ?>
 							</a>
@@ -374,9 +413,10 @@ class GutenBlock_Pro_Admin_Page {
 
 					<div class="editor-content">
 						<textarea id="gutenblock-pro-code-editor" 
-						          data-pattern="<?php echo esc_attr( $selected_pattern ); ?>" 
+						          data-type="pattern"
+						          data-pattern="<?php echo esc_attr( $selected_item ); ?>" 
 						          data-file="<?php echo esc_attr( $selected_file ); ?>"
-						          data-type="<?php echo $selected_file === 'script' ? 'javascript' : ( $selected_file === 'content' ? 'html' : 'css' ); ?>"></textarea>
+						          data-file-type="<?php echo $selected_file === 'script' ? 'javascript' : ( $selected_file === 'content' ? 'html' : 'css' ); ?>"></textarea>
 						
 						<div class="editor-actions">
 							<button type="button" class="button button-primary" id="save-file">
@@ -386,12 +426,100 @@ class GutenBlock_Pro_Admin_Page {
 							<span class="save-status"></span>
 						</div>
 					</div>
+				<?php elseif ( $selected_type === 'block' && $selected_item ) : 
+					$variant = null;
+					foreach ( $block_variants as $v ) {
+						if ( $v['slug'] === $selected_item ) {
+							$variant = $v;
+							break;
+						}
+					}
+					if ( $variant ) :
+				?>
+					<div class="editor-header">
+						<h2><?php echo esc_html( $variant['label'] ); ?></h2>
+						<div class="file-tabs">
+							<a href="?page=gutenblock-pro&tab=editor&type=block&block=<?php echo esc_attr( $selected_item ); ?>&file=style" 
+							   class="file-tab <?php echo $selected_file === 'style' ? 'active' : ''; ?> <?php echo $variant['has_style'] ? '' : 'no-file'; ?>">
+								style.css
+							</a>
+						</div>
+					</div>
+
+					<div class="editor-content">
+						<textarea id="gutenblock-pro-code-editor" 
+						          data-type="block"
+						          data-block="<?php echo esc_attr( $selected_item ); ?>" 
+						          data-file="<?php echo esc_attr( $selected_file ); ?>"
+						          data-file-type="css"></textarea>
+						
+						<div class="editor-actions">
+							<button type="button" class="button button-primary" id="save-file">
+								<span class="dashicons dashicons-saved"></span>
+								<?php _e( 'Speichern', 'gutenblock-pro' ); ?>
+							</button>
+							<span class="save-status"></span>
+						</div>
+					</div>
+				<?php endif; ?>
 				<?php else : ?>
 					<div class="no-pattern-selected">
-						<p><?php _e( 'Wähle ein Pattern aus der Liste.', 'gutenblock-pro' ); ?></p>
+						<p><?php _e( 'Wähle ein Pattern oder eine Block-Variante aus der Liste.', 'gutenblock-pro' ); ?></p>
 					</div>
 				<?php endif; ?>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render blocks tab
+	 */
+	private function render_blocks_tab() {
+		$block_registry = new GutenBlock_Pro_Block_Registry();
+		$block_variants = $block_registry->get_block_variants();
+		?>
+		<div class="gutenblock-pro-blocks">
+			<h2><?php _e( 'Block-Erweiterungen', 'gutenblock-pro' ); ?></h2>
+			<p class="description">
+				<?php _e( 'Übersicht aller registrierten Block-Varianten und Block-Erweiterungen von GutenBlock Pro.', 'gutenblock-pro' ); ?>
+			</p>
+
+			<?php if ( empty( $block_variants ) ) : ?>
+				<div class="notice notice-info">
+					<p><?php _e( 'Noch keine Block-Erweiterungen registriert.', 'gutenblock-pro' ); ?></p>
+				</div>
+			<?php else : ?>
+				<div class="gutenblock-pro-blocks-grid">
+					<?php foreach ( $block_variants as $variant ) : ?>
+						<div class="block-card">
+							<div class="block-card-header">
+								<h3>
+									<?php echo esc_html( $variant['label'] ); ?>
+									<span class="block-type-badge"><?php echo esc_html( $variant['type'] ); ?></span>
+								</h3>
+							</div>
+							<div class="block-card-body">
+								<div class="block-info">
+									<div class="block-info-row">
+										<strong><?php _e( 'Block:', 'gutenblock-pro' ); ?></strong>
+										<code><?php echo esc_html( $variant['block'] ); ?></code>
+									</div>
+									<div class="block-info-row">
+										<strong><?php _e( 'Variante:', 'gutenblock-pro' ); ?></strong>
+										<code><?php echo esc_html( $variant['name'] ); ?></code>
+									</div>
+									<?php if ( ! empty( $variant['description'] ) ) : ?>
+									<div class="block-info-row">
+										<p class="block-description"><?php echo esc_html( $variant['description'] ); ?></p>
+									</div>
+									<?php endif; ?>
+								</div>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -496,27 +624,42 @@ class GutenBlock_Pro_Admin_Page {
 			wp_send_json_error( 'Permission denied' );
 		}
 
-		$pattern = sanitize_key( $_POST['pattern'] );
+		$type = isset( $_POST['type'] ) ? sanitize_key( $_POST['type'] ) : 'pattern';
+		$item = isset( $_POST['pattern'] ) ? sanitize_key( $_POST['pattern'] ) : ( isset( $_POST['block'] ) ? sanitize_key( $_POST['block'] ) : '' );
 		$file = sanitize_text_field( $_POST['file'] );
 
-		$file_map = array(
-			'style'   => 'style.css',
-			'editor'  => 'editor.css',
-			'script'  => 'script.js',
-			'content' => 'content.html',
-		);
+		if ( $type === 'block' ) {
+			// Block variant file
+			$file_map = array(
+				'style' => 'style.css',
+			);
 
-		// Handle language-specific content files (content_de_DE -> content-de_DE.html)
-		if ( strpos( $file, 'content_' ) === 0 ) {
-			$lang = str_replace( 'content_', '', $file );
-			$file_map[ $file ] = 'content-' . $lang . '.html';
+			if ( ! isset( $file_map[ $file ] ) ) {
+				wp_send_json_error( 'Invalid file type' );
+			}
+
+			$file_path = GUTENBLOCK_PRO_BLOCKS_PATH . $item . '/' . $file_map[ $file ];
+		} else {
+			// Pattern file
+			$file_map = array(
+				'style'   => 'style.css',
+				'editor'  => 'editor.css',
+				'script'  => 'script.js',
+				'content' => 'content.html',
+			);
+
+			// Handle language-specific content files (content_de_DE -> content-de_DE.html)
+			if ( strpos( $file, 'content_' ) === 0 ) {
+				$lang = str_replace( 'content_', '', $file );
+				$file_map[ $file ] = 'content-' . $lang . '.html';
+			}
+
+			if ( ! isset( $file_map[ $file ] ) ) {
+				wp_send_json_error( 'Invalid file type' );
+			}
+
+			$file_path = GUTENBLOCK_PRO_PATTERNS_PATH . $item . '/' . $file_map[ $file ];
 		}
-
-		if ( ! isset( $file_map[ $file ] ) ) {
-			wp_send_json_error( 'Invalid file type' );
-		}
-
-		$file_path = GUTENBLOCK_PRO_PATTERNS_PATH . $pattern . '/' . $file_map[ $file ];
 
 		if ( file_exists( $file_path ) ) {
 			$content = file_get_contents( $file_path );
@@ -536,33 +679,49 @@ class GutenBlock_Pro_Admin_Page {
 			wp_send_json_error( 'Permission denied' );
 		}
 
-		$pattern = sanitize_key( $_POST['pattern'] );
+		$type = isset( $_POST['type'] ) ? sanitize_key( $_POST['type'] ) : 'pattern';
+		$item = isset( $_POST['pattern'] ) ? sanitize_key( $_POST['pattern'] ) : ( isset( $_POST['block'] ) ? sanitize_key( $_POST['block'] ) : '' );
 		$file = sanitize_text_field( $_POST['file'] );
 		$content = wp_unslash( $_POST['content'] );
 
-		$file_map = array(
-			'style'   => 'style.css',
-			'editor'  => 'editor.css',
-			'script'  => 'script.js',
-			'content' => 'content.html',
-		);
+		if ( $type === 'block' ) {
+			// Block variant file
+			$file_map = array(
+				'style' => 'style.css',
+			);
 
-		// Handle language-specific content files (content_de_DE -> content-de_DE.html)
-		if ( strpos( $file, 'content_' ) === 0 ) {
-			$lang = str_replace( 'content_', '', $file );
-			$file_map[ $file ] = 'content-' . $lang . '.html';
+			if ( ! isset( $file_map[ $file ] ) ) {
+				wp_send_json_error( 'Invalid file type' );
+			}
+
+			$file_path = GUTENBLOCK_PRO_BLOCKS_PATH . $item . '/' . $file_map[ $file ];
+			$item_dir = GUTENBLOCK_PRO_BLOCKS_PATH . $item;
+		} else {
+			// Pattern file
+			$file_map = array(
+				'style'   => 'style.css',
+				'editor'  => 'editor.css',
+				'script'  => 'script.js',
+				'content' => 'content.html',
+			);
+
+			// Handle language-specific content files (content_de_DE -> content-de_DE.html)
+			if ( strpos( $file, 'content_' ) === 0 ) {
+				$lang = str_replace( 'content_', '', $file );
+				$file_map[ $file ] = 'content-' . $lang . '.html';
+			}
+
+			if ( ! isset( $file_map[ $file ] ) ) {
+				wp_send_json_error( 'Invalid file type' );
+			}
+
+			$file_path = GUTENBLOCK_PRO_PATTERNS_PATH . $item . '/' . $file_map[ $file ];
+			$item_dir = GUTENBLOCK_PRO_PATTERNS_PATH . $item;
 		}
-
-		if ( ! isset( $file_map[ $file ] ) ) {
-			wp_send_json_error( 'Invalid file type' );
-		}
-
-		$file_path = GUTENBLOCK_PRO_PATTERNS_PATH . $pattern . '/' . $file_map[ $file ];
-		$pattern_dir = GUTENBLOCK_PRO_PATTERNS_PATH . $pattern;
 
 		// Create directory if it doesn't exist
-		if ( ! is_dir( $pattern_dir ) ) {
-			wp_mkdir_p( $pattern_dir );
+		if ( ! is_dir( $item_dir ) ) {
+			wp_mkdir_p( $item_dir );
 		}
 
 		$result = file_put_contents( $file_path, $content );
