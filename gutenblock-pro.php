@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.4.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.5.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -31,6 +31,8 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-pattern-creator.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-license.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-generator.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-settings.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-features-page.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-admin-bar.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-bridge-installer.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-block-registry.php';
 
@@ -93,7 +95,15 @@ function gutenblock_pro_init() {
 		// Initialize AI Settings Page
 		$ai_settings = GutenBlock_Pro_AI_Settings::get_instance();
 		$ai_settings->init();
+
+		// Initialize Features Page (toggle optional features)
+		$features_page = new GutenBlock_Pro_Features_Page();
+		$features_page->init();
 	}
+
+	// Initialize Admin Bar Replacement (frontend; feature toggle checked inside class)
+	$admin_bar = new GutenBlock_Pro_Admin_Bar();
+	$admin_bar->init();
 }
 add_action( 'plugins_loaded', 'gutenblock_pro_init' );
 
