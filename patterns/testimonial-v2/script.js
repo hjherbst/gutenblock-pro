@@ -1,5 +1,5 @@
 /**
- * Testimonial-v2 - Frontend Script
+ * Testimonial v2 - Frontend Script
  */
 
 (function () {

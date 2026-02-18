@@ -14,17 +14,22 @@ class GutenBlock_Pro_Features_Page {
 	const OPTION_NAME = 'gutenblock_pro_features';
 
 	/**
-	 * Feature definitions: key => [ 'name' => string, 'description' => string ]
-	 * Names/descriptions are translated in get_features().
+	 * Feature definitions (raw strings; translated in get_features()).
 	 *
-	 * @var array
+	 * @return array
 	 */
-	private $features = array(
-		'admin-bar' => array(
-			'name'        => 'Admin Bar ersetzen',
-			'description' => 'Ersetzt die WordPress Admin-Bar durch ein kleines schwebendes Icon unten rechts mit kontextabhängigen Bearbeitungslinks.',
-		),
-	);
+	private function get_feature_definitions() {
+		return array(
+			'admin-bar' => array(
+				'name'        => 'Admin Bar ersetzen',
+				'description' => 'Ersetzt die WordPress Admin-Bar durch ein kleines schwebendes Icon unten rechts mit kontextabhängigen Bearbeitungslinks.',
+			),
+			'container-forms' => array(
+				'name'        => 'Container-Formen',
+				'description' => 'Ermöglicht Abschlussformen (z. B. Welle, Diagonale) oben oder unten an Gruppen-Blöcken als Stilvarianten.',
+			),
+		);
+	}
 
 	/**
 	 * Get feature definitions with translated strings
@@ -33,7 +38,7 @@ class GutenBlock_Pro_Features_Page {
 	 */
 	private function get_features() {
 		$out = array();
-		foreach ( $this->features as $key => $def ) {
+		foreach ( $this->get_feature_definitions() as $key => $def ) {
 			$out[ $key ] = array(
 				'name'        => __( $def['name'], 'gutenblock-pro' ),
 				'description' => __( $def['description'], 'gutenblock-pro' ),
@@ -75,7 +80,6 @@ class GutenBlock_Pro_Features_Page {
 			array(
 				'type'              => 'array',
 				'sanitize_callback' => array( $this, 'sanitize_features' ),
-				'default'           => $this->get_defaults(),
 			)
 		);
 	}
@@ -87,7 +91,7 @@ class GutenBlock_Pro_Features_Page {
 	 */
 	private function get_defaults() {
 		$defaults = array();
-		foreach ( array_keys( $this->features ) as $key ) {
+		foreach ( array_keys( $this->get_feature_definitions() ) as $key ) {
 			$defaults[ $key ] = false;
 		}
 		return $defaults;
@@ -104,7 +108,7 @@ class GutenBlock_Pro_Features_Page {
 			return $this->get_defaults();
 		}
 		$out = array();
-		foreach ( array_keys( $this->features ) as $key ) {
+		foreach ( array_keys( $this->get_feature_definitions() ) as $key ) {
 			$out[ $key ] = ! empty( $value[ $key ] );
 		}
 		return $out;

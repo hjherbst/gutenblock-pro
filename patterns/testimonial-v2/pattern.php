@@ -1,10 +1,10 @@
 <?php
 /**
- * Pattern: Testimonial-v2
+ * Pattern: Testimonial v2
  */
 
 return array(
-	'title'       => __( 'Testimonial-v2', 'gutenblock-pro' ),
+	'title'       => __( 'Testimonial v2', 'gutenblock-pro' ),
 	'description' => __( '', 'gutenblock-pro' ),
 	'type'        => 'pattern', // 'pattern' or 'page'
 	'group'       => 'testimonial',

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.5.1
+ * Version: 1.6.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.5.1' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.6.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -33,6 +33,7 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-generator.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-features-page.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-admin-bar.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-container-forms.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-bridge-installer.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-block-registry.php';
 
@@ -104,6 +105,10 @@ function gutenblock_pro_init() {
 	// Initialize Admin Bar Replacement (frontend; feature toggle checked inside class)
 	$admin_bar = new GutenBlock_Pro_Admin_Bar();
 	$admin_bar->init();
+
+	// Initialize Container Forms (block styles + CSS when feature enabled)
+	$container_forms = new GutenBlock_Pro_Container_Forms();
+	$container_forms->init();
 }
 add_action( 'plugins_loaded', 'gutenblock_pro_init' );
 
