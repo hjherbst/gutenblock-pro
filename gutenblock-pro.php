@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.6.0
+ * Version: 1.7.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,11 +17,49 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.6.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.7.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
 define( 'GUTENBLOCK_PRO_BLOCKS_PATH', GUTENBLOCK_PRO_PATH . 'blocks/' );
+
+/**
+ * Get the uploads-based custom path/URL for a block variant file.
+ * Custom files live in wp-content/uploads/gutenblock-pro/blocks/{slug}/
+ * and survive plugin updates.
+ *
+ * @param string $slug Block variant slug.
+ * @param string $file Filename (e.g. 'custom.css').
+ * @return array { 'path' => string, 'url' => string, 'dir' => string }
+ */
+function gutenblock_pro_custom_block_file( $slug, $file = 'custom.css' ) {
+	$upload_dir = wp_upload_dir();
+	$base       = $upload_dir['basedir'] . '/gutenblock-pro/blocks/' . $slug . '/';
+	$base_url   = $upload_dir['baseurl'] . '/gutenblock-pro/blocks/' . $slug . '/';
+	return array(
+		'path' => $base . $file,
+		'url'  => $base_url . $file,
+		'dir'  => $base,
+	);
+}
+
+/**
+ * Get the uploads-based custom path/URL for a pattern file.
+ *
+ * @param string $slug Pattern slug.
+ * @param string $file Filename (e.g. 'style.css', 'script.js', 'content.html').
+ * @return array { 'path' => string, 'url' => string, 'dir' => string }
+ */
+function gutenblock_pro_custom_pattern_file( $slug, $file = 'style.css' ) {
+	$upload_dir = wp_upload_dir();
+	$base       = $upload_dir['basedir'] . '/gutenblock-pro/patterns/' . $slug . '/';
+	$base_url   = $upload_dir['baseurl'] . '/gutenblock-pro/patterns/' . $slug . '/';
+	return array(
+		'path' => $base . $file,
+		'url'  => $base_url . $file,
+		'dir'  => $base,
+	);
+}
 
 // Load classes
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-pattern-loader.php';

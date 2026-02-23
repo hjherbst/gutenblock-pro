@@ -204,6 +204,19 @@ class GutenBlock_Pro_Block_Registry {
 					'path'   => $style_file,
 				)
 			);
+
+			$custom = gutenblock_pro_custom_block_file( $slug );
+			if ( file_exists( $custom['path'] ) ) {
+				wp_enqueue_block_style(
+					$config['block'],
+					array(
+						'handle' => 'gutenblock-pro-block-' . $slug . '-custom',
+						'src'    => $custom['url'],
+						'ver'    => filemtime( $custom['path'] ),
+						'path'   => $custom['path'],
+					)
+				);
+			}
 		}
 	}
 
@@ -233,6 +246,16 @@ class GutenBlock_Pro_Block_Registry {
 					array(),
 					filemtime( $style_file )
 				);
+
+				$custom = gutenblock_pro_custom_block_file( $slug );
+				if ( file_exists( $custom['path'] ) ) {
+					wp_enqueue_style(
+						$handle . '-custom',
+						$custom['url'],
+						array( $handle ),
+						filemtime( $custom['path'] )
+					);
+				}
 			}
 		}
 	}

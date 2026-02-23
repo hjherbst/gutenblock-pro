@@ -1,0 +1,7 @@
+{
+	"block": "core/paragraph",
+	"name": "step-circle",
+	"label": "Step Circle",
+	"type": "variant",
+	"description": "Zeigt den Absatz als nummerierte Kreisfläche (z.B. für Schritte)"
+}

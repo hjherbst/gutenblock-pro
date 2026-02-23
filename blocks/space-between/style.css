@@ -1,0 +1,15 @@
+/**
+ * GutenBlock Pro - Space Between Block Variant
+ */
+
+.wp-block-group.is-style-space-between {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: flex-start;
+	flex-wrap: wrap;
+}
+
+.wp-block-group.is-style-space-between > * {
+	flex: 0 1 auto;
+}

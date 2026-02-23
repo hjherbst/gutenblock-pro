@@ -1,0 +1,33 @@
+/**
+ * GutenBlock Pro - Step Circle Block Variant
+ */
+
+.wp-block-paragraph.is-style-step-circle,
+p.is-style-step-circle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+	background-color: #fff;
+	color: #1e3a8a;
+	font-weight: 700;
+	line-height: 1;
+	margin-bottom: 1rem;
+	padding: 0;
+	margin-left: 0 !important;
+	margin-right: auto !important;
+}
+
+.wp-block-paragraph.is-style-step-circle.has-text-align-center,
+p.is-style-step-circle.has-text-align-center {
+	margin-left: auto !important;
+	margin-right: auto !important;
+}
+
+.wp-block-paragraph.is-style-step-circle.has-text-align-right,
+p.is-style-step-circle.has-text-align-right {
+	margin-left: auto !important;
+	margin-right: 0 !important;
+}

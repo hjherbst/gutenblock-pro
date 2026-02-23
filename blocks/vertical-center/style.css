@@ -1,0 +1,9 @@
+/**
+ * GutenBlock Pro - Vertical Center Block Variant
+ */
+
+.wp-block-group.is-style-vertical-center {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}

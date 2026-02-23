@@ -1,0 +1,7 @@
+{
+	"block": "core/group",
+	"name": "vertical-center",
+	"label": "Vertikal zentriert",
+	"type": "variant",
+	"description": "Zentriert den Inhalt vertikal per Flexbox"
+}

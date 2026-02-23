@@ -161,7 +161,6 @@ class GutenBlock_Pro_Asset_Loader {
 
 			// Register styles to be loaded in editor iframe via wp_enqueue_block_style
 			if ( file_exists( $style_file ) ) {
-				// Use wp_enqueue_block_style for FSE iframe support
 				wp_enqueue_block_style(
 					'core/group',
 					array(
@@ -171,6 +170,19 @@ class GutenBlock_Pro_Asset_Loader {
 						'path'   => $style_file,
 					)
 				);
+
+				$custom_style = gutenblock_pro_custom_pattern_file( $slug, 'style.css' );
+				if ( file_exists( $custom_style['path'] ) ) {
+					wp_enqueue_block_style(
+						'core/group',
+						array(
+							'handle' => 'gutenblock-pro-' . $slug . '-custom',
+							'src'    => $custom_style['url'],
+							'ver'    => filemtime( $custom_style['path'] ),
+							'path'   => $custom_style['path'],
+						)
+					);
+				}
 			}
 
 			// Register editor-specific styles
@@ -184,6 +196,19 @@ class GutenBlock_Pro_Asset_Loader {
 						'path'   => $editor_file,
 					)
 				);
+
+				$custom_editor = gutenblock_pro_custom_pattern_file( $slug, 'editor.css' );
+				if ( file_exists( $custom_editor['path'] ) ) {
+					wp_enqueue_block_style(
+						'core/group',
+						array(
+							'handle' => 'gutenblock-pro-' . $slug . '-editor-custom',
+							'src'    => $custom_editor['url'],
+							'ver'    => filemtime( $custom_editor['path'] ),
+							'path'   => $custom_editor['path'],
+						)
+					);
+				}
 			}
 		}
 	}
@@ -197,16 +222,27 @@ class GutenBlock_Pro_Asset_Loader {
 	private function enqueue_pattern_assets( $slug, $context = 'frontend' ) {
 		$folder = GUTENBLOCK_PRO_PATTERNS_PATH . $slug;
 		$url_base = GUTENBLOCK_PRO_URL . 'patterns/' . $slug;
+		$handle = 'gutenblock-pro-' . $slug;
 
 		// Style CSS (both frontend and editor)
 		$style_file = $folder . '/style.css';
 		if ( file_exists( $style_file ) ) {
 			wp_enqueue_style(
-				'gutenblock-pro-' . $slug,
+				$handle,
 				$url_base . '/style.css',
 				array(),
 				filemtime( $style_file )
 			);
+
+			$custom_style = gutenblock_pro_custom_pattern_file( $slug, 'style.css' );
+			if ( file_exists( $custom_style['path'] ) ) {
+				wp_enqueue_style(
+					$handle . '-custom',
+					$custom_style['url'],
+					array( $handle ),
+					filemtime( $custom_style['path'] )
+				);
+			}
 		}
 
 		// Editor CSS (editor only)
@@ -214,25 +250,46 @@ class GutenBlock_Pro_Asset_Loader {
 			$editor_file = $folder . '/editor.css';
 			if ( file_exists( $editor_file ) ) {
 				wp_enqueue_style(
-					'gutenblock-pro-' . $slug . '-editor',
+					$handle . '-editor',
 					$url_base . '/editor.css',
-					array( 'gutenblock-pro-' . $slug ),
+					array( $handle ),
 					filemtime( $editor_file )
 				);
+
+				$custom_editor = gutenblock_pro_custom_pattern_file( $slug, 'editor.css' );
+				if ( file_exists( $custom_editor['path'] ) ) {
+					wp_enqueue_style(
+						$handle . '-editor-custom',
+						$custom_editor['url'],
+						array( $handle . '-editor' ),
+						filemtime( $custom_editor['path'] )
+					);
+				}
 			}
 		}
 
-		// Script JS (frontend only - editor scripts need special handling)
+		// Script JS (frontend only)
 		if ( $context === 'frontend' ) {
 			$script_file = $folder . '/script.js';
 			if ( file_exists( $script_file ) ) {
 				wp_enqueue_script(
-					'gutenblock-pro-' . $slug,
+					$handle,
 					$url_base . '/script.js',
 					array(),
 					filemtime( $script_file ),
 					true
 				);
+
+				$custom_script = gutenblock_pro_custom_pattern_file( $slug, 'script.js' );
+				if ( file_exists( $custom_script['path'] ) ) {
+					wp_enqueue_script(
+						$handle . '-custom',
+						$custom_script['url'],
+						array( $handle ),
+						filemtime( $custom_script['path'] ),
+						true
+					);
+				}
 			}
 		}
 	}

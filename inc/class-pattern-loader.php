@@ -348,19 +348,25 @@ class GutenBlock_Pro_Pattern_Loader {
 	 * @return string Content or empty string
 	 */
 	private function load_localized_content( $folder ) {
+		$slug   = basename( $folder );
 		$locale = get_locale(); // e.g. de_DE
-		$lang = substr( $locale, 0, 2 ); // e.g. de
+		$lang   = substr( $locale, 0, 2 ); // e.g. de
 
-		// Try files in order of specificity
-		$files_to_try = array(
-			$folder . '/content-' . $locale . '.html',  // content-de_DE.html
-			$folder . '/content-' . $lang . '.html',    // content-de.html
-			$folder . '/content.html',                   // content.html (fallback)
+		// Try custom files from uploads first, then plugin defaults
+		$candidates = array(
+			'content-' . $locale . '.html',  // content-de_DE.html
+			'content-' . $lang . '.html',    // content-de.html
+			'content.html',                   // content.html (fallback)
 		);
 
-		foreach ( $files_to_try as $file ) {
-			if ( file_exists( $file ) ) {
-				return file_get_contents( $file );
+		foreach ( $candidates as $filename ) {
+			$custom = gutenblock_pro_custom_pattern_file( $slug, $filename );
+			if ( file_exists( $custom['path'] ) ) {
+				return file_get_contents( $custom['path'] );
+			}
+			$default = $folder . '/' . $filename;
+			if ( file_exists( $default ) ) {
+				return file_get_contents( $default );
 			}
 		}
 

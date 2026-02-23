@@ -1,0 +1,7 @@
+{
+	"block": "core/group",
+	"name": "space-between",
+	"label": "Space Between",
+	"type": "variant",
+	"description": "Horizontale Ausrichtung mit gleichmäßigem Abstand zwischen den Elementen"
+}

@@ -57,6 +57,11 @@
 					});
 
 					codeEditor = wp.codeEditor.initialize(textarea, editorSettings);
+
+					// Show "Angepasst" indicator when custom overrides exist
+					if (response.data.has_custom) {
+						$('.custom-indicator').show();
+					}
 				}
 			},
 		});
@@ -106,6 +111,7 @@
 					setTimeout(function () {
 						$status.text('');
 					}, 3000);
+					$('.custom-indicator').show();
 				} else {
 					$status.addClass('error').text(gutenblockProAdmin.strings.error);
 				}
@@ -186,6 +192,86 @@
 			error: function () {
 				// Revert toggle on error
 				$toggle.prop('checked', !enabled);
+			},
+		});
+	}
+
+	/**
+	 * Reset block variant style to plugin default
+	 */
+	function resetBlockStyle() {
+		const $button = $('#reset-block-style');
+		const block = $button.data('block');
+
+		if (!block || !confirm(gutenblockProAdmin.strings.confirmReset)) {
+			return;
+		}
+
+		$button.prop('disabled', true);
+
+		$.ajax({
+			url: gutenblockProAdmin.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'gutenblock_pro_reset_block_style',
+				nonce: gutenblockProAdmin.nonce,
+				block: block,
+			},
+			success: function (response) {
+				$button.prop('disabled', false);
+				if (response.success && codeEditor) {
+					codeEditor.codemirror.setValue(response.data.content);
+					$('.custom-indicator').hide();
+					$('.save-status').text(gutenblockProAdmin.strings.saved);
+					setTimeout(function () {
+						$('.save-status').text('');
+					}, 3000);
+				}
+			},
+			error: function () {
+				$button.prop('disabled', false);
+				$('.save-status').addClass('error').text(gutenblockProAdmin.strings.error);
+			},
+		});
+	}
+
+	/**
+	 * Reset pattern file to plugin default
+	 */
+	function resetPatternFile() {
+		const $button = $('#reset-pattern-file');
+		const pattern = $button.data('pattern');
+		const file = $button.data('file');
+
+		if (!pattern || !confirm(gutenblockProAdmin.strings.confirmReset)) {
+			return;
+		}
+
+		$button.prop('disabled', true);
+
+		$.ajax({
+			url: gutenblockProAdmin.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'gutenblock_pro_reset_pattern_file',
+				nonce: gutenblockProAdmin.nonce,
+				pattern: pattern,
+				file: file,
+			},
+			success: function (response) {
+				$button.prop('disabled', false);
+				if (response.success && codeEditor) {
+					codeEditor.codemirror.setValue(response.data.content);
+					$('.custom-indicator').hide();
+					$('.save-status').text(gutenblockProAdmin.strings.saved);
+					setTimeout(function () {
+						$('.save-status').text('');
+					}, 3000);
+				}
+			},
+			error: function () {
+				$button.prop('disabled', false);
+				$('.save-status').addClass('error').text(gutenblockProAdmin.strings.error);
 			},
 		});
 	}
@@ -286,6 +372,10 @@
 
 		// Save button click
 		$('#save-file').on('click', saveFile);
+
+		// Reset buttons
+		$('#reset-block-style').on('click', resetBlockStyle);
+		$('#reset-pattern-file').on('click', resetPatternFile);
 
 		// Pattern toggle
 		$('.pattern-toggle').on('change', function () {

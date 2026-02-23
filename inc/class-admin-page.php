@@ -22,6 +22,8 @@ class GutenBlock_Pro_Admin_Page {
 		add_action( 'wp_ajax_gutenblock_pro_save_file', array( $this, 'ajax_save_file' ) );
 		add_action( 'wp_ajax_gutenblock_pro_preview_pattern', array( $this, 'ajax_preview_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_delete_pattern', array( $this, 'ajax_delete_pattern' ) );
+		add_action( 'wp_ajax_gutenblock_pro_reset_block_style', array( $this, 'ajax_reset_block_style' ) );
+		add_action( 'wp_ajax_gutenblock_pro_reset_pattern_file', array( $this, 'ajax_reset_pattern_file' ) );
 		add_action( 'wp_ajax_gutenblock_pro_update_group', array( $this, 'ajax_update_group' ) );
 		add_action( 'wp_ajax_gutenblock_pro_update_premium', array( $this, 'ajax_update_premium' ) );
 		add_action( 'wp_ajax_gutenblock_pro_randomize_images', array( $this, 'ajax_randomize_images' ) );
@@ -423,7 +425,14 @@ class GutenBlock_Pro_Admin_Page {
 								<span class="dashicons dashicons-saved"></span>
 								<?php _e( 'Speichern', 'gutenblock-pro' ); ?>
 							</button>
+							<button type="button" class="button" id="reset-pattern-file" data-pattern="<?php echo esc_attr( $selected_item ); ?>" data-file="<?php echo esc_attr( $selected_file ); ?>" style="margin-left:8px;">
+								<span class="dashicons dashicons-image-rotate"></span>
+								<?php _e( 'Auf Original zurücksetzen', 'gutenblock-pro' ); ?>
+							</button>
 							<span class="save-status"></span>
+							<span class="custom-indicator" style="display:none; margin-left:12px; color:#d63638; font-style:italic;">
+								<?php _e( 'Angepasst', 'gutenblock-pro' ); ?>
+							</span>
 						</div>
 					</div>
 				<?php elseif ( $selected_type === 'block' && $selected_item ) : 
@@ -458,7 +467,14 @@ class GutenBlock_Pro_Admin_Page {
 								<span class="dashicons dashicons-saved"></span>
 								<?php _e( 'Speichern', 'gutenblock-pro' ); ?>
 							</button>
+							<button type="button" class="button" id="reset-block-style" data-block="<?php echo esc_attr( $selected_item ); ?>" style="margin-left:8px;">
+								<span class="dashicons dashicons-image-rotate"></span>
+								<?php _e( 'Auf Original zurücksetzen', 'gutenblock-pro' ); ?>
+							</button>
 							<span class="save-status"></span>
+							<span class="custom-indicator" style="display:none; margin-left:12px; color:#d63638; font-style:italic;">
+								<?php _e( 'Angepasst', 'gutenblock-pro' ); ?>
+							</span>
 						</div>
 					</div>
 				<?php endif; ?>
@@ -629,16 +645,22 @@ class GutenBlock_Pro_Admin_Page {
 		$file = sanitize_text_field( $_POST['file'] );
 
 		if ( $type === 'block' ) {
-			// Block variant file
-			$file_map = array(
-				'style' => 'style.css',
-			);
-
-			if ( ! isset( $file_map[ $file ] ) ) {
+			// Block variant: prefer user custom.css from uploads, fall back to plugin default
+			if ( $file !== 'style' ) {
 				wp_send_json_error( 'Invalid file type' );
 			}
 
-			$file_path = GUTENBLOCK_PRO_BLOCKS_PATH . $item . '/' . $file_map[ $file ];
+			$custom      = gutenblock_pro_custom_block_file( $item );
+			$has_custom  = file_exists( $custom['path'] );
+			$default_path = GUTENBLOCK_PRO_BLOCKS_PATH . $item . '/style.css';
+
+			$file_path = $has_custom ? $custom['path'] : $default_path;
+
+			$content = file_exists( $file_path ) ? file_get_contents( $file_path ) : '';
+			wp_send_json_success( array(
+				'content'    => $content,
+				'has_custom' => $has_custom,
+			) );
 		} else {
 			// Pattern file
 			$file_map = array(
@@ -658,14 +680,18 @@ class GutenBlock_Pro_Admin_Page {
 				wp_send_json_error( 'Invalid file type' );
 			}
 
-			$file_path = GUTENBLOCK_PRO_PATTERNS_PATH . $item . '/' . $file_map[ $file ];
-		}
+			$filename     = $file_map[ $file ];
+			$custom       = gutenblock_pro_custom_pattern_file( $item, $filename );
+			$has_custom   = file_exists( $custom['path'] );
+			$default_path = GUTENBLOCK_PRO_PATTERNS_PATH . $item . '/' . $filename;
 
-		if ( file_exists( $file_path ) ) {
-			$content = file_get_contents( $file_path );
-			wp_send_json_success( array( 'content' => $content ) );
-		} else {
-			wp_send_json_success( array( 'content' => '' ) );
+			$file_path = $has_custom ? $custom['path'] : $default_path;
+			$content   = file_exists( $file_path ) ? file_get_contents( $file_path ) : '';
+
+			wp_send_json_success( array(
+				'content'    => $content,
+				'has_custom' => $has_custom,
+			) );
 		}
 	}
 
@@ -685,19 +711,16 @@ class GutenBlock_Pro_Admin_Page {
 		$content = wp_unslash( $_POST['content'] );
 
 		if ( $type === 'block' ) {
-			// Block variant file
-			$file_map = array(
-				'style' => 'style.css',
-			);
-
-			if ( ! isset( $file_map[ $file ] ) ) {
+			// Block variant: save user edits to uploads dir (survives plugin updates)
+			if ( $file !== 'style' ) {
 				wp_send_json_error( 'Invalid file type' );
 			}
 
-			$file_path = GUTENBLOCK_PRO_BLOCKS_PATH . $item . '/' . $file_map[ $file ];
-			$item_dir = GUTENBLOCK_PRO_BLOCKS_PATH . $item;
+			$custom   = gutenblock_pro_custom_block_file( $item );
+			$file_path = $custom['path'];
+			$item_dir  = $custom['dir'];
 		} else {
-			// Pattern file
+			// Pattern file: save user edits to uploads dir (survives plugin updates)
 			$file_map = array(
 				'style'   => 'style.css',
 				'editor'  => 'editor.css',
@@ -715,8 +738,9 @@ class GutenBlock_Pro_Admin_Page {
 				wp_send_json_error( 'Invalid file type' );
 			}
 
-			$file_path = GUTENBLOCK_PRO_PATTERNS_PATH . $item . '/' . $file_map[ $file ];
-			$item_dir = GUTENBLOCK_PRO_PATTERNS_PATH . $item;
+			$custom    = gutenblock_pro_custom_pattern_file( $item, $file_map[ $file ] );
+			$file_path = $custom['path'];
+			$item_dir  = $custom['dir'];
 		}
 
 		// Create directory if it doesn't exist
@@ -853,6 +877,78 @@ class GutenBlock_Pro_Admin_Page {
 		</html>
 		<?php
 		exit;
+	}
+
+	/**
+	 * AJAX: Reset block variant style to plugin default (deletes custom.css from uploads)
+	 */
+	public function ajax_reset_block_style() {
+		check_ajax_referer( 'gutenblock_pro_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Permission denied' );
+		}
+
+		$item = isset( $_POST['block'] ) ? sanitize_key( $_POST['block'] ) : '';
+		if ( empty( $item ) ) {
+			wp_send_json_error( 'No block specified' );
+		}
+
+		$custom = gutenblock_pro_custom_block_file( $item );
+		if ( file_exists( $custom['path'] ) ) {
+			unlink( $custom['path'] );
+		}
+
+		$default_path = GUTENBLOCK_PRO_BLOCKS_PATH . $item . '/style.css';
+		$content = file_exists( $default_path ) ? file_get_contents( $default_path ) : '';
+
+		wp_send_json_success( array( 'content' => $content ) );
+	}
+
+	/**
+	 * AJAX: Reset pattern file to plugin default (deletes custom file from uploads)
+	 */
+	public function ajax_reset_pattern_file() {
+		check_ajax_referer( 'gutenblock_pro_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Permission denied' );
+		}
+
+		$item = isset( $_POST['pattern'] ) ? sanitize_key( $_POST['pattern'] ) : '';
+		$file = isset( $_POST['file'] ) ? sanitize_text_field( $_POST['file'] ) : '';
+
+		if ( empty( $item ) || empty( $file ) ) {
+			wp_send_json_error( 'Missing parameters' );
+		}
+
+		$file_map = array(
+			'style'   => 'style.css',
+			'editor'  => 'editor.css',
+			'script'  => 'script.js',
+			'content' => 'content.html',
+		);
+
+		if ( strpos( $file, 'content_' ) === 0 ) {
+			$lang = str_replace( 'content_', '', $file );
+			$file_map[ $file ] = 'content-' . $lang . '.html';
+		}
+
+		if ( ! isset( $file_map[ $file ] ) ) {
+			wp_send_json_error( 'Invalid file type' );
+		}
+
+		$filename = $file_map[ $file ];
+		$custom   = gutenblock_pro_custom_pattern_file( $item, $filename );
+
+		if ( file_exists( $custom['path'] ) ) {
+			unlink( $custom['path'] );
+		}
+
+		$default_path = GUTENBLOCK_PRO_PATTERNS_PATH . $item . '/' . $filename;
+		$content = file_exists( $default_path ) ? file_get_contents( $default_path ) : '';
+
+		wp_send_json_success( array( 'content' => $content ) );
 	}
 
 	/**
