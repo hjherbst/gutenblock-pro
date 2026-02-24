@@ -91,34 +91,20 @@ class GutenBlock_Pro_AI_Generator {
 			$asset['version']
 		);
 		
-		// Enqueue premium lock script (simple, robust locking)
-		wp_enqueue_script(
-			'gutenblock-pro-premium-lock',
-			GUTENBLOCK_PRO_URL . 'assets/js/premium-lock.js',
-			array( 'wp-dom-ready' ),
-			GUTENBLOCK_PRO_VERSION,
-			true
-		);
-		
-		// Enqueue premium lock styles
-		wp_enqueue_style(
-			'gutenblock-pro-premium-lock',
-			GUTENBLOCK_PRO_URL . 'assets/css/premium-lock.css',
-			array(),
-			GUTENBLOCK_PRO_VERSION
-		);
-
 		// Get license info
 		$license = GutenBlock_Pro_License::get_instance();
 		
 		// Localize script with config
 		wp_localize_script( 'gutenblock-pro-ai-editor', 'gutenblockProConfig', array(
-			'restUrl'    => rest_url( 'gutenblock-pro/v1/' ),
-			'nonce'      => wp_create_nonce( 'wp_rest' ),
-			'isPro'      => $license->is_pro(),
-			'hasPremium' => $license->has_premium_access(),
-			'hasKey'     => $this->has_api_key(),
-			'upgradeUrl' => 'https://app.gutenblock.com/licenses',
+			'restUrl'            => rest_url( 'gutenblock-pro/v1/' ),
+			'nonce'              => wp_create_nonce( 'wp_rest' ),
+			'isPro'              => $license->is_pro(),
+			'hasPremium'         => $license->has_premium_access(),
+			'hasKey'             => $this->has_api_key(),
+			'upgradeUrl'         => 'https://app.gutenblock.com/licenses',
+			'aiSettingsUrl'      => admin_url( 'admin.php?page=gutenblock-pro-ai' ),
+			'translateLanguages' => GutenBlock_Pro_Translation_Settings::get_enabled_languages(),
+			'premiumPatterns'    => self::get_premium_pattern_slugs(),
 		) );
 	}
 
@@ -150,6 +136,26 @@ class GutenBlock_Pro_AI_Generator {
 	 */
 	public function has_api_key() {
 		return true; // Key is on SaaS server, always available
+	}
+
+	/**
+	 * Get slugs of patterns marked as premium.
+	 *
+	 * @return array
+	 */
+	private static function get_premium_pattern_slugs() {
+		$slugs   = array();
+		$dir     = GUTENBLOCK_PRO_PATTERNS_PATH;
+		if ( ! is_dir( $dir ) ) {
+			return $slugs;
+		}
+		foreach ( glob( $dir . '*/pattern.php' ) as $file ) {
+			$data = include $file;
+			if ( is_array( $data ) && ! empty( $data['premium'] ) ) {
+				$slugs[] = basename( dirname( $file ) );
+			}
+		}
+		return $slugs;
 	}
 
 	/**

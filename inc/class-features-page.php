@@ -28,6 +28,10 @@ class GutenBlock_Pro_Features_Page {
 				'name'        => 'Container-Formen',
 				'description' => 'Ermöglicht Abschlussformen (z. B. Welle, Diagonale) oben oder unten an Gruppen-Blöcken als Stilvarianten.',
 			),
+			'material-icons' => array(
+				'name'        => 'Material Icons Block',
+				'description' => 'Custom Block für Google Material Symbols mit Inline-SVG, Suche und Größen-/Farbsteuerung.',
+			),
 		);
 	}
 

@@ -15,6 +15,7 @@
 		"@wordpress/scripts": "^27.0.0"
 	},
 	"dependencies": {
+		"@material-symbols-svg/metadata": "^0.1.23",
 		"@wordpress/block-editor": "^12.0.0",
 		"@wordpress/blocks": "^12.0.0",
 		"@wordpress/components": "^25.0.0",
@@ -23,4 +24,3 @@
 		"@wordpress/i18n": "^4.0.0"
 	}
 }
-

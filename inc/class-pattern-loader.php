@@ -297,11 +297,8 @@ class GutenBlock_Pro_Pattern_Loader {
 		$license = GutenBlock_Pro_License::get_instance();
 		$has_premium_access = $license->has_premium_access();
 
-		// CSS class marker for asset detection AND premium locking
+		// CSS class marker for asset detection (premium detection via premiumPatterns config)
 		$css_class = 'gb-pattern-' . $slug;
-		if ( $is_premium ) {
-			$css_class .= ' gb-pattern-premium';
-		}
 		
 		// Simple, robust approach: Add class to first HTML element directly
 		// This works regardless of block type (cover, group, etc.)

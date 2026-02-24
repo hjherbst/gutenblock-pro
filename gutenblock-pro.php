@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.7.0
+ * Version: 1.8.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.7.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.8.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -72,6 +72,8 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-features-page.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-admin-bar.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-container-forms.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-material-icons.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-translation-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-bridge-installer.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-block-registry.php';
 
@@ -138,6 +140,10 @@ function gutenblock_pro_init() {
 		// Initialize Features Page (toggle optional features)
 		$features_page = new GutenBlock_Pro_Features_Page();
 		$features_page->init();
+
+		// Initialize Translation Settings Page
+		$translation_settings = new GutenBlock_Pro_Translation_Settings();
+		$translation_settings->init();
 	}
 
 	// Initialize Admin Bar Replacement (frontend; feature toggle checked inside class)
@@ -147,6 +153,10 @@ function gutenblock_pro_init() {
 	// Initialize Container Forms (block styles + CSS when feature enabled)
 	$container_forms = new GutenBlock_Pro_Container_Forms();
 	$container_forms->init();
+
+	// Initialize Material Icons Block (when feature enabled)
+	$material_icons = new GutenBlock_Pro_Material_Icons();
+	$material_icons->init();
 }
 add_action( 'plugins_loaded', 'gutenblock_pro_init' );
 

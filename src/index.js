@@ -8,9 +8,9 @@ import { registerPlugin } from '@wordpress/plugins';
 import { addFilter } from '@wordpress/hooks';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { addFilter as addBlocksFilter } from '@wordpress/hooks';
-import { Fragment, useState, useEffect, useMemo } from '@wordpress/element';
+import { Fragment, useState, useEffect, useMemo, useCallback } from '@wordpress/element';
 import { InspectorControls, BlockControls } from '@wordpress/block-editor';
-import { PanelBody, PanelRow, Button, Spinner, TextareaControl, Notice, ComboboxControl } from '@wordpress/components';
+import { PanelBody, PanelRow, Button, Spinner, TextareaControl, Notice, ComboboxControl, Modal } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useDispatch, useSelect } from '@wordpress/data';
 import apiFetch from '@wordpress/api-fetch';
@@ -18,6 +18,9 @@ import { useBlockProps } from '@wordpress/block-editor';
 
 // Import editor styles
 import './editor.scss';
+
+// Material Icon Block (Feature: material-icons)
+import './blocks/material-icon';
 
 /**
  * Set/remove generating animation on a block
@@ -243,9 +246,9 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 	};
 
 	/**
-	 * Translate current block text
+	 * Translate current block text to a specific language.
 	 */
-	const translateText = async () => {
+	const translateToLanguage = async (promptLang) => {
 		setIsLoading(true);
 		setError('');
 		setGeneratingAnimation(clientId, true);
@@ -264,7 +267,7 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 				path: '/gutenblock-pro/v1/ai/generate',
 				method: 'POST',
 				data: {
-					prompt: `Übersetze den folgenden Text ins Englische. Antworte nur mit der Übersetzung:\n\n${currentText}`,
+					prompt: `Übersetze den folgenden Text ${promptLang}. Antworte nur mit der Übersetzung:\n\n${currentText}`,
 					blockName: 'translation',
 				},
 			});
@@ -301,6 +304,7 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 	const hasValidPrompt = tempPrompt && tempPrompt.trim().length >= 3;
 
 	return (
+		<>
 		<PanelBody title={__('GutenBlock AI', 'gutenblock-pro')} initialOpen={true}>
 			{/* Token Usage */}
 			<PanelRow>
@@ -389,14 +393,6 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 						>
 							{__('-10%', 'gutenblock-pro')}
 						</Button>
-						<Button
-							isSecondary
-							onClick={translateText}
-							disabled={isLoading}
-							size="small"
-						>
-							{__('→ EN', 'gutenblock-pro')}
-						</Button>
 					</div>
 				</div>
 			</PanelRow>
@@ -408,6 +404,170 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 						{error}
 					</Notice>
 				</PanelRow>
+			)}
+		</PanelBody>
+		<TranslatePanel
+			clientId={clientId}
+			blockName={blockName}
+			attributes={attributes}
+			translateToLanguage={translateToLanguage}
+			isLoading={isLoading}
+		/>
+		</>
+	);
+};
+
+/**
+ * TranslatePanel – Grouped section with per-language buttons and Translate All.
+ */
+const TranslatePanel = ({ clientId, blockName, attributes, translateToLanguage, isLoading }) => {
+	const languages = window.gutenblockProConfig?.translateLanguages || [];
+	const aiSettingsUrl = window.gutenblockProConfig?.aiSettingsUrl || '/wp-admin/admin.php?page=gutenblock-pro-ai';
+	const isPro = window.gutenblockProConfig?.isPro || false;
+	const [showWarning, setShowWarning] = useState(false);
+	const [selectedLang, setSelectedLang] = useState(null);
+	const [batchRunning, setBatchRunning] = useState(false);
+	const [batchProgress, setBatchProgress] = useState('');
+	const [batchError, setBatchError] = useState('');
+
+	const { updateBlockAttributes } = useDispatch('core/block-editor');
+	const allBlocks = useSelect((select) => select('core/block-editor').getBlocks(), []);
+
+	if (!languages.length) return null;
+
+	const collectTextBlocks = (blocks) => {
+		const result = [];
+		const supported = ['core/paragraph', 'core/heading', 'core/button', 'core/list-item'];
+		const traverse = (list) => {
+			if (!list) return;
+			list.forEach((block) => {
+				if (supported.includes(block.name)) {
+					const text = getBlockText(block.name, block.attributes);
+					if (text && text.length > 2) {
+						result.push({ clientId: block.clientId, blockName: block.name, text });
+					}
+				}
+				if (block.innerBlocks?.length) traverse(block.innerBlocks);
+			});
+		};
+		traverse(blocks);
+		return result;
+	};
+
+	const runTranslateAll = async (lang) => {
+		const textBlocks = collectTextBlocks(allBlocks);
+		if (!textBlocks.length) {
+			setBatchError(__('Keine übersetzbaren Textblöcke gefunden.', 'gutenblock-pro'));
+			return;
+		}
+		setBatchRunning(true);
+		setBatchError('');
+		let done = 0;
+		for (const block of textBlocks) {
+			setBatchProgress(`${done + 1}/${textBlocks.length}`);
+			setGeneratingAnimation(block.clientId, true);
+			try {
+				const response = await apiFetch({
+					path: '/gutenblock-pro/v1/ai/generate',
+					method: 'POST',
+					data: {
+						prompt: `Übersetze den folgenden Text ${lang.promptLang}. Antworte nur mit der Übersetzung:\n\n${block.text}`,
+						blockName: 'translation',
+					},
+				});
+				if (response.success && response.text) {
+					updateBlockContent(block.clientId, block.blockName, response.text, updateBlockAttributes);
+				}
+			} catch (err) {
+				if (err?.code === 'token_limit_reached' || err?.data?.status === 403) {
+					setGeneratingAnimation(block.clientId, false);
+					setBatchError(`Token-Limit erreicht. ${done} von ${textBlocks.length} Blöcken übersetzt.`);
+					setBatchRunning(false);
+					setBatchProgress('');
+					return;
+				}
+			} finally {
+				setGeneratingAnimation(block.clientId, false);
+			}
+			done++;
+		}
+		setBatchProgress('');
+		setBatchRunning(false);
+	};
+
+	return (
+		<PanelBody title={__('Übersetzen', 'gutenblock-pro')} initialOpen={false}>
+			<PanelRow>
+				<div className="gb-ai-buttons gb-translate-grid">
+					{languages.map((lang) => (
+						<div key={lang.code} className="gb-translate-lang-row">
+							<Button
+								isSecondary
+								size="small"
+								className="gb-translate-lang-btn"
+								disabled={isLoading || batchRunning}
+								onClick={() => translateToLanguage(lang.promptLang)}
+							>
+								{`→ ${lang.label}`}
+							</Button>
+							<Button
+								isSecondary
+								size="small"
+								className="gb-translate-all-btn"
+								disabled={batchRunning}
+								onClick={() => { setSelectedLang(lang); setShowWarning(true); }}
+							>
+								{lang.translateAll}
+							</Button>
+						</div>
+					))}
+
+					{batchRunning && batchProgress && (
+						<div className="gb-translate-progress">
+							<Spinner /> {batchProgress} {__('übersetzt…', 'gutenblock-pro')}
+						</div>
+					)}
+					{batchError && (
+						<Notice status="warning" isDismissible={false} className="gb-translate-notice">
+							{batchError}
+						</Notice>
+					)}
+				</div>
+			</PanelRow>
+			{showWarning && selectedLang && (
+				<Modal
+					title={__('Ganze Seite übersetzen', 'gutenblock-pro')}
+					onRequestClose={() => setShowWarning(false)}
+					isDismissible={true}
+				>
+					{isPro ? (
+						<p>{__('Alle Textblöcke auf dieser Seite werden übersetzt. Das kann einen Moment dauern.', 'gutenblock-pro')}</p>
+					) : (
+						<p>{__('Die Übersetzung aller Textblöcke auf dieser Seite kann viele Tokens verbrauchen.', 'gutenblock-pro')}</p>
+					)}
+					<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+						{!isPro && (
+							<Button
+								isSecondary
+								onClick={() => { setShowWarning(false); window.open(aiSettingsUrl, '_blank'); }}
+							>
+								{__('Token-Limit erhöhen', 'gutenblock-pro')}
+							</Button>
+						)}
+						<Button
+							isPrimary
+							onClick={() => { setShowWarning(false); runTranslateAll(selectedLang); }}
+						>
+							{isPro ? __('Übersetzen', 'gutenblock-pro') : __('Trotzdem übersetzen', 'gutenblock-pro')}
+						</Button>
+						<Button
+							isTertiary
+							onClick={() => setShowWarning(false)}
+						>
+							{__('Abbrechen', 'gutenblock-pro')}
+						</Button>
+					</div>
+				</Modal>
 			)}
 		</PanelBody>
 	);
@@ -662,34 +822,11 @@ const withAIControls = createHigherOrderComponent((BlockEdit) => {
 	return (props) => {
 		const { clientId, name, attributes } = props;
 		
-		// Check if this is a premium pattern block (don't show AI controls if locked)
 		const hasPremium = window.gutenblockProConfig?.hasPremium || false;
-		const [isPremiumPattern, setIsPremiumPattern] = useState(false);
-		
-		useEffect(() => {
-			const checkPremium = () => {
-				const blockElement = document.querySelector(`[data-block="${clientId}"]`);
-				if (blockElement) {
-					const hasPremiumClass = blockElement.classList.contains('gb-pattern-premium') ||
-						blockElement.closest('.gb-pattern-premium') !== null;
-					setIsPremiumPattern(hasPremiumClass);
-				}
-			};
-			
-			const timeoutId = setTimeout(checkPremium, 100);
-			const observer = new MutationObserver(checkPremium);
-			const blockElement = document.querySelector(`[data-block="${clientId}"]`);
-			if (blockElement) {
-				observer.observe(blockElement, { attributes: true, subtree: true });
-			}
-			
-			return () => {
-				clearTimeout(timeoutId);
-				observer.disconnect();
-			};
-		}, [clientId]);
-		
-		// Don't show AI controls for premium patterns without access
+		const premiumSlugs = window.gutenblockProConfig?.premiumPatterns || [];
+		const className = attributes?.className || '';
+		const isPremiumPattern = premiumSlugs.some((slug) => className.includes(`gb-pattern-${slug}`));
+
 		if (isPremiumPattern && !hasPremium) {
 			return <BlockEdit {...props} />;
 		}
@@ -752,14 +889,10 @@ const withPremiumBlockLock = createHigherOrderComponent((BlockEdit) => {
 		const hasPremium = window.gutenblockProConfig?.hasPremium || false;
 		const upgradeUrl = window.gutenblockProConfig?.upgradeUrl || 'https://app.gutenblock.com/licenses';
 		
-		// Check if this is the outer block of a premium pattern
 		const isOuterBlock = name === 'core/cover' || name === 'core/group';
 		const className = attributes?.className || '';
-		const isPremiumPattern = isOuterBlock && (
-			className.includes('gb-section-hero-v2') ||
-			className.includes('gb-section-cta-v1') ||
-			className.includes('gb-pattern-premium')
-		);
+		const premiumSlugs = window.gutenblockProConfig?.premiumPatterns || [];
+		const isPremiumPattern = isOuterBlock && premiumSlugs.some((slug) => className.includes(`gb-pattern-${slug}`));
 		
 		// If premium pattern and no access: replace ALL InspectorControls
 		if (isPremiumPattern && !hasPremium) {

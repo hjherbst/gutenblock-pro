@@ -1,0 +1,170 @@
+/**
+ * Material Icon Block – Editor (Modal + Grid)
+ *
+ * @package GutenBlockPro
+ */
+
+/* Block-Wrapper: kein Abstand, linksbündig – Abstände nur über übergeordnete Gruppe */
+.wp-block-gutenblock-pro-material-icon-wrapper {
+	margin: 0 !important;
+	padding: 0 !important;
+	width: fit-content;
+	max-width: 100%;
+}
+
+.gutenblock-material-icon-placeholder,
+.gutenblock-material-icon-preview {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start; /* linksbündig für vertikale Flucht */
+	padding: 0;
+	margin: 0;
+	min-height: 0;
+	width: fit-content;
+}
+
+.gutenblock-material-icon-placeholder {
+	border: 1px dashed #ccc;
+	border-radius: 4px;
+	background: #f9f9f9;
+	/* Nur im Platzhalter-Zustand minimaler Klickbereich */
+	min-height: 48px;
+}
+
+.gutenblock-material-icon-loading {
+	color: #757575;
+	font-size: 13px;
+}
+
+.gutenblock-material-icon-error {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	color: #757575;
+	font-size: 13px;
+}
+
+/* Modal */
+.gutenblock-material-icon-modal-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.gutenblock-material-icon-modal {
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+	max-width: 90vw;
+	width: 640px;
+	max-height: 85vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.gutenblock-material-icon-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.gutenblock-material-icon-modal-header h2 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.gutenblock-material-icon-modal-body {
+	padding: 16px 20px;
+	overflow-y: auto;
+	flex: 1;
+}
+
+/* Search + Grid */
+.gutenblock-material-icon-search {
+	margin-bottom: 16px;
+}
+
+.gutenblock-material-icon-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+	gap: 8px;
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+.gutenblock-material-icon-grid-empty {
+	margin: 24px 0;
+	color: #757575;
+	text-align: center;
+}
+
+.gutenblock-material-icon-grid-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 10px 8px;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+	background: #fff;
+	cursor: pointer;
+	font-size: 11px;
+	text-align: center;
+	transition: background 0.15s, border-color 0.15s;
+
+	.gutenblock-material-icon-thumb {
+		display: block;
+		flex-shrink: 0;
+	}
+}
+
+.gutenblock-material-icon-grid-loading {
+	display: block;
+	width: 32px;
+	height: 32px;
+	background: #f0f0f0;
+	border-radius: 4px;
+	animation: gutenblock-material-icon-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes gutenblock-material-icon-pulse {
+	0%, 100% { opacity: 0.6; }
+	50% { opacity: 1; }
+}
+
+.gutenblock-material-icon-grid-item:hover {
+	background: #f0f0f0;
+	border-color: #999;
+}
+
+.gutenblock-material-icon-grid-label {
+	word-break: break-word;
+	line-height: 1.2;
+}
+
+/* Inspector color control */
+.gutenblock-material-icon-color-control .components-base-control__label {
+	display: block;
+	margin-bottom: 8px;
+}
+
+/* Tabs im Modal */
+.gutenblock-material-icon-tabs .components-tab-panel__tabs {
+	margin-bottom: 16px;
+}
+
+/* Eigene SVG: Vorschau skaliert das SVG */
+.gutenblock-custom-svg-preview-inner svg {
+	width: 100%;
+	height: 100%;
+	display: block;
+}

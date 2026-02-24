@@ -1,0 +1,17 @@
+/**
+ * Material Icon Block – Frontend: kein Abstand, linksbündig.
+ * Vertikale Flucht mit anderen Elementen über übergeordnete Gruppe steuern.
+ *
+ * @package GutenBlockPro
+ */
+
+.wp-block-gutenblock-pro-material-icon {
+	margin: 0 !important;
+	padding: 0 !important;
+	width: fit-content;
+	max-width: 100%;
+}
+
+.wp-block-gutenblock-pro-material-icon > span {
+	display: inline-block;
+}
