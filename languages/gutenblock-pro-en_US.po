@@ -1,0 +1,941 @@
+# #-#-#-#-#  gutenblock-pro.pot (GutenBlock Pro 1.8.0)  #-#-#-#-#
+# English translations for GutenBlock Pro package.
+# Copyright (C) 2026 Hans-Jürgen Herbst
+# This file is distributed under the same license as the GutenBlock Pro package.
+# Automatically generated, 2026.
+#
+# #-#-#-#-#  gutenblock-pro-js.pot (GutenBlock Pro 1.8.0)  #-#-#-#-#
+# English translations for GutenBlock Pro package.
+# Copyright (C) 2026 THE GutenBlock Pro'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the GutenBlock Pro package.
+# Automatically generated, 2026.
+#
+msgid ""
+msgstr ""
+"#-#-#-#-#  gutenblock-pro.pot (GutenBlock Pro 1.8.0)  #-#-#-#-#\n"
+"Project-Id-Version: GutenBlock Pro 1.8.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-25 17:26+0100\n"
+"PO-Revision-Date: 2026-02-25 17:26+0100\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"#-#-#-#-#  gutenblock-pro-js.pot (GutenBlock Pro 1.8.0)  #-#-#-#-#\n"
+"Project-Id-Version: GutenBlock Pro 1.8.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-24 22:39+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: gutenblock-pro.php:173 inc/class-admin-page.php:39
+#: inc/class-admin-page.php:40 inc/class-admin-page.php:175
+msgid "GutenBlock Pro"
+msgstr "GutenBlock Pro"
+
+#: inc/class-admin-page.php:83
+msgid "Gespeichert!"
+msgstr "Saved!"
+
+#: inc/class-admin-page.php:84
+msgid "Fehler beim Speichern"
+msgstr "Error saving"
+
+#: inc/class-admin-page.php
+msgid "Aktuellen Editor-Inhalt als neues Original in das Plugin übernehmen?"
+msgstr "Adopt current editor content as new plugin original?"
+
+#: inc/class-admin-page.php
+msgid "Als Original übernommen!"
+msgstr "Adopted as original!"
+
+#: inc/class-admin-page.php
+msgid "Als Original übernehmen"
+msgstr "Adopt as original"
+
+#: inc/class-admin-page.php:85
+msgid "Datei wirklich zurücksetzen?"
+msgstr "Really reset file?"
+
+#: inc/class-admin-page.php
+msgid "Sections/Varianten"
+msgstr "Sections/Variants"
+
+#: inc/class-admin-page.php
+msgid "Stilvarianten"
+msgstr "Style Variants"
+
+#: inc/class-admin-page.php:186
+msgid "CSS/JS Editor"
+msgstr "CSS/JS Editor"
+
+#: inc/class-admin-page.php:189
+msgid "Info"
+msgstr "Info"
+
+#: inc/class-admin-page.php:225
+msgid "Keine Sections gefunden."
+msgstr "No sections found."
+
+#: inc/class-admin-page.php:230
+msgid "Sections"
+msgstr "Sections"
+
+#: inc/class-admin-page.php:237
+msgid "Seiten"
+msgstr "Pages"
+
+#: inc/class-admin-page.php:264 src/index.js:915
+msgid "Premium Pattern"
+msgstr "Premium Pattern"
+
+#: inc/class-admin-page.php:269
+msgid "Premium/Free"
+msgstr "Premium/Free"
+
+#: inc/class-admin-page.php:278
+msgid "Löschen"
+msgstr "Delete"
+
+#: inc/class-admin-page.php:298 inc/class-pattern-creator.php:77
+#: inc/class-pattern-creator.php:117
+msgid "— Keine Gruppe —"
+msgstr "— No group —"
+
+#: inc/class-admin-page.php:366
+msgid "Block-Varianten"
+msgstr "Block Variants"
+
+#: inc/class-admin-page.php:426 inc/class-admin-page.php:468
+msgid "Speichern"
+msgstr "Save"
+
+#: inc/class-admin-page.php:430 inc/class-admin-page.php:472
+msgid "Auf Original zurücksetzen"
+msgstr "Reset to original"
+
+#: inc/class-admin-page.php:434 inc/class-admin-page.php:476
+msgid "Angepasst"
+msgstr "Customized"
+
+#: inc/class-admin-page.php:483
+msgid "Wähle ein Pattern oder eine Block-Variante aus der Liste."
+msgstr "Select a pattern or block variant from the list."
+
+#: inc/class-admin-page.php:499
+msgid "Block-Erweiterungen"
+msgstr "Block Extensions"
+
+#: inc/class-admin-page.php:501
+msgid ""
+"Übersicht aller registrierten Block-Varianten und Block-Erweiterungen von "
+"GutenBlock Pro."
+msgstr "Overview of all registered block variants and block extensions from GutenBlock Pro."
+
+#: inc/class-admin-page.php:506
+msgid "Noch keine Block-Erweiterungen registriert."
+msgstr "No block extensions registered yet."
+
+#: inc/class-admin-page.php:521
+msgid "Block:"
+msgstr "Block:"
+
+#: inc/class-admin-page.php:525
+msgid "Variante:"
+msgstr "Variant:"
+
+#: inc/class-admin-page.php:562
+msgid "Statistiken"
+msgstr "Statistics"
+
+#: inc/class-admin-page.php:565
+msgid "Sections gesamt"
+msgstr "Total sections"
+
+#: inc/class-admin-page.php:569
+msgid "CSS gesamt"
+msgstr "Total CSS"
+
+#: inc/class-admin-page.php:573
+msgid "JS gesamt"
+msgstr "Total JS"
+
+#: inc/class-admin-page.php:577
+msgid "Plugin Version"
+msgstr "Plugin Version"
+
+#: inc/class-admin-page.php:584
+msgid "Conditional Loading"
+msgstr "Conditional Loading"
+
+#: inc/class-admin-page.php:585
+msgid ""
+"GutenBlock Pro lädt CSS und JS nur für Sections, die auf der aktuellen Seite "
+"verwendet werden."
+msgstr "GutenBlock Pro loads CSS and JS only for sections used on the current page."
+
+#: inc/class-admin-page.php:586
+msgid "Die Erkennung basiert auf der CSS-Klasse:"
+msgstr "Detection is based on the CSS class:"
+
+#: inc/class-admin-page.php:590
+msgid "Pfade"
+msgstr "Paths"
+
+#: inc/class-admin-page.php:593
+msgid "Plugin-Verzeichnis"
+msgstr "Plugin directory"
+
+#: inc/class-admin-page.php:597
+msgid "Sections-Verzeichnis"
+msgstr "Sections directory"
+
+#: inc/class-admin-page.php:1191
+msgid "Bilder erfolgreich aktualisiert"
+msgstr "Images updated successfully"
+
+#: inc/class-admin-page.php:1197
+msgid "Keine picsum.photos Bilder gefunden"
+msgstr "No picsum.photos images found"
+
+#: inc/class-ai-generator.php:228
+msgid "Prompt ist erforderlich"
+msgstr "Prompt is required"
+
+#: inc/class-ai-generator.php:235 inc/class-ai-generator.php:314
+msgid ""
+"Monatliches Token-Limit erreicht. Upgrade auf Pro für unbegrenzte "
+"Generierung."
+msgstr "Monthly token limit reached. Upgrade to Pro for unlimited generation."
+
+#: inc/class-ai-generator.php:242 inc/class-ai-generator.php:321
+msgid "API-Key nicht konfiguriert"
+msgstr "API key not configured"
+
+#: inc/class-ai-generator.php:254
+#, php-format
+msgid "Schreibe einen passenden Text für das Element „%s\"."
+msgstr "Write suitable text for the element \"%s\"."
+
+#: inc/class-ai-generator.php:287 inc/class-ai-generator.php:418
+msgid "Fehler bei der AI-Generierung: "
+msgstr "Error during AI generation: "
+
+#: inc/class-ai-generator.php:307
+msgid "Keine Content-Felder angegeben"
+msgstr "No content fields specified"
+
+#: inc/class-ai-generator.php:383
+msgid "Ungültige JSON-Response von der API. Response: "
+msgstr "Invalid JSON response from API. Response: "
+
+#: inc/class-ai-generator.php:487
+msgid "Rate-Limit erreicht. Bitte warte einen Moment."
+msgstr "Rate limit reached. Please wait a moment."
+
+#: inc/class-ai-generator.php:491
+msgid "AI-Generierung fehlgeschlagen"
+msgstr "AI generation failed"
+
+#: inc/class-ai-generator.php:728
+msgid "Kein Text zum Übersetzen"
+msgstr "No text to translate"
+
+#: inc/class-ai-generator.php:733
+msgid "Token-Limit erreicht"
+msgstr "Token limit reached"
+
+#: inc/class-ai-settings.php:63 inc/class-ai-settings.php:64
+msgid "KI-Einstellungen"
+msgstr "AI Settings"
+
+#: inc/class-ai-settings.php:148
+msgid "Aktiviere..."
+msgstr "Activating..."
+
+#: inc/class-ai-settings.php:149
+msgid "Deaktiviere..."
+msgstr "Deactivating..."
+
+#: inc/class-ai-settings.php:150
+msgid "Lade Prompts..."
+msgstr "Loading prompts..."
+
+#: inc/class-ai-settings.php:182
+msgid "GutenBlock Pro - KI-Einstellungen"
+msgstr "GutenBlock Pro - AI Settings"
+
+#: inc/class-ai-settings.php:187
+msgid "Lizenz"
+msgstr "License"
+
+#: inc/class-ai-settings.php:194
+msgid "Pro-Lizenz aktiv"
+msgstr "Pro license active"
+
+#: inc/class-ai-settings.php:199
+msgid "Lizenz deaktivieren"
+msgstr "Deactivate license"
+
+#: inc/class-ai-settings.php:205
+msgid "Kostenlose Version"
+msgstr "Free version"
+
+#: inc/class-ai-settings.php:216
+msgid "Lizenz aktivieren"
+msgstr "Activate license"
+
+#: inc/class-ai-settings.php:223
+#, php-format
+msgid "Noch keine Lizenz? %s"
+msgstr "No license yet? %s"
+
+#: inc/class-ai-settings.php:224
+msgid "Jetzt kaufen"
+msgstr "Buy now"
+
+#: inc/class-ai-settings.php:231
+msgid "1 Mio. AI-Tokens monatlich"
+msgstr "1M AI tokens monthly"
+
+#: inc/class-ai-settings.php:235
+msgid "Alle Premium-Patterns freigeschalten"
+msgstr "All premium patterns unlocked"
+
+#: inc/class-ai-settings.php:239
+msgid "Einmalig zahlen, lebenslang nutzen"
+msgstr "Pay once, use forever"
+
+#: inc/class-ai-settings.php:249
+msgid "Token-Verbrauch"
+msgstr "Token usage"
+
+#: inc/class-ai-settings.php:255 src/index.js:50
+msgid "Unbegrenzte Tokens (Pro)"
+msgstr "Unlimited tokens (Pro)"
+
+#: inc/class-ai-settings.php:275
+msgid "Tokens"
+msgstr "Tokens"
+
+#: inc/class-ai-settings.php:282
+#, php-format
+msgid "Verbleibend: %1$s Tokens. Reset: %2$s"
+msgstr "Remaining: %1$s tokens. Reset: %2$s"
+
+#: inc/class-ai-settings.php:294
+msgid "KI-Prompts"
+msgstr "AI Prompts"
+
+#: inc/class-ai-settings.php:296
+msgid ""
+"Definiere den Stil und Kontext für alle KI-generierten Texte. Diese Prompts "
+"werden bei jeder Generierung kombiniert verwendet."
+msgstr "Define style and context for all AI-generated texts. These prompts are combined for each generation."
+
+#: inc/class-ai-settings.php:305 src/blocks/material-icon/edit.js:179
+msgid "Stil"
+msgstr "Style"
+
+#: inc/class-ai-settings.php:314
+msgid "Definiere den Schreibstil und technische Vorgaben für die Texte."
+msgstr "Define writing style and technical guidelines for the texts."
+
+#: inc/class-ai-settings.php:320
+msgid "Kontext"
+msgstr "Context"
+
+#: inc/class-ai-settings.php:327
+msgid ""
+"z.B. Ich bin ein Marketing-Berater und helfe Unternehmen bei der digitalen "
+"Transformation..."
+msgstr "e.g. I am a marketing consultant helping companies with digital transformation..."
+
+#: inc/class-ai-settings.php:330
+msgid ""
+"Beschreibe wer du bist und was du machst. Diese Informationen werden mit dem "
+"Stil kombiniert."
+msgstr "Describe who you are and what you do. This is combined with the style."
+
+#: inc/class-ai-settings.php:341
+msgid "Bild-API Anbieter"
+msgstr "Image API provider"
+
+#: inc/class-ai-settings.php:346
+msgid "Pexels"
+msgstr "Pexels"
+
+#: inc/class-ai-settings.php:349
+msgid "Unsplash"
+msgstr "Unsplash"
+
+#: inc/class-ai-settings.php:353
+msgid ""
+"Wähle den API-Anbieter für die Bildsuche. Ohne API Key wird picsum.photos "
+"verwendet."
+msgstr "Select API provider for image search. Without API key, picsum.photos is used."
+
+#: inc/class-ai-settings.php:359
+msgid "Pexels API Key"
+msgstr "Pexels API Key"
+
+#: inc/class-ai-settings.php:372
+#, php-format
+msgid ""
+"Optional: API Key von %1$s. Alle über die API bezogenen Bilder sind unter "
+"der Pexels-Lizenz frei verwendbar (kommerziell erlaubt, keine Attribution "
+"erforderlich). Siehe %2$s für Details."
+msgstr "Optional: API key from %1$s. All API images are freely usable under Pexels license (commercial allowed, no attribution required). See %2$s for details."
+
+#: inc/class-ai-settings.php:382
+msgid "Unsplash API Key"
+msgstr "Unsplash API Key"
+
+#: inc/class-ai-settings.php:395
+#, php-format
+msgid ""
+"Optional: Access Key von %1$s. Alle über die API bezogenen Bilder sind unter "
+"der Unsplash-Lizenz frei verwendbar. Siehe %2$s für Details."
+msgstr "Optional: Access key from %1$s. All API images are freely usable under Unsplash license. See %2$s for details."
+
+#: inc/class-ai-settings.php:406 inc/class-features-page.php:219
+#: inc/class-translation-settings.php:172
+msgid "Einstellungen speichern"
+msgstr "Save settings"
+
+#: inc/class-ai-settings.php:413
+msgid "Block-Prompts"
+msgstr "Block Prompts"
+
+#: inc/class-ai-settings.php:415
+msgid "Prompts mit API synchronisieren"
+msgstr "Synchronize prompts with API"
+
+#: inc/class-ai-settings.php:419
+msgid ""
+"Diese Prompts werden mit der API von gutenblock.com synchronisiert und "
+"definieren, welcher Text für welches Block-Element generiert wird. Custom "
+"Prompts überschreiben die API-Prompts."
+msgstr "These prompts are synced with gutenblock.com API and define which text is generated for which block element. Custom prompts override API prompts."
+
+#: inc/class-ai-settings.php:426
+msgid "Block-ID"
+msgstr "Block ID"
+
+#: inc/class-ai-settings.php:427
+msgid "Prompt (API)"
+msgstr "Prompt (API)"
+
+#: inc/class-ai-settings.php:428
+msgid "Custom Prompt"
+msgstr "Custom Prompt"
+
+#: inc/class-ai-settings.php:443
+msgid "Optional: Eigener Prompt (überschreibt API-Prompt)"
+msgstr "Optional: Custom prompt (overrides API prompt)"
+
+#: inc/class-ai-settings.php:452
+msgid "Custom Prompts speichern"
+msgstr "Save custom prompts"
+
+#: inc/class-ai-settings.php:457
+msgid ""
+"Keine Prompts geladen. Klicke auf \"Aktualisieren\" um die Prompts von "
+"gutenblock.com zu laden."
+msgstr "No prompts loaded. Click \"Update\" to load prompts from gutenblock.com."
+
+#: inc/class-ai-settings.php:473 inc/class-ai-settings.php:498
+#: inc/class-ai-settings.php:512 inc/class-ai-settings.php:536
+msgid "Keine Berechtigung"
+msgstr "No permission"
+
+#: inc/class-ai-settings.php:479
+msgid "Bitte Lizenzschlüssel eingeben"
+msgstr "Please enter license key"
+
+#: inc/class-ai-settings.php:519
+msgid "Prompts erfolgreich aktualisiert"
+msgstr "Prompts updated successfully"
+
+#: inc/class-ai-settings.php:524
+msgid "Keine Prompts gefunden. Prüfe die Verbindung zu gutenblock.com"
+msgstr "No prompts found. Check connection to gutenblock.com"
+
+#: inc/class-ai-settings.php:560
+msgid "Custom Prompts erfolgreich gespeichert"
+msgstr "Custom prompts saved successfully"
+
+#: inc/class-block-registry.php:101
+msgid "Checkmark"
+msgstr "Checkmark"
+
+#: inc/class-block-registry.php:103
+msgid "Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente"
+msgstr "Shows checkmarks (✓) instead of bullets for all list items"
+
+#: inc/class-container-forms.php:35
+msgid "Welle"
+msgstr "Wave"
+
+#: inc/class-container-forms.php:36
+msgid "Diagonale"
+msgstr "Diagonal"
+
+#: inc/class-container-forms.php:37
+msgid "Bogen"
+msgstr "Arch"
+
+#: inc/class-container-forms.php:38
+msgid "Spitze"
+msgstr "Point"
+
+#: inc/class-container-forms.php:39
+msgid "Zickzack"
+msgstr "Zigzag"
+
+#: inc/class-container-forms.php:40
+msgid "Asymmetric"
+msgstr "Asymmetric"
+
+#: inc/class-container-forms.php:41
+msgid "Layered Wave"
+msgstr "Layered Wave"
+
+#: inc/class-features-page.php:69 inc/class-features-page.php:70
+msgid "Features"
+msgstr "Features"
+
+#: inc/class-features-page.php:188
+msgid "Aktiviere oder deaktiviere optionale Funktionen von GutenBlock Pro."
+msgstr "Enable or disable optional GutenBlock Pro features."
+
+#: inc/class-license.php:135
+msgid "Lizenz erfolgreich aktiviert!"
+msgstr "License activated successfully!"
+
+#: inc/class-license.php:142
+msgid "Aktivierung fehlgeschlagen"
+msgstr "Activation failed"
+
+#: inc/class-license.php:214
+msgid "Lizenz deaktiviert"
+msgstr "License deactivated"
+
+#: inc/class-pattern-creator.php:100
+msgid "Als GB Pro Pattern speichern"
+msgstr "Save as GB Pro Pattern"
+
+#: inc/class-pattern-creator.php:101
+msgid "GutenBlock Pro Pattern erstellen"
+msgstr "Create GutenBlock Pro Pattern"
+
+#: inc/class-pattern-creator.php:102
+msgid "Pattern Name"
+msgstr "Pattern Name"
+
+#: inc/class-pattern-creator.php:103
+msgid "Mein neues Pattern"
+msgstr "My new pattern"
+
+#: inc/class-pattern-creator.php:104
+msgid "Slug"
+msgstr "Slug"
+
+#: inc/class-pattern-creator.php:105
+msgid "Wird automatisch generiert"
+msgstr "Generated automatically"
+
+#: inc/class-pattern-creator.php:106
+msgid "Beschreibung"
+msgstr "Description"
+
+#: inc/class-pattern-creator.php:107
+msgid "Kurze Beschreibung des Patterns"
+msgstr "Short pattern description"
+
+#: inc/class-pattern-creator.php:108
+msgid "Keywords"
+msgstr "Keywords"
+
+#: inc/class-pattern-creator.php:109
+msgid "hero, cta, button (kommagetrennt)"
+msgstr "hero, cta, button (comma-separated)"
+
+#: inc/class-pattern-creator.php:110
+msgid "Sprache"
+msgstr "Language"
+
+#: inc/class-pattern-creator.php:111
+msgid "Für welche Sprache ist dieser Content?"
+msgstr "For which language is this content?"
+
+#: inc/class-pattern-creator.php:112 inc/class-pattern-creator.php:133
+msgid "Default (Fallback)"
+msgstr "Default (Fallback)"
+
+#: inc/class-pattern-creator.php:113
+msgid "Typ"
+msgstr "Type"
+
+#: inc/class-pattern-creator.php:114
+msgid "Section"
+msgstr "Section"
+
+#: inc/class-pattern-creator.php:115
+msgid "Seite"
+msgstr "Page"
+
+#: inc/class-pattern-creator.php:116
+msgid "Gruppe"
+msgstr "Group"
+
+#: inc/class-pattern-creator.php:118
+msgid "Lokale Bilder ersetzen"
+msgstr "Replace local images"
+
+#: inc/class-pattern-creator.php:119
+msgid "Ersetzt Bilder aus dem Uploads-Ordner durch Placeholder (picsum.photos)"
+msgstr ""
+"Ersetzt Bilder aus dem Uploads-Ordner durch Placeholder (picsum.photos)"
+
+#: inc/class-pattern-creator.php:120
+msgid "Pattern erstellen"
+msgstr "Create pattern"
+
+#: inc/class-pattern-creator.php:121
+msgid "Content aktualisieren"
+msgstr "Update content"
+
+#: inc/class-pattern-creator.php:122
+msgid "Bestehendes Pattern aktualisieren"
+msgstr "Update existing pattern"
+
+#: inc/class-pattern-creator.php:123
+msgid "Nur content.html wird überschrieben. CSS und JS bleiben erhalten."
+msgstr "Only content.html is overwritten. CSS and JS remain."
+
+#: inc/class-pattern-creator.php:124
+msgid "Pattern existiert bereits. Content wird aktualisiert."
+msgstr "Pattern already exists. Content will be updated."
+
+#: inc/class-pattern-creator.php:125 src/index.js:567
+msgid "Abbrechen"
+msgstr "Cancel"
+
+#: inc/class-pattern-creator.php:126
+msgid "Erstelle Pattern..."
+msgstr "Creating pattern..."
+
+#: inc/class-pattern-creator.php:127
+msgid "Pattern erfolgreich erstellt!"
+msgstr "Pattern created successfully!"
+
+#: inc/class-pattern-creator.php:128
+msgid "Fehler beim Erstellen des Patterns"
+msgstr "Error creating pattern"
+
+#: inc/class-pattern-creator.php:129
+msgid "Bitte wähle mindestens einen Block aus."
+msgstr "Please select at least one block."
+
+#: inc/class-pattern-creator.php:130
+msgid "Bitte gib einen Namen ein."
+msgstr "Please enter a name."
+
+#: inc/class-translation-settings.php:53 inc/class-translation-settings.php:54
+msgid "KI Übersetzungen"
+msgstr "AI Translations"
+
+#: inc/class-translation-settings.php:142
+msgid ""
+"Aktiviere die Sprachen, in die im Editor übersetzt werden kann. Jede "
+"aktivierte Sprache erscheint als Button in der Sidebar."
+msgstr ""
+"Aktiviere die Sprachen, in die im Editor übersetzt werden kann. Jede "
+"aktivierte Sprache erscheint als Button in der Sidebar."
+
+#: src/index.js:241 src/index.js:721 src/index.js:724
+msgid "Fehler bei der Generierung"
+msgstr "Error during generation"
+
+#: src/index.js:260
+msgid "Mindestens 3 Zeichen Text erforderlich"
+msgstr "At least 3 characters of text required"
+
+#: src/index.js:283
+msgid "Fehler bei der Übersetzung"
+msgstr "Error during translation"
+
+#: src/index.js:308
+msgid "GutenBlock AI"
+msgstr "GutenBlock AI"
+
+#: src/index.js:318
+msgid "Content-Feld"
+msgstr "Content field"
+
+#: src/index.js:338
+msgid "Prompt (aus Content-Feld)"
+msgstr "Prompt (from content field)"
+
+#: src/index.js:338
+msgid "Eigener Prompt"
+msgstr "Custom prompt"
+
+#: src/index.js:341
+msgid "Wähle ein Content-Feld oder schreibe einen eigenen Prompt..."
+msgstr "Select a content field or write a custom prompt..."
+
+#: src/index.js:343
+msgid ""
+"Der Prompt wird aus dem Content-Feld geladen. Du kannst ihn hier temporär "
+"anpassen."
+msgstr ""
+"Der Prompt wird aus dem Content-Feld geladen. Du kannst ihn hier temporär "
+"anpassen."
+
+#: src/index.js:357
+msgid "Generieren"
+msgstr "Generate"
+
+#: src/index.js:367
+msgid "Variante"
+msgstr "Variant"
+
+#: src/index.js:375
+msgid "Neu"
+msgstr "New"
+
+#: src/index.js:386
+msgid "+10%"
+msgstr "+10%"
+
+#: src/index.js:394
+msgid "-10%"
+msgstr "-10%"
+
+#: src/index.js:460
+msgid "Keine übersetzbaren Textblöcke gefunden."
+msgstr "No translatable text blocks found."
+
+#: src/index.js:499 src/index.js:561
+msgid "Übersetzen"
+msgstr "Translate"
+
+#: src/index.js:527
+msgid "übersetzt…"
+msgstr "translated…"
+
+#: src/index.js:539
+msgid "Ganze Seite übersetzen"
+msgstr "Translate entire page"
+
+#: src/index.js:544
+msgid ""
+"Alle Textblöcke auf dieser Seite werden übersetzt. Das kann einen Moment "
+"dauern."
+msgstr ""
+"Alle Textblöcke auf dieser Seite werden übersetzt. Das kann einen Moment "
+"dauern."
+
+#: src/index.js:546
+msgid ""
+"Die Übersetzung aller Textblöcke auf dieser Seite kann viele Tokens "
+"verbrauchen."
+msgstr ""
+"Die Übersetzung aller Textblöcke auf dieser Seite kann viele Tokens "
+"verbrauchen."
+
+#: src/index.js:554
+msgid "Token-Limit erhöhen"
+msgstr "Increase token limit"
+
+#: src/index.js:561
+msgid "Trotzdem übersetzen"
+msgstr "Translate anyway"
+
+#: src/index.js:676
+msgid "Keine Content-Felder in dieser Gruppe gefunden."
+msgstr "No content fields found in this group."
+
+#: src/index.js:734
+msgid "GutenBlock AI - Gruppe"
+msgstr "GutenBlock AI - Group"
+
+#: src/index.js:743
+msgid "Gefundene Content-Felder:"
+msgstr "Found content fields:"
+
+#: src/index.js:746
+msgid "Keine Content-Felder mit metadata.name in dieser Gruppe gefunden."
+msgstr "No content fields with metadata.name found in this group."
+
+#: src/index.js:763
+msgid "Gruppen-Prompt"
+msgstr "Group prompt"
+
+#: src/index.js:766
+msgid "Beschreibe, was für alle Content-Felder generiert werden soll..."
+msgstr "Describe what should be generated for all content fields..."
+
+#: src/index.js:768
+msgid "Dieser Prompt wird für alle Content-Felder in der Gruppe verwendet."
+msgstr "This prompt is used for all content fields in the group."
+
+#: src/index.js:781
+msgid "Alle Felder generieren"
+msgstr "Generate all fields"
+
+#: src/index.js:785
+msgid ""
+"Hinweis: Füge Blöcke mit metadata.name in diese Gruppe ein, um sie hier zu "
+"sehen."
+msgstr ""
+"Hinweis: Füge Blöcke mit metadata.name in diese Gruppe ein, um sie hier zu "
+"sehen."
+
+#: src/index.js:922
+msgid "🔒 Pro Plus erforderlich"
+msgstr "🔒 Pro Plus required"
+
+#: src/index.js:925
+msgid ""
+"Dieses Pattern kann als Vorschau eingefügt werden, ist aber nur mit "
+"GutenBlock Pro Plus bearbeitbar."
+msgstr ""
+"Dieses Pattern kann als Vorschau eingefügt werden, ist aber nur mit "
+"GutenBlock Pro Plus bearbeitbar."
+
+#: src/index.js:932
+msgid "Jetzt upgraden"
+msgstr "Upgrade now"
+
+#: src/blocks/material-icon/custom-svg-tab.js:30
+msgid "SVG konnte nicht geladen werden."
+msgstr "SVG could not be loaded."
+
+#: src/blocks/material-icon/custom-svg-tab.js:34
+msgid "Fehler beim Laden des SVG."
+msgstr "Error loading SVG."
+
+#: src/blocks/material-icon/custom-svg-tab.js:42
+msgid "SVG aus der Mediabibliothek wählen oder neu hochladen. Nur SVG-Dateien."
+msgstr ""
+"SVG aus der Mediabibliothek wählen oder neu hochladen. Nur SVG-Dateien."
+
+#: src/blocks/material-icon/custom-svg-tab.js:49
+msgid "Bitte eine SVG-Datei wählen."
+msgstr "Please select an SVG file."
+
+#: src/blocks/material-icon/custom-svg-tab.js:57
+#: src/blocks/material-icon/edit.js:230
+msgid "Laden…"
+msgstr "Loading…"
+
+#: src/blocks/material-icon/custom-svg-tab.js:57
+msgid "SVG hochladen oder auswählen"
+msgstr "Upload or select SVG"
+
+#: src/blocks/material-icon/edit.js:19
+msgid "Outlined"
+msgstr "Outlined"
+
+#: src/blocks/material-icon/edit.js:20
+msgid "Rounded"
+msgstr "Rounded"
+
+#: src/blocks/material-icon/edit.js:21
+msgid "Sharp"
+msgstr "Sharp"
+
+#: src/blocks/material-icon/edit.js:175
+msgid "Icon-Einstellungen"
+msgstr "Icon settings"
+
+#: src/blocks/material-icon/edit.js:185
+msgid "Stärke"
+msgstr "Weight"
+
+#: src/blocks/material-icon/edit.js:195
+msgid "Größe (px)"
+msgstr "Size (px)"
+
+#: src/blocks/material-icon/edit.js:203
+msgid "Farbe"
+msgstr "Color"
+
+#: src/blocks/material-icon/edit.js:219
+msgid "Icon wechseln"
+msgstr "Change icon"
+
+#: src/blocks/material-icon/edit.js:219 src/blocks/material-icon/edit.js:245
+msgid "Icon wählen"
+msgstr "Select icon"
+
+#: src/blocks/material-icon/edit.js:235
+msgid "Icon konnte nicht geladen werden."
+msgstr "Icon could not be loaded."
+
+#: src/blocks/material-icon/edit.js:237
+msgid "Erneut laden"
+msgstr "Retry"
+
+#: src/blocks/material-icon/edit.js:252 src/blocks/material-icon/edit.js:255
+msgid "Icon auswählen"
+msgstr "Select icon"
+
+#: src/blocks/material-icon/edit.js:257
+msgid "Schließen"
+msgstr "Close"
+
+#: src/blocks/material-icon/edit.js:264
+msgid "Material Symbols"
+msgstr "Material Symbols"
+
+#: src/blocks/material-icon/edit.js:265
+msgid "Eigene SVG"
+msgstr "Custom SVG"
+
+#: src/blocks/material-icon/icon-search.js:121
+msgid "Icon suchen (z.B. home, arrow)…"
+msgstr "Search icon (e.g. home, arrow)…"
+
+#: src/blocks/material-icon/icon-search.js:124
+msgid "Icons"
+msgstr "Icons"
+
+#: src/blocks/material-icon/icon-search.js:128
+msgid "Keine Icons gefunden."
+msgstr "No icons found."
+
+#: src/blocks/material-icon/icon-search.js:129
+msgid "Mindestens 2 Zeichen eingeben."
+msgstr "Enter at least 2 characters."
+
+#: src/blocks/material-icon/index.js:13
+msgid "Material Icon"
+msgstr "Material Icon"
+
+#: src/blocks/material-icon/index.js:14
+msgid "Google Material Symbol als Inline-SVG mit Suche, Größe und Farbe."
+msgstr "Google Material Symbol as inline SVG with search, size and color."
+
+#: src/blocks/material-icon/index.js:16
+msgid "Icon"
+msgstr "Icon"
+
+#: src/blocks/material-icon/index.js:16
+msgid "SVG"
+msgstr "SVG"
+
+#: src/blocks/material-icon/index.js:16
+msgid "Material"
+msgstr "Material"

@@ -277,6 +277,52 @@
 	}
 
 	/**
+	 * Adopt current editor content as plugin original (dev mode only)
+	 */
+	function adoptAsOriginal() {
+		const $button = $('#adopt-as-original');
+		const type = $button.data('type');
+		const item = $button.data('item');
+		const file = $button.data('file');
+
+		if (!item || !codeEditor) return;
+		if (!confirm(gutenblockProAdmin.strings.confirmAdopt)) return;
+
+		const content = codeEditor.codemirror.getValue();
+		const $status = $('.save-status');
+
+		$button.prop('disabled', true);
+		$status.removeClass('error').text('…');
+
+		$.ajax({
+			url: gutenblockProAdmin.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'gutenblock_pro_adopt_as_original',
+				nonce: gutenblockProAdmin.nonce,
+				type: type,
+				item: item,
+				file: file,
+				content: content,
+			},
+			success: function (response) {
+				$button.prop('disabled', false);
+				if (response.success) {
+					$('.custom-indicator').hide();
+					$status.text(gutenblockProAdmin.strings.adopted + ' (' + response.data.size + ')');
+					setTimeout(function () { $status.text(''); }, 3000);
+				} else {
+					$status.addClass('error').text(gutenblockProAdmin.strings.error);
+				}
+			},
+			error: function () {
+				$button.prop('disabled', false);
+				$status.addClass('error').text(gutenblockProAdmin.strings.error);
+			},
+		});
+	}
+
+	/**
 	 * Keyboard shortcut for saving (Ctrl+S / Cmd+S)
 	 */
 	function handleKeyboardShortcuts(e) {
@@ -376,6 +422,9 @@
 		// Reset buttons
 		$('#reset-block-style').on('click', resetBlockStyle);
 		$('#reset-pattern-file').on('click', resetPatternFile);
+
+		// Adopt as original (dev mode)
+		$('#adopt-as-original').on('click', adoptAsOriginal);
 
 		// Pattern toggle
 		$('.pattern-toggle').on('change', function () {

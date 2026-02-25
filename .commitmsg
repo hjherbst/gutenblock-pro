@@ -1,8 +1,0 @@
-KI-Uebersetzungen, Material Icons Block, Premium-Fix, Version 1.8.0
-
-- Neue Einstellungsseite KI Uebersetzungen mit Toggle-Buttons fuer 18 Sprachen
-- Uebersetzungs-Panel in der Sidebar mit Sprach-Buttons und Translate All in Landessprache
-- Warnmodal vor Batch-Uebersetzung, differenziert nach Pro/Free-Lizenz
-- Material Icons Block: Inline-SVG mit Suche, eigene SVG-Uploads, Groessen-/Farbsteuerung
-- Premium-Erkennung: Dynamisch ueber Server-Liste statt hardcoded CSS-Klassen
-- Altes premium-lock.js entfernt (redundant, verursachte falsche Sperren)

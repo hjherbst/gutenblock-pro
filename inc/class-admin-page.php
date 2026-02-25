@@ -24,6 +24,7 @@ class GutenBlock_Pro_Admin_Page {
 		add_action( 'wp_ajax_gutenblock_pro_delete_pattern', array( $this, 'ajax_delete_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_reset_block_style', array( $this, 'ajax_reset_block_style' ) );
 		add_action( 'wp_ajax_gutenblock_pro_reset_pattern_file', array( $this, 'ajax_reset_pattern_file' ) );
+		add_action( 'wp_ajax_gutenblock_pro_adopt_as_original', array( $this, 'ajax_adopt_as_original' ) );
 		add_action( 'wp_ajax_gutenblock_pro_update_group', array( $this, 'ajax_update_group' ) );
 		add_action( 'wp_ajax_gutenblock_pro_update_premium', array( $this, 'ajax_update_premium' ) );
 		add_action( 'wp_ajax_gutenblock_pro_randomize_images', array( $this, 'ajax_randomize_images' ) );
@@ -43,6 +44,14 @@ class GutenBlock_Pro_Admin_Page {
 			array( $this, 'render_admin_page' ),
 			'dashicons-layout',
 			59
+		);
+
+		add_submenu_page(
+			'gutenblock-pro',
+			__( 'Sections/Varianten', 'gutenblock-pro' ),
+			__( 'Sections/Varianten', 'gutenblock-pro' ),
+			'manage_options',
+			'gutenblock-pro'
 		);
 	}
 
@@ -79,10 +88,13 @@ class GutenBlock_Pro_Admin_Page {
 		wp_localize_script( 'gutenblock-pro-admin', 'gutenblockProAdmin', array(
 			'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
 			'nonce'    => wp_create_nonce( 'gutenblock_pro_admin' ),
+			'isDevMode' => GUTENBLOCK_PRO_DEV,
 			'strings'  => array(
-				'saved'        => __( 'Gespeichert!', 'gutenblock-pro' ),
-				'error'        => __( 'Fehler beim Speichern', 'gutenblock-pro' ),
-				'confirmReset' => __( 'Datei wirklich zurücksetzen?', 'gutenblock-pro' ),
+				'saved'          => __( 'Gespeichert!', 'gutenblock-pro' ),
+				'error'          => __( 'Fehler beim Speichern', 'gutenblock-pro' ),
+				'confirmReset'   => __( 'Datei wirklich zurücksetzen?', 'gutenblock-pro' ),
+				'confirmAdopt'   => __( 'Aktuellen Editor-Inhalt als neues Original in das Plugin übernehmen?', 'gutenblock-pro' ),
+				'adopted'        => __( 'Als Original übernommen!', 'gutenblock-pro' ),
 			),
 		) );
 	}
@@ -177,10 +189,10 @@ class GutenBlock_Pro_Admin_Page {
 
 			<nav class="nav-tab-wrapper">
 				<a href="?page=gutenblock-pro&tab=patterns" class="nav-tab <?php echo $active_tab === 'patterns' ? 'nav-tab-active' : ''; ?>">
-					<?php _e( 'Patterns', 'gutenblock-pro' ); ?>
+					<?php _e( 'Sections', 'gutenblock-pro' ); ?>
 				</a>
 				<a href="?page=gutenblock-pro&tab=blocks" class="nav-tab <?php echo $active_tab === 'blocks' ? 'nav-tab-active' : ''; ?>">
-					<?php _e( 'Blöcke', 'gutenblock-pro' ); ?>
+					<?php _e( 'Stilvarianten', 'gutenblock-pro' ); ?>
 				</a>
 				<a href="?page=gutenblock-pro&tab=editor" class="nav-tab <?php echo $active_tab === 'editor' ? 'nav-tab-active' : ''; ?>">
 					<?php _e( 'CSS/JS Editor', 'gutenblock-pro' ); ?>
@@ -344,15 +356,15 @@ class GutenBlock_Pro_Admin_Page {
 			<div class="editor-sidebar">
 				<div class="editor-sidebar-tabs">
 					<button type="button" class="sidebar-tab <?php echo $selected_type === 'pattern' ? 'active' : ''; ?>" data-type="pattern">
-						<?php _e( 'Patterns', 'gutenblock-pro' ); ?>
+						<?php _e( 'Sections', 'gutenblock-pro' ); ?>
 					</button>
 					<button type="button" class="sidebar-tab <?php echo $selected_type === 'block' ? 'active' : ''; ?>" data-type="block">
-						<?php _e( 'Blöcke', 'gutenblock-pro' ); ?>
+						<?php _e( 'Stilvarianten', 'gutenblock-pro' ); ?>
 					</button>
 				</div>
 				
 				<?php if ( $selected_type === 'pattern' ) : ?>
-					<h3><?php _e( 'Patterns', 'gutenblock-pro' ); ?></h3>
+					<h3><?php _e( 'Sections', 'gutenblock-pro' ); ?></h3>
 					<ul class="pattern-list">
 						<?php foreach ( $patterns as $slug => $pattern ) : ?>
 							<li class="<?php echo $slug === $selected_item ? 'active' : ''; ?>">
@@ -429,6 +441,12 @@ class GutenBlock_Pro_Admin_Page {
 								<span class="dashicons dashicons-image-rotate"></span>
 								<?php _e( 'Auf Original zurücksetzen', 'gutenblock-pro' ); ?>
 							</button>
+							<?php if ( GUTENBLOCK_PRO_DEV ) : ?>
+							<button type="button" class="button button-link-delete" id="adopt-as-original" data-type="pattern" data-item="<?php echo esc_attr( $selected_item ); ?>" data-file="<?php echo esc_attr( $selected_file ); ?>" style="margin-left:8px;">
+								<span class="dashicons dashicons-upload"></span>
+								<?php _e( 'Als Original übernehmen', 'gutenblock-pro' ); ?>
+							</button>
+							<?php endif; ?>
 							<span class="save-status"></span>
 							<span class="custom-indicator" style="display:none; margin-left:12px; color:#d63638; font-style:italic;">
 								<?php _e( 'Angepasst', 'gutenblock-pro' ); ?>
@@ -471,6 +489,12 @@ class GutenBlock_Pro_Admin_Page {
 								<span class="dashicons dashicons-image-rotate"></span>
 								<?php _e( 'Auf Original zurücksetzen', 'gutenblock-pro' ); ?>
 							</button>
+							<?php if ( GUTENBLOCK_PRO_DEV ) : ?>
+							<button type="button" class="button button-link-delete" id="adopt-as-original" data-type="block" data-item="<?php echo esc_attr( $selected_item ); ?>" data-file="style" style="margin-left:8px;">
+								<span class="dashicons dashicons-upload"></span>
+								<?php _e( 'Als Original übernehmen', 'gutenblock-pro' ); ?>
+							</button>
+							<?php endif; ?>
 							<span class="save-status"></span>
 							<span class="custom-indicator" style="display:none; margin-left:12px; color:#d63638; font-style:italic;">
 								<?php _e( 'Angepasst', 'gutenblock-pro' ); ?>
@@ -562,7 +586,7 @@ class GutenBlock_Pro_Admin_Page {
 				<h3><?php _e( 'Statistiken', 'gutenblock-pro' ); ?></h3>
 				<table class="widefat">
 					<tr>
-						<th><?php _e( 'Patterns gesamt', 'gutenblock-pro' ); ?></th>
+						<th><?php _e( 'Sections gesamt', 'gutenblock-pro' ); ?></th>
 						<td><?php echo count( $patterns ); ?></td>
 					</tr>
 					<tr>
@@ -582,7 +606,7 @@ class GutenBlock_Pro_Admin_Page {
 
 			<div class="info-card">
 				<h3><?php _e( 'Conditional Loading', 'gutenblock-pro' ); ?></h3>
-				<p><?php _e( 'GutenBlock Pro lädt CSS und JS nur für Patterns, die auf der aktuellen Seite verwendet werden.', 'gutenblock-pro' ); ?></p>
+				<p><?php _e( 'GutenBlock Pro lädt CSS und JS nur für Sections, die auf der aktuellen Seite verwendet werden.', 'gutenblock-pro' ); ?></p>
 				<p><?php _e( 'Die Erkennung basiert auf der CSS-Klasse:', 'gutenblock-pro' ); ?> <code>gb-pattern-{slug}</code></p>
 			</div>
 
@@ -594,7 +618,7 @@ class GutenBlock_Pro_Admin_Page {
 						<td><code><?php echo GUTENBLOCK_PRO_PATH; ?></code></td>
 					</tr>
 					<tr>
-						<th><?php _e( 'Patterns-Verzeichnis', 'gutenblock-pro' ); ?></th>
+						<th><?php _e( 'Sections-Verzeichnis', 'gutenblock-pro' ); ?></th>
 						<td><code><?php echo GUTENBLOCK_PRO_PATTERNS_PATH; ?></code></td>
 					</tr>
 				</table>
@@ -949,6 +973,73 @@ class GutenBlock_Pro_Admin_Page {
 		$content = file_exists( $default_path ) ? file_get_contents( $default_path ) : '';
 
 		wp_send_json_success( array( 'content' => $content ) );
+	}
+
+	/**
+	 * AJAX: Adopt current editor content as plugin original (dev mode only).
+	 * Writes directly into the plugin directory so the file ships with the next release.
+	 */
+	public function ajax_adopt_as_original() {
+		check_ajax_referer( 'gutenblock_pro_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) || ! GUTENBLOCK_PRO_DEV ) {
+			wp_send_json_error( 'Permission denied' );
+		}
+
+		$type    = isset( $_POST['type'] ) ? sanitize_key( $_POST['type'] ) : 'pattern';
+		$item    = isset( $_POST['item'] ) ? sanitize_key( $_POST['item'] ) : '';
+		$file    = isset( $_POST['file'] ) ? sanitize_text_field( $_POST['file'] ) : '';
+		$content = wp_unslash( $_POST['content'] );
+
+		if ( empty( $item ) || empty( $file ) ) {
+			wp_send_json_error( 'Missing parameters' );
+		}
+
+		if ( $type === 'block' ) {
+			$target = GUTENBLOCK_PRO_BLOCKS_PATH . $item . '/style.css';
+		} else {
+			$file_map = array(
+				'style'   => 'style.css',
+				'editor'  => 'editor.css',
+				'script'  => 'script.js',
+				'content' => 'content.html',
+			);
+
+			if ( strpos( $file, 'content_' ) === 0 ) {
+				$lang = str_replace( 'content_', '', $file );
+				$file_map[ $file ] = 'content-' . $lang . '.html';
+			}
+
+			if ( ! isset( $file_map[ $file ] ) ) {
+				wp_send_json_error( 'Invalid file type' );
+			}
+
+			$target = GUTENBLOCK_PRO_PATTERNS_PATH . $item . '/' . $file_map[ $file ];
+		}
+
+		$target_dir = dirname( $target );
+		if ( ! is_dir( $target_dir ) ) {
+			wp_mkdir_p( $target_dir );
+		}
+
+		$result = file_put_contents( $target, $content );
+
+		if ( $result === false ) {
+			wp_send_json_error( 'Could not write file' );
+		}
+
+		// Remove custom override so the editor shows the new original
+		if ( $type === 'block' ) {
+			$custom = gutenblock_pro_custom_block_file( $item );
+		} else {
+			$custom = gutenblock_pro_custom_pattern_file( $item, $file_map[ $file ] );
+		}
+
+		if ( file_exists( $custom['path'] ) ) {
+			unlink( $custom['path'] );
+		}
+
+		wp_send_json_success( array( 'size' => size_format( strlen( $content ) ) ) );
 	}
 
 	/**

@@ -5,3 +5,29 @@
 .gb-pattern-process-v2 {
 	/* Add your styles here */
 }
+
+/* Start Timeline v1 */
+.gb-timeline-v1-step-container:before {
+    content: "";
+    float: left;
+    position: relative;
+    top: 38px;
+    left: -38px;
+    width: 14px;
+    height: 14px;
+    background-color: #030303;
+    border-radius: 50%;
+}
+.gb-timeline-v1-step:before {
+    width: 30px;
+    height: 30px;
+    content: "";
+    display: block;
+    background: var(--wp--preset--color--base);
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    position: relative;
+    top: 30px;
+    left: -15px;
+    margin-bottom: -30px;
+}
+/* End Timeline v1 */

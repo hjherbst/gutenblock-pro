@@ -20,6 +20,7 @@ class GutenBlock_Pro_Translation_Settings {
 	 */
 	public static function get_available_languages() {
 		return array(
+			'de' => array( 'label' => 'Deutsch',         'promptLang' => 'ins Deutsche',        'translateAll' => 'Alles übersetzen' ),
 			'en' => array( 'label' => 'Englisch',        'promptLang' => 'ins Englische',       'translateAll' => 'Translate all' ),
 			'fr' => array( 'label' => 'Französisch',     'promptLang' => 'ins Französische',    'translateAll' => 'Traduire tout' ),
 			'es' => array( 'label' => 'Spanisch',        'promptLang' => 'ins Spanische',       'translateAll' => 'Traducir todo' ),

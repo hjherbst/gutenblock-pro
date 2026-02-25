@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.8.0
+ * Version: 1.9.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,11 +17,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.8.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.9.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
 define( 'GUTENBLOCK_PRO_BLOCKS_PATH', GUTENBLOCK_PRO_PATH . 'blocks/' );
+
+if ( ! defined( 'GUTENBLOCK_PRO_DEV' ) ) {
+	define( 'GUTENBLOCK_PRO_DEV', false );
+}
 
 /**
  * Get the uploads-based custom path/URL for a block variant file.
@@ -103,6 +107,9 @@ add_action( 'plugins_loaded', 'gutenblock_pro_init_update_checker', 5 );
  * Initialize the plugin
  */
 function gutenblock_pro_init() {
+	// Load plugin text domain
+	load_plugin_textdomain( 'gutenblock-pro', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+
 	// Initialize Bridge Installer (mu-plugin)
 	GutenBlock_Pro_Bridge_Installer::get_instance();
 

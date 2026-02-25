@@ -90,7 +90,9 @@ class GutenBlock_Pro_AI_Generator {
 			array(),
 			$asset['version']
 		);
-		
+
+		wp_set_script_translations( 'gutenblock-pro-ai-editor', 'gutenblock-pro', GUTENBLOCK_PRO_PATH . 'languages' );
+
 		// Get license info
 		$license = GutenBlock_Pro_License::get_instance();
 		

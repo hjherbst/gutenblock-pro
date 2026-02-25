@@ -1,0 +1,636 @@
+{
+  "domain": "gutenblock-pro",
+  "locale_data": {
+    "gutenblock-pro": {
+      "": {
+        "domain": "gutenblock-pro",
+        "lang": "en_US",
+        "plural_forms": "nplurals=2; plural=(n != 1);"
+      },
+      "GutenBlock Pro": [
+        "GutenBlock Pro"
+      ],
+      "Gespeichert!": [
+        "Saved!"
+      ],
+      "Fehler beim Speichern": [
+        "Error saving"
+      ],
+      "Datei wirklich zurücksetzen?": [
+        "Really reset file?"
+      ],
+      "Patterns": [
+        "Patterns"
+      ],
+      "Blöcke": [
+        "Blocks"
+      ],
+      "CSS/JS Editor": [
+        "CSS/JS Editor"
+      ],
+      "Info": [
+        "Info"
+      ],
+      "Keine Sections gefunden.": [
+        "No sections found."
+      ],
+      "Sections": [
+        "Sections"
+      ],
+      "Seiten": [
+        "Pages"
+      ],
+      "Premium Pattern": [
+        "Premium Pattern"
+      ],
+      "Premium/Free": [
+        "Premium/Free"
+      ],
+      "Löschen": [
+        "Delete"
+      ],
+      "— Keine Gruppe —": [
+        "— No group —"
+      ],
+      "Block-Varianten": [
+        "Block Variants"
+      ],
+      "Speichern": [
+        "Save"
+      ],
+      "Auf Original zurücksetzen": [
+        "Reset to original"
+      ],
+      "Angepasst": [
+        "Customized"
+      ],
+      "Wähle ein Pattern oder eine Block-Variante aus der Liste.": [
+        "Select a pattern or block variant from the list."
+      ],
+      "Block-Erweiterungen": [
+        "Block Extensions"
+      ],
+      "Übersicht aller registrierten Block-Varianten und Block-Erweiterungen von GutenBlock Pro.": [
+        "Overview of all registered block variants and block extensions from GutenBlock Pro."
+      ],
+      "Noch keine Block-Erweiterungen registriert.": [
+        "No block extensions registered yet."
+      ],
+      "Block:": [
+        "Block:"
+      ],
+      "Variante:": [
+        "Variant:"
+      ],
+      "Statistiken": [
+        "Statistics"
+      ],
+      "Patterns gesamt": [
+        "Total patterns"
+      ],
+      "CSS gesamt": [
+        "Total CSS"
+      ],
+      "JS gesamt": [
+        "Total JS"
+      ],
+      "Plugin Version": [
+        "Plugin Version"
+      ],
+      "Conditional Loading": [
+        "Conditional Loading"
+      ],
+      "GutenBlock Pro lädt CSS und JS nur für Patterns, die auf der aktuellen Seite verwendet werden.": [
+        "GutenBlock Pro loads CSS and JS only for patterns used on the current page."
+      ],
+      "Die Erkennung basiert auf der CSS-Klasse:": [
+        "Detection is based on the CSS class:"
+      ],
+      "Pfade": [
+        "Paths"
+      ],
+      "Plugin-Verzeichnis": [
+        "Plugin directory"
+      ],
+      "Patterns-Verzeichnis": [
+        "Patterns directory"
+      ],
+      "Bilder erfolgreich aktualisiert": [
+        "Images updated successfully"
+      ],
+      "Keine picsum.photos Bilder gefunden": [
+        "No picsum.photos images found"
+      ],
+      "Prompt ist erforderlich": [
+        "Prompt is required"
+      ],
+      "Monatliches Token-Limit erreicht. Upgrade auf Pro für unbegrenzte Generierung.": [
+        "Monthly token limit reached. Upgrade to Pro for unlimited generation."
+      ],
+      "API-Key nicht konfiguriert": [
+        "API key not configured"
+      ],
+      "Schreibe einen passenden Text für das Element „%s\".": [
+        "Write suitable text for the element \"%s\"."
+      ],
+      "Fehler bei der AI-Generierung: ": [
+        "Error during AI generation: "
+      ],
+      "Keine Content-Felder angegeben": [
+        "No content fields specified"
+      ],
+      "Ungültige JSON-Response von der API. Response: ": [
+        "Invalid JSON response from API. Response: "
+      ],
+      "Rate-Limit erreicht. Bitte warte einen Moment.": [
+        "Rate limit reached. Please wait a moment."
+      ],
+      "AI-Generierung fehlgeschlagen": [
+        "AI generation failed"
+      ],
+      "Kein Text zum Übersetzen": [
+        "No text to translate"
+      ],
+      "Token-Limit erreicht": [
+        "Token limit reached"
+      ],
+      "KI-Einstellungen": [
+        "AI Settings"
+      ],
+      "Aktiviere...": [
+        "Activating..."
+      ],
+      "Deaktiviere...": [
+        "Deactivating..."
+      ],
+      "Lade Prompts...": [
+        "Loading prompts..."
+      ],
+      "GutenBlock Pro - KI-Einstellungen": [
+        "GutenBlock Pro - AI Settings"
+      ],
+      "Lizenz": [
+        "License"
+      ],
+      "Pro-Lizenz aktiv": [
+        "Pro license active"
+      ],
+      "Lizenz deaktivieren": [
+        "Deactivate license"
+      ],
+      "Kostenlose Version": [
+        "Free version"
+      ],
+      "Lizenz aktivieren": [
+        "Activate license"
+      ],
+      "Noch keine Lizenz? %s": [
+        "No license yet? %s"
+      ],
+      "Jetzt kaufen": [
+        "Buy now"
+      ],
+      "1 Mio. AI-Tokens monatlich": [
+        "1M AI tokens monthly"
+      ],
+      "Alle Premium-Patterns freigeschalten": [
+        "All premium patterns unlocked"
+      ],
+      "Einmalig zahlen, lebenslang nutzen": [
+        "Pay once, use forever"
+      ],
+      "Token-Verbrauch": [
+        "Token usage"
+      ],
+      "Unbegrenzte Tokens (Pro)": [
+        "Unlimited tokens (Pro)"
+      ],
+      "Tokens": [
+        "Tokens"
+      ],
+      "Verbleibend: %1$s Tokens. Reset: %2$s": [
+        "Remaining: %1$s tokens. Reset: %2$s"
+      ],
+      "KI-Prompts": [
+        "AI Prompts"
+      ],
+      "Definiere den Stil und Kontext für alle KI-generierten Texte. Diese Prompts werden bei jeder Generierung kombiniert verwendet.": [
+        "Define style and context for all AI-generated texts. These prompts are combined for each generation."
+      ],
+      "Stil": [
+        "Style"
+      ],
+      "Definiere den Schreibstil und technische Vorgaben für die Texte.": [
+        "Define writing style and technical guidelines for the texts."
+      ],
+      "Kontext": [
+        "Context"
+      ],
+      "z.B. Ich bin ein Marketing-Berater und helfe Unternehmen bei der digitalen Transformation...": [
+        "e.g. I am a marketing consultant helping companies with digital transformation..."
+      ],
+      "Beschreibe wer du bist und was du machst. Diese Informationen werden mit dem Stil kombiniert.": [
+        "Describe who you are and what you do. This is combined with the style."
+      ],
+      "Bild-API Anbieter": [
+        "Image API provider"
+      ],
+      "Pexels": [
+        "Pexels"
+      ],
+      "Unsplash": [
+        "Unsplash"
+      ],
+      "Wähle den API-Anbieter für die Bildsuche. Ohne API Key wird picsum.photos verwendet.": [
+        "Select API provider for image search. Without API key, picsum.photos is used."
+      ],
+      "Pexels API Key": [
+        "Pexels API Key"
+      ],
+      "Optional: API Key von %1$s. Alle über die API bezogenen Bilder sind unter der Pexels-Lizenz frei verwendbar (kommerziell erlaubt, keine Attribution erforderlich). Siehe %2$s für Details.": [
+        "Optional: API key from %1$s. All API images are freely usable under Pexels license (commercial allowed, no attribution required). See %2$s for details."
+      ],
+      "Unsplash API Key": [
+        "Unsplash API Key"
+      ],
+      "Optional: Access Key von %1$s. Alle über die API bezogenen Bilder sind unter der Unsplash-Lizenz frei verwendbar. Siehe %2$s für Details.": [
+        "Optional: Access key from %1$s. All API images are freely usable under Unsplash license. See %2$s for details."
+      ],
+      "Einstellungen speichern": [
+        "Save settings"
+      ],
+      "Block-Prompts": [
+        "Block Prompts"
+      ],
+      "Prompts mit API synchronisieren": [
+        "Synchronize prompts with API"
+      ],
+      "Diese Prompts werden mit der API von gutenblock.com synchronisiert und definieren, welcher Text für welches Block-Element generiert wird. Custom Prompts überschreiben die API-Prompts.": [
+        "These prompts are synced with gutenblock.com API and define which text is generated for which block element. Custom prompts override API prompts."
+      ],
+      "Block-ID": [
+        "Block ID"
+      ],
+      "Prompt (API)": [
+        "Prompt (API)"
+      ],
+      "Custom Prompt": [
+        "Custom Prompt"
+      ],
+      "Optional: Eigener Prompt (überschreibt API-Prompt)": [
+        "Optional: Custom prompt (overrides API prompt)"
+      ],
+      "Custom Prompts speichern": [
+        "Save custom prompts"
+      ],
+      "Keine Prompts geladen. Klicke auf \"Aktualisieren\" um die Prompts von gutenblock.com zu laden.": [
+        "No prompts loaded. Click \"Update\" to load prompts from gutenblock.com."
+      ],
+      "Keine Berechtigung": [
+        "No permission"
+      ],
+      "Bitte Lizenzschlüssel eingeben": [
+        "Please enter license key"
+      ],
+      "Prompts erfolgreich aktualisiert": [
+        "Prompts updated successfully"
+      ],
+      "Keine Prompts gefunden. Prüfe die Verbindung zu gutenblock.com": [
+        "No prompts found. Check connection to gutenblock.com"
+      ],
+      "Custom Prompts erfolgreich gespeichert": [
+        "Custom prompts saved successfully"
+      ],
+      "Checkmark": [
+        "Checkmark"
+      ],
+      "Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente": [
+        "Shows checkmarks (✓) instead of bullets for all list items"
+      ],
+      "Welle": [
+        "Wave"
+      ],
+      "Diagonale": [
+        "Diagonal"
+      ],
+      "Bogen": [
+        "Arch"
+      ],
+      "Spitze": [
+        "Point"
+      ],
+      "Zickzack": [
+        "Zigzag"
+      ],
+      "Asymmetric": [
+        "Asymmetric"
+      ],
+      "Layered Wave": [
+        "Layered Wave"
+      ],
+      "Features": [
+        "Features"
+      ],
+      "Aktiviere oder deaktiviere optionale Funktionen von GutenBlock Pro.": [
+        "Enable or disable optional GutenBlock Pro features."
+      ],
+      "Lizenz erfolgreich aktiviert!": [
+        "License activated successfully!"
+      ],
+      "Aktivierung fehlgeschlagen": [
+        "Activation failed"
+      ],
+      "Lizenz deaktiviert": [
+        "License deactivated"
+      ],
+      "Als GB Pro Pattern speichern": [
+        "Save as GB Pro Pattern"
+      ],
+      "GutenBlock Pro Pattern erstellen": [
+        "Create GutenBlock Pro Pattern"
+      ],
+      "Pattern Name": [
+        "Pattern Name"
+      ],
+      "Mein neues Pattern": [
+        "My new pattern"
+      ],
+      "Slug": [
+        "Slug"
+      ],
+      "Wird automatisch generiert": [
+        "Generated automatically"
+      ],
+      "Beschreibung": [
+        "Description"
+      ],
+      "Kurze Beschreibung des Patterns": [
+        "Short pattern description"
+      ],
+      "Keywords": [
+        "Keywords"
+      ],
+      "hero, cta, button (kommagetrennt)": [
+        "hero, cta, button (comma-separated)"
+      ],
+      "Sprache": [
+        "Language"
+      ],
+      "Für welche Sprache ist dieser Content?": [
+        "For which language is this content?"
+      ],
+      "Default (Fallback)": [
+        "Default (Fallback)"
+      ],
+      "Typ": [
+        "Type"
+      ],
+      "Section": [
+        "Section"
+      ],
+      "Seite": [
+        "Page"
+      ],
+      "Gruppe": [
+        "Group"
+      ],
+      "Lokale Bilder ersetzen": [
+        "Replace local images"
+      ],
+      "Ersetzt Bilder aus dem Uploads-Ordner durch Placeholder (picsum.photos)": [
+        "Ersetzt Bilder aus dem Uploads-Ordner durch Placeholder (picsum.photos)"
+      ],
+      "Pattern erstellen": [
+        "Create pattern"
+      ],
+      "Content aktualisieren": [
+        "Update content"
+      ],
+      "Bestehendes Pattern aktualisieren": [
+        "Update existing pattern"
+      ],
+      "Nur content.html wird überschrieben. CSS und JS bleiben erhalten.": [
+        "Only content.html is overwritten. CSS and JS remain."
+      ],
+      "Pattern existiert bereits. Content wird aktualisiert.": [
+        "Pattern already exists. Content will be updated."
+      ],
+      "Abbrechen": [
+        "Cancel"
+      ],
+      "Erstelle Pattern...": [
+        "Creating pattern..."
+      ],
+      "Pattern erfolgreich erstellt!": [
+        "Pattern created successfully!"
+      ],
+      "Fehler beim Erstellen des Patterns": [
+        "Error creating pattern"
+      ],
+      "Bitte wähle mindestens einen Block aus.": [
+        "Please select at least one block."
+      ],
+      "Bitte gib einen Namen ein.": [
+        "Please enter a name."
+      ],
+      "KI Übersetzungen": [
+        "AI Translations"
+      ],
+      "Aktiviere die Sprachen, in die im Editor übersetzt werden kann. Jede aktivierte Sprache erscheint als Button in der Sidebar.": [
+        "Aktiviere die Sprachen, in die im Editor übersetzt werden kann. Jede aktivierte Sprache erscheint als Button in der Sidebar."
+      ],
+      "Fehler bei der Generierung": [
+        "Error during generation"
+      ],
+      "Mindestens 3 Zeichen Text erforderlich": [
+        "At least 3 characters of text required"
+      ],
+      "Fehler bei der Übersetzung": [
+        "Error during translation"
+      ],
+      "GutenBlock AI": [
+        "GutenBlock AI"
+      ],
+      "Content-Feld": [
+        "Content field"
+      ],
+      "Prompt (aus Content-Feld)": [
+        "Prompt (from content field)"
+      ],
+      "Eigener Prompt": [
+        "Custom prompt"
+      ],
+      "Wähle ein Content-Feld oder schreibe einen eigenen Prompt...": [
+        "Select a content field or write a custom prompt..."
+      ],
+      "Der Prompt wird aus dem Content-Feld geladen. Du kannst ihn hier temporär anpassen.": [
+        "Der Prompt wird aus dem Content-Feld geladen. Du kannst ihn hier temporär anpassen."
+      ],
+      "Generieren": [
+        "Generate"
+      ],
+      "Variante": [
+        "Variant"
+      ],
+      "Neu": [
+        "New"
+      ],
+      "+10%": [
+        "+10%"
+      ],
+      "-10%": [
+        "-10%"
+      ],
+      "Keine übersetzbaren Textblöcke gefunden.": [
+        "No translatable text blocks found."
+      ],
+      "Übersetzen": [
+        "Translate"
+      ],
+      "übersetzt…": [
+        "translated…"
+      ],
+      "Ganze Seite übersetzen": [
+        "Translate entire page"
+      ],
+      "Alle Textblöcke auf dieser Seite werden übersetzt. Das kann einen Moment dauern.": [
+        "Alle Textblöcke auf dieser Seite werden übersetzt. Das kann einen Moment dauern."
+      ],
+      "Die Übersetzung aller Textblöcke auf dieser Seite kann viele Tokens verbrauchen.": [
+        "Die Übersetzung aller Textblöcke auf dieser Seite kann viele Tokens verbrauchen."
+      ],
+      "Token-Limit erhöhen": [
+        "Increase token limit"
+      ],
+      "Trotzdem übersetzen": [
+        "Translate anyway"
+      ],
+      "Keine Content-Felder in dieser Gruppe gefunden.": [
+        "No content fields found in this group."
+      ],
+      "GutenBlock AI - Gruppe": [
+        "GutenBlock AI - Group"
+      ],
+      "Gefundene Content-Felder:": [
+        "Found content fields:"
+      ],
+      "Keine Content-Felder mit metadata.name in dieser Gruppe gefunden.": [
+        "No content fields with metadata.name found in this group."
+      ],
+      "Gruppen-Prompt": [
+        "Group prompt"
+      ],
+      "Beschreibe, was für alle Content-Felder generiert werden soll...": [
+        "Describe what should be generated for all content fields..."
+      ],
+      "Dieser Prompt wird für alle Content-Felder in der Gruppe verwendet.": [
+        "This prompt is used for all content fields in the group."
+      ],
+      "Alle Felder generieren": [
+        "Generate all fields"
+      ],
+      "Hinweis: Füge Blöcke mit metadata.name in diese Gruppe ein, um sie hier zu sehen.": [
+        "Note: Add blocks with metadata.name to this group to see them here."
+      ],
+      "🔒 Pro Plus erforderlich": [
+        "🔒 Pro Plus required"
+      ],
+      "Dieses Pattern kann als Vorschau eingefügt werden, ist aber nur mit GutenBlock Pro Plus bearbeitbar.": [
+        "Dieses Pattern kann als Vorschau eingefügt werden, ist aber nur mit GutenBlock Pro Plus bearbeitbar."
+      ],
+      "Jetzt upgraden": [
+        "Upgrade now"
+      ],
+      "SVG konnte nicht geladen werden.": [
+        "SVG could not be loaded."
+      ],
+      "Fehler beim Laden des SVG.": [
+        "Error loading SVG."
+      ],
+      "SVG aus der Mediabibliothek wählen oder neu hochladen. Nur SVG-Dateien.": [
+        "SVG aus der Mediabibliothek wählen oder neu hochladen. Nur SVG-Dateien."
+      ],
+      "Bitte eine SVG-Datei wählen.": [
+        "Please select an SVG file."
+      ],
+      "Laden…": [
+        "Loading…"
+      ],
+      "SVG hochladen oder auswählen": [
+        "Upload or select SVG"
+      ],
+      "Outlined": [
+        "Outlined"
+      ],
+      "Rounded": [
+        "Rounded"
+      ],
+      "Sharp": [
+        "Sharp"
+      ],
+      "Icon-Einstellungen": [
+        "Icon settings"
+      ],
+      "Stärke": [
+        "Weight"
+      ],
+      "Größe (px)": [
+        "Size (px)"
+      ],
+      "Farbe": [
+        "Color"
+      ],
+      "Icon wechseln": [
+        "Change icon"
+      ],
+      "Icon wählen": [
+        "Select icon"
+      ],
+      "Icon konnte nicht geladen werden.": [
+        "Icon could not be loaded."
+      ],
+      "Erneut laden": [
+        "Retry"
+      ],
+      "Icon auswählen": [
+        "Select icon"
+      ],
+      "Schließen": [
+        "Close"
+      ],
+      "Material Symbols": [
+        "Material Symbols"
+      ],
+      "Eigene SVG": [
+        "Custom SVG"
+      ],
+      "Icon suchen (z.B. home, arrow)…": [
+        "Search icon (e.g. home, arrow)…"
+      ],
+      "Icons": [
+        "Icons"
+      ],
+      "Keine Icons gefunden.": [
+        "No icons found."
+      ],
+      "Mindestens 2 Zeichen eingeben.": [
+        "Enter at least 2 characters."
+      ],
+      "Material Icon": [
+        "Material Icon"
+      ],
+      "Google Material Symbol als Inline-SVG mit Suche, Größe und Farbe.": [
+        "Google Material Symbol as inline SVG with search, size and color."
+      ],
+      "Icon": [
+        "Icon"
+      ],
+      "SVG": [
+        "SVG"
+      ],
+      "Material": [
+        "Material"
+      ]
+    }
+  }
+}
