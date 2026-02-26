@@ -98,6 +98,7 @@ class GutenBlock_Pro_AI_Generator {
 		
 		// Localize script with config
 		wp_localize_script( 'gutenblock-pro-ai-editor', 'gutenblockProConfig', array(
+			'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
 			'restUrl'            => rest_url( 'gutenblock-pro/v1/' ),
 			'nonce'              => wp_create_nonce( 'wp_rest' ),
 			'isPro'              => $license->is_pro(),

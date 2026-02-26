@@ -8,9 +8,14 @@ import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
 import { MediaUpload } from '@wordpress/block-editor';
-import apiFetch from '@wordpress/api-fetch';
 
 const SVG_MIME = 'image/svg+xml';
+
+function ajaxGet( params ) {
+	const base = window.gutenblockProConfig?.ajaxUrl || window.ajaxurl || '/wp-admin/admin-ajax.php';
+	const qs = new URLSearchParams( params ).toString();
+	return fetch( `${ base }?${ qs }`, { credentials: 'include' } ).then( ( r ) => r.json() );
+}
 
 export default function CustomSvgTab( { onSelect, onClose } ) {
 	const [ loading, setLoading ] = useState( false );
@@ -20,8 +25,7 @@ export default function CustomSvgTab( { onSelect, onClose } ) {
 		if ( ! attachmentId ) return;
 		setError( '' );
 		setLoading( true );
-		const url = `${ window.ajaxurl || '/wp-admin/admin-ajax.php' }?action=gutenblock_pro_svg_markup&attachment_id=${ attachmentId }`;
-		apiFetch( { url } )
+		ajaxGet( { action: 'gutenblock_pro_svg_markup', attachment_id: attachmentId } )
 			.then( ( res ) => {
 				if ( res && res.success && res.data && res.data.markup ) {
 					onSelect( { id: attachmentId, markup: res.data.markup } );

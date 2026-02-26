@@ -9,10 +9,15 @@ import { useBlockProps } from '@wordpress/block-editor';
 import { InspectorControls } from '@wordpress/block-editor';
 import { PanelBody, Button, RangeControl, SelectControl, ColorPalette, TabPanel } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import apiFetch from '@wordpress/api-fetch';
 import { useSelect } from '@wordpress/data';
 import IconSearch from './icon-search';
 import CustomSvgTab from './custom-svg-tab';
+
+function ajaxGet( params ) {
+	const base = window.gutenblockProConfig?.ajaxUrl || window.ajaxurl || '/wp-admin/admin-ajax.php';
+	const qs = new URLSearchParams( params ).toString();
+	return fetch( `${ base }?${ qs }`, { credentials: 'include' } ).then( ( r ) => r.json() );
+}
 
 const VIEWBOX = '0 -960 960 960';
 const STYLES = [
@@ -84,9 +89,8 @@ export default function Edit( { attributes, setAttributes } ) {
 
 	const fetchPaths = useCallback( ( iconName ) => {
 		if ( ! iconName ) return;
-		const url = `${ window.ajaxurl || '/wp-admin/admin-ajax.php' }?action=gutenblock_pro_icon_paths&icon=${ encodeURIComponent( iconName ) }`;
 		setLoadingPaths( true );
-		apiFetch( { url } )
+		ajaxGet( { action: 'gutenblock_pro_icon_paths', icon: iconName } )
 			.then( ( res ) => {
 				if ( res && res.success && res.data ) {
 					setPathData( res.data );
@@ -154,8 +158,7 @@ export default function Edit( { attributes, setAttributes } ) {
 		if ( cache[ iconName ] !== undefined ) {
 			return Promise.resolve( cache[ iconName ] );
 		}
-		const url = `${ window.ajaxurl || '/wp-admin/admin-ajax.php' }?action=gutenblock_pro_icon_paths&icon=${ encodeURIComponent( iconName ) }`;
-		return apiFetch( { url } ).then( ( res ) => {
+		return ajaxGet( { action: 'gutenblock_pro_icon_paths', icon: iconName } ).then( ( res ) => {
 			if ( res && res.success && res.data ) {
 				const path = getPathFromData( res.data, 'outlined', 400 );
 				cache[ iconName ] = path;

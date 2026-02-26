@@ -32,8 +32,10 @@ class GutenBlock_Pro_Material_Icons {
 		add_action( 'init', array( $this, 'register_block' ) );
 		add_action( 'init', array( $this, 'enqueue_block_style' ), 20 );
 		add_action( 'wp_ajax_gutenblock_pro_icon_paths', array( $this, 'ajax_icon_paths' ) );
+		add_action( 'wp_ajax_nopriv_gutenblock_pro_icon_paths', array( $this, 'ajax_icon_paths' ) );
 		add_action( 'wp_ajax_gutenblock_pro_svg_markup', array( $this, 'ajax_svg_markup' ) );
 		add_filter( 'upload_mimes', array( $this, 'allow_svg_upload' ) );
+		add_filter( 'wp_check_filetype_and_ext', array( $this, 'fix_svg_mime_type' ), 10, 5 );
 	}
 
 	/**
@@ -50,6 +52,24 @@ class GutenBlock_Pro_Material_Icons {
 			$mimes['svgz'] = 'image/svg+xml';
 		}
 		return $mimes;
+	}
+
+	/**
+	 * Fix SVG MIME type detection – WordPress core rejects SVGs
+	 * because fileinfo cannot identify them as image/svg+xml.
+	 */
+	public function fix_svg_mime_type( $data, $file, $filename, $mimes, $real_mime = '' ) {
+		if ( ! empty( $data['ext'] ) && ! empty( $data['type'] ) ) {
+			return $data;
+		}
+
+		$ext = pathinfo( $filename, PATHINFO_EXTENSION );
+		if ( strtolower( $ext ) === 'svg' ) {
+			$data['ext']  = 'svg';
+			$data['type'] = 'image/svg+xml';
+		}
+
+		return $data;
 	}
 
 	/**
@@ -181,7 +201,8 @@ class GutenBlock_Pro_Material_Icons {
 			wp_send_json_error( array( 'message' => 'File not found' ) );
 		}
 		$mime = get_post_mime_type( $id );
-		if ( $mime !== 'image/svg+xml' ) {
+		$is_svg = ( $mime === 'image/svg+xml' ) || ( strtolower( pathinfo( $file, PATHINFO_EXTENSION ) ) === 'svg' );
+		if ( ! $is_svg ) {
 			wp_send_json_error( array( 'message' => 'Not an SVG attachment' ) );
 		}
 		$markup = file_get_contents( $file );
