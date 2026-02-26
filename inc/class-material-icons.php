@@ -19,15 +19,10 @@ class GutenBlock_Pro_Material_Icons {
 	 *
 	 * @var string
 	 */
-	private static $paths_dir;
-
 	public function init() {
 		if ( ! GutenBlock_Pro_Features_Page::is_feature_enabled( 'material-icons' ) ) {
 			return;
 		}
-
-		$plugin_dir = defined( 'GUTENBLOCK_PRO_PATH' ) ? GUTENBLOCK_PRO_PATH : plugin_dir_path( dirname( __FILE__ ) );
-		self::$paths_dir = $plugin_dir . 'node_modules/@material-symbols-svg/metadata/paths/';
 
 		add_action( 'init', array( $this, 'register_block' ) );
 		add_action( 'init', array( $this, 'enqueue_block_style' ), 20 );
@@ -137,11 +132,7 @@ class GutenBlock_Pro_Material_Icons {
 		$path = isset( $attributes['svgPath'] ) ? $attributes['svgPath'] : '';
 
 		if ( empty( $path ) && ! empty( $icon ) ) {
-			$style_attr  = isset( $attributes['style'] ) ? $attributes['style'] : 'outlined';
-			$style_attr  = is_array( $style_attr ) ? 'outlined' : (string) $style_attr;
-			$weight_attr = isset( $attributes['weight'] ) ? $attributes['weight'] : 400;
-			$weight_attr = is_numeric( $weight_attr ) ? (int) $weight_attr : 400;
-			$path        = $this->get_path_for_icon( $icon, $style_attr, $weight_attr );
+			$path = $this->get_path_for_icon( $icon );
 		}
 
 		if ( empty( $path ) ) {
@@ -233,39 +224,16 @@ class GutenBlock_Pro_Material_Icons {
 	}
 
 	/**
-	 * Get SVG path string for an icon from metadata JSON.
+	 * Get SVG path string for an icon from the bundled JSON.
 	 *
 	 * @param string $icon_name Icon name (e.g. home).
-	 * @param string $style     outlined|rounded|sharp.
-	 * @param int    $weight    100-700.
 	 * @return string Path d or empty.
 	 */
-	private function get_path_for_icon( $icon_name, $style = 'outlined', $weight = 400 ) {
+	private function get_path_for_icon( $icon_name ) {
 		$icon_name = sanitize_file_name( $icon_name );
 		if ( '' === $icon_name ) {
 			return '';
 		}
-
-		$file = self::$paths_dir . $icon_name . '.json';
-		if ( file_exists( $file ) && is_readable( $file ) ) {
-			$data = json_decode( file_get_contents( $file ), true );
-			if ( is_array( $data ) ) {
-				$style = is_string( $style ) ? $style : 'outlined';
-				if ( ! empty( $data[ $style ] ) ) {
-					$w_int      = min( 700, max( 100, ( (int) round( (int) $weight / 100 ) ) * 100 ) );
-					$w          = 'w' . $w_int;
-					$style_data = $data[ $style ];
-					if ( isset( $style_data['outline'][ $w ] ) ) {
-						return $style_data['outline'][ $w ];
-					}
-					if ( isset( $style_data['fill'][ $w ] ) ) {
-						return $style_data['fill'][ $w ];
-					}
-					return isset( $style_data['outline']['w400'] ) ? $style_data['outline']['w400'] : '';
-				}
-			}
-		}
-
 		$bundle = self::get_bundle();
 		return isset( $bundle[ $icon_name ] ) ? $bundle[ $icon_name ] : '';
 	}
@@ -278,14 +246,6 @@ class GutenBlock_Pro_Material_Icons {
 		$icon_name = isset( $_GET['icon'] ) ? sanitize_file_name( wp_unslash( $_GET['icon'] ) ) : '';
 		if ( '' === $icon_name ) {
 			wp_send_json_error( array( 'message' => 'Missing icon' ) );
-		}
-
-		$file = self::$paths_dir . $icon_name . '.json';
-		if ( file_exists( $file ) && is_readable( $file ) ) {
-			$data = json_decode( file_get_contents( $file ), true );
-			if ( is_array( $data ) ) {
-				wp_send_json_success( $data );
-			}
 		}
 
 		$bundle = self::get_bundle();

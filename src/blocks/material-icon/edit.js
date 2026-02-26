@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from '@wordpress/element';
 import { useBlockProps } from '@wordpress/block-editor';
 import { InspectorControls } from '@wordpress/block-editor';
-import { PanelBody, Button, RangeControl, SelectControl, ColorPalette, TabPanel } from '@wordpress/components';
+import { PanelBody, Button, RangeControl, ColorPalette, TabPanel } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import IconSearch from './icon-search';
@@ -20,20 +20,10 @@ function ajaxGet( params ) {
 }
 
 const VIEWBOX = '0 -960 960 960';
-const STYLES = [
-	{ value: 'outlined', label: __( 'Outlined', 'gutenblock-pro' ) },
-	{ value: 'rounded', label: __( 'Rounded', 'gutenblock-pro' ) },
-	{ value: 'sharp', label: __( 'Sharp', 'gutenblock-pro' ) },
-];
 
-function getPathFromData( data, style, weight ) {
-	if ( ! data || ! data[ style ] ) return '';
-	const w = 'w' + Math.min( 700, Math.max( 100, Math.round( Number( weight ) / 100 ) * 100 ) );
-	const styleData = data[ style ];
-	if ( styleData.outline && styleData.outline[ w ] ) return styleData.outline[ w ];
-	if ( styleData.fill && styleData.fill[ w ] ) return styleData.fill[ w ];
-	if ( styleData.outline && styleData.outline.w400 ) return styleData.outline.w400;
-	if ( styleData.fill && styleData.fill.w400 ) return styleData.fill.w400;
+function getPathFromData( data ) {
+	if ( ! data ) return '';
+	if ( data.outlined?.outline?.w400 ) return data.outlined.outline.w400;
 	return '';
 }
 
@@ -65,7 +55,7 @@ function CustomSvgPreview( { markup, size, color } ) {
 }
 
 export default function Edit( { attributes, setAttributes } ) {
-	const { icon, style, weight, size, color, colorSlug, svgPath, iconSource, customSvgId, customSvgMarkup } = attributes;
+	const { icon, size, color, colorSlug, svgPath, iconSource, customSvgId, customSvgMarkup } = attributes;
 	const [ isModalOpen, setIsModalOpen ] = useState( false );
 	const [ pathData, setPathData ] = useState( null );
 	const [ loadingPaths, setLoadingPaths ] = useState( false );
@@ -94,13 +84,12 @@ export default function Edit( { attributes, setAttributes } ) {
 			.then( ( res ) => {
 				if ( res && res.success && res.data ) {
 					setPathData( res.data );
-					const path = getPathFromData( res.data, style, weight );
-					setAttributes( { svgPath: path } );
+					setAttributes( { svgPath: getPathFromData( res.data ) } );
 				}
 			} )
 			.catch( () => setPathData( null ) )
 			.finally( () => setLoadingPaths( false ) );
-	}, [ style, weight, setAttributes ] );
+	}, [ setAttributes ] );
 
 	useEffect( () => {
 		if ( iconSource === 'material' && icon && ! pathData && ! loadingPaths ) {
@@ -126,28 +115,6 @@ export default function Edit( { attributes, setAttributes } ) {
 		[ setAttributes ]
 	);
 
-	const onStyleChange = useCallback(
-		( value ) => {
-			setAttributes( { style: value } );
-			if ( pathData ) {
-				setAttributes( { svgPath: getPathFromData( pathData, value, weight ) } );
-			} else if ( icon ) {
-				fetchPaths( icon );
-			}
-		},
-		[ pathData, icon, weight, setAttributes, fetchPaths ]
-	);
-
-	const onWeightChange = useCallback(
-		( value ) => {
-			setAttributes( { weight: value } );
-			if ( pathData ) {
-				setAttributes( { svgPath: getPathFromData( pathData, style, value ) } );
-			}
-		},
-		[ pathData, style, setAttributes ]
-	);
-
 	const hasMaterialIcon = iconSource !== 'custom' && !! icon;
 	const hasCustomSvg = iconSource === 'custom' && !! customSvgMarkup;
 	const hasIcon = hasMaterialIcon || hasCustomSvg;
@@ -160,7 +127,7 @@ export default function Edit( { attributes, setAttributes } ) {
 		}
 		return ajaxGet( { action: 'gutenblock_pro_icon_paths', icon: iconName } ).then( ( res ) => {
 			if ( res && res.success && res.data ) {
-				const path = getPathFromData( res.data, 'outlined', 400 );
+				const path = getPathFromData( res.data );
 				cache[ iconName ] = path;
 				return path;
 			}
@@ -176,24 +143,6 @@ export default function Edit( { attributes, setAttributes } ) {
 		<>
 			<InspectorControls>
 				<PanelBody title={ __( 'Icon-Einstellungen', 'gutenblock-pro' ) } initialOpen={ true }>
-					{ iconSource === 'material' && (
-						<>
-							<SelectControl
-								label={ __( 'Stil', 'gutenblock-pro' ) }
-								value={ style }
-								options={ STYLES }
-								onChange={ onStyleChange }
-							/>
-							<RangeControl
-								label={ __( 'Stärke', 'gutenblock-pro' ) }
-								value={ weight }
-								onChange={ ( v ) => onWeightChange( v ) }
-								min={ 100 }
-								max={ 700 }
-								step={ 100 }
-							/>
-						</>
-					) }
 					<RangeControl
 						label={ __( 'Größe (px)', 'gutenblock-pro' ) }
 						value={ size }

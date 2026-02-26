@@ -17,8 +17,6 @@ registerBlockType( 'gutenblock-pro/material-icon', {
 	icon: 'admin-customizer',
 	attributes: {
 		icon: { type: 'string', default: '' },
-		style: { type: 'string', default: 'outlined' },
-		weight: { type: 'number', default: 400 },
 		size: { type: 'number', default: 48 },
 		color: { type: 'string', default: '#000000' },
 		colorSlug: { type: 'string', default: '' },
