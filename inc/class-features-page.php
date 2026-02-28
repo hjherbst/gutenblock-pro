@@ -50,9 +50,26 @@ class GutenBlock_Pro_Features_Page {
 			$out[ $key ] = array(
 				'name'        => __( $def['name'], 'gutenblock-pro' ),
 				'description' => __( $def['description'], 'gutenblock-pro' ),
+				'icon'        => $this->get_feature_icon( $key ),
 			);
 		}
 		return $out;
+	}
+
+	/**
+	 * SVG-Icon für ein Feature
+	 *
+	 * @param string $key Feature-Key.
+	 * @return string
+	 */
+	private function get_feature_icon( $key ) {
+		$icons = array(
+			'admin-bar'        => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>',
+			'container-forms'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 16" fill="currentColor"><path d="M0 16c8-4 16-4 24 0s16-4 24 0V0H0v16z"/></svg>',
+			'material-icons'   => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+			'horizontal-scroll' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M100-160q-24 0-42-18t-18-42v-520q0-24 18-42t42-18h120q24 0 42 18t18 42v520q0 24-18 42t-42 18H100Zm0-59h120v-521H100v521Zm320 59q-24 0-42-18t-18-42v-520q0-24 18-42t42-18h440q24 0 42 18t18 42v520q0 24-18 42t-42 18H420Zm0-59h440v-521H420v521Zm-200 0v-521 521Zm200 0v-521 521Z"/></svg>',
+		);
+		return isset( $icons[ $key ] ) ? $icons[ $key ] : '';
 	}
 
 	/**
@@ -93,14 +110,14 @@ class GutenBlock_Pro_Features_Page {
 	}
 
 	/**
-	 * Default feature states
+	 * Default feature states (alle aktiv bei Neuinstallation)
 	 *
 	 * @return array
 	 */
 	private function get_defaults() {
 		$defaults = array();
 		foreach ( array_keys( $this->get_feature_definitions() ) as $key ) {
-			$defaults[ $key ] = false;
+			$defaults[ $key ] = true;
 		}
 		return $defaults;
 	}
@@ -164,12 +181,15 @@ class GutenBlock_Pro_Features_Page {
 	 */
 	private function get_toggle_css() {
 		return '
-			.gbp-feature-row { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
-			.gbp-feature-row .gbp-feature-toggle { flex-shrink: 0; }
-			.gbp-feature-content h3 { margin: 0 0 0.25rem 0; }
-			.gbp-feature-content p { margin: 0; color: #646970; }
-			.gbp-feature-notice { margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: #f0f0f1; border-left: 4px solid #dba617; font-size: 13px; }
-			.gbp-features-form .submit { margin-top: 0; }
+			.gbp-features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; max-width: 1200px; margin-top: 1.5rem; }
+			.gbp-feature-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 4px; padding: 1.5rem; display: flex; flex-direction: column; box-shadow: 0 1px 1px rgba(0,0,0,.04); transition: box-shadow .15s; }
+			.gbp-feature-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+			.gbp-feature-icon { width: 64px; height: 64px; margin-bottom: 1rem; color: #2271b1; }
+			.gbp-feature-icon svg { width: 100%; height: 100%; }
+			.gbp-feature-card h3 { margin: 0 0 0.5rem 0; font-size: 1.1em; }
+			.gbp-feature-card p { margin: 0 0 1rem 0; color: #646970; font-size: 13px; line-height: 1.5; flex-grow: 1; }
+			.gbp-feature-card .gbp-feature-toggle { margin-top: auto; }
+			.gbp-features-form .submit { margin-top: 1.5rem; }
 			.gbp-toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
 			.gbp-toggle input { opacity: 0; width: 0; height: 0; }
 			.gbp-toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #c3c4c7; border-radius: 24px; transition: 0.2s; }
@@ -193,33 +213,26 @@ class GutenBlock_Pro_Features_Page {
 
 			<form method="post" action="options.php" class="gbp-features-form">
 				<?php settings_fields( 'gutenblock_pro_features' ); ?>
-				<table class="form-table" role="presentation">
-					<tbody>
-					<?php foreach ( $features_list as $key => $feature ) : ?>
-						<?php $enabled = ! empty( $features_state[ $key ] ); ?>
-						<tr>
-							<td>
-								<div class="gbp-feature-row">
-									<div class="gbp-feature-toggle">
-										<label class="gbp-toggle">
-											<input type="checkbox"
-												name="<?php echo esc_attr( self::OPTION_NAME . '[' . $key . ']' ); ?>"
-												value="1"
-												<?php checked( $enabled ); ?>
-											/>
-											<span class="gbp-toggle-slider"></span>
-										</label>
-									</div>
-									<div class="gbp-feature-content">
-										<h3><?php echo esc_html( $feature['name'] ); ?></h3>
-										<p><?php echo esc_html( $feature['description'] ); ?></p>
-									</div>
-								</div>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-					</tbody>
-				</table>
+				<div class="gbp-features-grid">
+				<?php foreach ( $features_list as $key => $feature ) : ?>
+					<?php $enabled = ! empty( $features_state[ $key ] ); ?>
+					<div class="gbp-feature-card">
+						<div class="gbp-feature-icon"><?php echo $feature['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG from plugin. ?></div>
+						<h3><?php echo esc_html( $feature['name'] ); ?></h3>
+						<p><?php echo esc_html( $feature['description'] ); ?></p>
+						<div class="gbp-feature-toggle">
+							<label class="gbp-toggle">
+								<input type="checkbox"
+									name="<?php echo esc_attr( self::OPTION_NAME . '[' . $key . ']' ); ?>"
+									value="1"
+									<?php checked( $enabled ); ?>
+								/>
+								<span class="gbp-toggle-slider"></span>
+							</label>
+						</div>
+					</div>
+				<?php endforeach; ?>
+				</div>
 				<?php submit_button( __( 'Einstellungen speichern', 'gutenblock-pro' ) ); ?>
 			</form>
 		</div>
