@@ -4,12 +4,16 @@
 
 .wp-block-group.is-style-space-between {
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	justify-content: space-between;
-	align-items: flex-start;
-	flex-wrap: wrap;
+	height: 100%;
 }
 
 .wp-block-group.is-style-space-between > * {
-	flex: 0 1 auto;
+	flex: 0 0 auto;
+}
+
+/* Override vertical centering on parent column so height: 100% can take effect */
+.wp-block-column:has(> .is-style-space-between) {
+	align-self: stretch !important;
 }

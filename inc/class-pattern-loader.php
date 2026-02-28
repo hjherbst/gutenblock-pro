@@ -30,6 +30,7 @@ class GutenBlock_Pro_Pattern_Loader {
 		'about'       => 'About',
 		'offer'       => 'Offer',
 		'teaser'      => 'Teaser',
+		'carousel'    => 'Carousel',
 		'process'     => 'Process',
 		'team'        => 'Team',
 		'testimonial' => 'Testimonial',

@@ -184,6 +184,10 @@ class GutenBlock_Pro_Pattern_Creator {
 			$content = $this->replace_local_images( $content, $slug );
 		}
 
+		// Remove invalid empty-array style values that break block validation
+		$content = preg_replace( '/,"color":\[\]/', '', $content );
+		$content = preg_replace( '/"color":\[\],?/', '', $content );
+
 		// Add pattern marker class to content
 		$css_class = 'gb-pattern-' . $slug;
 		$content = $this->add_pattern_class( $content, $css_class );
@@ -194,23 +198,25 @@ class GutenBlock_Pro_Pattern_Creator {
 			$content_filename = 'content-' . $language . '.html';
 		}
 
-		// Only create pattern.php and asset files for NEW patterns (not updates)
 		if ( $is_new_pattern ) {
-			// Create pattern.php
+			// Create pattern.php and asset files for NEW patterns
 			$pattern_php = $this->generate_pattern_php( $name, $description, $keywords, $type, $group, $premium );
 			file_put_contents( $pattern_dir . '/pattern.php', $pattern_php );
 
-			// Create empty style.css
 			$style_css = $this->generate_style_css( $name, $slug );
 			file_put_contents( $pattern_dir . '/style.css', $style_css );
 
-			// Create empty editor.css
 			$editor_css = $this->generate_editor_css( $name, $slug );
 			file_put_contents( $pattern_dir . '/editor.css', $editor_css );
 
-			// Create empty script.js
 			$script_js = $this->generate_script_js( $name, $slug );
 			file_put_contents( $pattern_dir . '/script.js', $script_js );
+		} else {
+			// Update group in existing pattern.php if provided
+			$pattern_file = $pattern_dir . '/pattern.php';
+			if ( file_exists( $pattern_file ) ) {
+				$this->update_pattern_php_field( $pattern_file, 'group', $group );
+			}
 		}
 
 		// Create/update content file (language-specific or default)
@@ -266,6 +272,7 @@ class GutenBlock_Pro_Pattern_Creator {
 				$pattern_data = require $pattern_file;
 				$pattern_info['title'] = isset( $pattern_data['title'] ) ? $pattern_data['title'] : $slug;
 				$pattern_info['premium'] = isset( $pattern_data['premium'] ) ? $pattern_data['premium'] : false;
+				$pattern_info['group'] = isset( $pattern_data['group'] ) ? $pattern_data['group'] : '';
 			}
 			$pattern_info['has_style'] = file_exists( $pattern_dir . '/style.css' );
 			$pattern_info['has_script'] = file_exists( $pattern_dir . '/script.js' );
@@ -346,6 +353,28 @@ return array(
 	}
 
 	/**
+	 * Update a single field inside an existing pattern.php
+	 */
+	private function update_pattern_php_field( $file, $field, $value ) {
+		$contents = file_get_contents( $file );
+		if ( $contents === false ) {
+			return;
+		}
+		$escaped = addslashes( $value );
+		$pattern = "/'" . preg_quote( $field, '/' ) . "'\s*=>\s*'[^']*'/";
+		if ( preg_match( $pattern, $contents ) ) {
+			$contents = preg_replace( $pattern, "'{$field}' => '{$escaped}'", $contents );
+		} else {
+			$contents = preg_replace(
+				"/('type'\s*=>.*,)/",
+				"$1\n\t'group'       => '{$escaped}',",
+				$contents
+			);
+		}
+		file_put_contents( $file, $contents );
+	}
+
+	/**
 	 * Generate style.css content
 	 */
 	private function generate_style_css( $name, $slug ) {
@@ -419,69 +448,52 @@ return array(
 	 * @return string Modified content
 	 */
 	private function replace_local_images( $content, $slug ) {
-		$site_url = site_url();
+		$site_url   = site_url();
 		$upload_dir = wp_upload_dir();
 		$upload_url = $upload_dir['baseurl'];
 
-		// Counter for unique seeds per image
+		$url_map       = array();
 		$image_counter = 0;
+		$self          = $this;
+
+		$get_placeholder = function( $original_url ) use ( $site_url, $upload_url, $slug, $self, &$url_map, &$image_counter ) {
+			if ( strpos( $original_url, $site_url ) === false && strpos( $original_url, $upload_url ) === false ) {
+				return null;
+			}
+			if ( isset( $url_map[ $original_url ] ) ) {
+				return $url_map[ $original_url ];
+			}
+			$dimensions  = $self->extract_image_dimensions( $original_url );
+			$width       = $dimensions['width'] ?: 800;
+			$height      = $dimensions['height'] ?: 600;
+			$seed        = $slug . '-' . $image_counter;
+			$placeholder = "https://picsum.photos/seed/{$seed}/{$width}/{$height}";
+			$image_counter++;
+			$url_map[ $original_url ] = $placeholder;
+			return $placeholder;
+		};
 
 		// Replace img src attributes
 		$content = preg_replace_callback(
 			'/(<img[^>]+src=["\'])([^"\']+)(["\'][^>]*>)/i',
-			function( $matches ) use ( $site_url, $upload_url, $slug, &$image_counter ) {
-				$img_url = $matches[2];
-
-				// Only replace local images (from this site)
-				if ( strpos( $img_url, $site_url ) === false && strpos( $img_url, $upload_url ) === false ) {
-					return $matches[0];
-				}
-
-				// Try to get image dimensions from the URL or use defaults
-				$dimensions = $this->extract_image_dimensions( $img_url );
-				$width = $dimensions['width'] ?: 800;
-				$height = $dimensions['height'] ?: 600;
-
-				// Generate placeholder URL using picsum.photos
-				// Search queries can be added via the randomize button in editor (encoded in seed)
-				$seed = $slug . '-' . $image_counter;
-				$placeholder_url = "https://picsum.photos/seed/{$seed}/{$width}/{$height}";
-				$image_counter++;
-
-				return $matches[1] . $placeholder_url . $matches[3];
+			function( $matches ) use ( $get_placeholder ) {
+				$replacement = $get_placeholder( $matches[2] );
+				return $replacement ? $matches[1] . $replacement . $matches[3] : $matches[0];
 			},
 			$content
 		);
 
-		// Also replace in wp:image block JSON attributes
+		// Replace "url" in block JSON attributes (same URL gets same placeholder)
 		$content = preg_replace_callback(
 			'/"url":"([^"]+)"/',
-			function( $matches ) use ( $site_url, $upload_url, $slug, &$image_counter ) {
-				$img_url = $matches[1];
-
-				// Only replace local images
-				if ( strpos( $img_url, $site_url ) === false && strpos( $img_url, $upload_url ) === false ) {
-					return $matches[0];
-				}
-
-				$dimensions = $this->extract_image_dimensions( $img_url );
-				$width = $dimensions['width'] ?: 800;
-				$height = $dimensions['height'] ?: 600;
-
-				// Generate placeholder URL using picsum.photos
-				$seed = $slug . '-' . $image_counter;
-				$placeholder_url = "https://picsum.photos/seed/{$seed}/{$width}/{$height}";
-				$image_counter++;
-
-				return '"url":"' . $placeholder_url . '"';
+			function( $matches ) use ( $get_placeholder ) {
+				$replacement = $get_placeholder( $matches[1] );
+				return $replacement ? '"url":"' . $replacement . '"' : $matches[0];
 			},
 			$content
 		);
 
-		// Remove wp-image-XXX classes (local attachment IDs)
 		$content = preg_replace( '/wp-image-\d+/', '', $content );
-
-		// Remove id attributes pointing to local attachments
 		$content = preg_replace( '/"id":\d+,?/', '', $content );
 
 		return $content;
@@ -493,7 +505,7 @@ return array(
 	 * @param string $url Image URL
 	 * @return array ['width' => int, 'height' => int]
 	 */
-	private function extract_image_dimensions( $url ) {
+	public function extract_image_dimensions( $url ) {
 		$width = 0;
 		$height = 0;
 

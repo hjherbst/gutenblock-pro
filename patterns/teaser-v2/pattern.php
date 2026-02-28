@@ -1,14 +1,15 @@
 <?php
 /**
- * Pattern: Testimonial v1
+ * Pattern: Teaser v2
  */
 
 return array(
-	'title'       => __( 'Testimonial v1', 'gutenblock-pro' ),
+	'title'       => __( 'Teaser v2', 'gutenblock-pro' ),
 	'description' => __( '', 'gutenblock-pro' ),
 	'type'        => 'pattern', // 'pattern' or 'page'
-	'group' => 'testimonial',
+	'group'       => 'teaser',
 	'categories'  => array( 'gutenblock-pro' ),
 	'keywords'    => array(),
 	'content'     => '', // Loaded from content.html
+	'premium'     => false, // true = benötigt Pro Plus Lizenz für Bearbeitung
 );

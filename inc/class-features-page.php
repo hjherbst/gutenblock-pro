@@ -32,6 +32,10 @@ class GutenBlock_Pro_Features_Page {
 				'name'        => 'Material Icons Block',
 				'description' => 'Custom Block für Google Material Symbols mit Inline-SVG, Suche und Größen-/Farbsteuerung.',
 			),
+			'horizontal-scroll' => array(
+				'name'        => 'Horizontal Scroll',
+				'description' => 'Horizontales Scrollen für Spalten-Blöcke mit Snap, Dots und Pfeilen.',
+			),
 		);
 	}
 

@@ -97,10 +97,15 @@
 		const [existingPatternInfo, setExistingPatternInfo] = useState(null);
 		const [isChecking, setIsChecking] = useState(false);
 
-		// Load premium status from existing pattern if it exists
+		// Load existing values when pattern is found
 		useEffect(() => {
-			if (existingPatternInfo && existingPatternInfo.premium !== undefined) {
-				setIsPremium(existingPatternInfo.premium);
+			if (existingPatternInfo) {
+				if (existingPatternInfo.premium !== undefined) {
+					setIsPremium(existingPatternInfo.premium);
+				}
+				if (existingPatternInfo.group !== undefined) {
+					setGroup(existingPatternInfo.group);
+				}
 			}
 		}, [existingPatternInfo]);
 
@@ -311,14 +316,14 @@
 						? 'Alle markierten Blöcke werden als eine zusammenhängende Seite gespeichert.'
 						: 'Einzelnes wiederverwendbares Pattern.',
 				}),
-				!isUpdateMode && el(SelectControl, {
-					label: strings.groupLabel || 'Gruppe',
-					value: group,
-					onChange: setGroup,
-					options: gutenblockProCreator.groups || [
-						{ value: '', label: strings.groupNone || '— Keine Gruppe —' }
-					],
-				}),
+			el(SelectControl, {
+				label: strings.groupLabel || 'Gruppe',
+				value: group,
+				onChange: setGroup,
+				options: gutenblockProCreator.groups || [
+					{ value: '', label: strings.groupNone || '— Keine Gruppe —' }
+				],
+			}),
 				el(CheckboxControl, {
 					label: strings.replaceImagesLabel,
 					checked: replaceImages,

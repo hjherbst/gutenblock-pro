@@ -3,20 +3,13 @@
  * Pattern: Hero v1
  */
 
-return array (
-  'title' => 'Hero v1',
-  'description' => '',
-  'categories' => 
-  array (
-    0 => 'gutenblock-pro',
-  ),
-  'keywords' => 
-  array (
-    0 => 'hero',
-    1 => 'cover',
-    2 => 'cta',
-  ),
-  'content' => '',
-  'group' => 'hero',
-  'premium' => false,
+return array(
+	'title'       => __( 'Hero v1', 'gutenblock-pro' ),
+	'description' => __( '', 'gutenblock-pro' ),
+	'type'        => 'pattern', // 'pattern' or 'page'
+	'group' => 'hero',
+	'categories'  => array( 'gutenblock-pro' ),
+	'keywords'    => array(),
+	'content'     => '', // Loaded from content.html
+	'premium'     => false, // true = benötigt Pro Plus Lizenz für Bearbeitung
 );

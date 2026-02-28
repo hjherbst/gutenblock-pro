@@ -3,5 +3,5 @@
 	"name": "space-between",
 	"label": "Space Between",
 	"type": "variant",
-	"description": "Horizontale Ausrichtung mit gleichmäßigem Abstand zwischen den Elementen"
+	"description": "Vertikale Verteilung: Inhalte füllen die volle Höhe mit gleichmäßigem Abstand"
 }
