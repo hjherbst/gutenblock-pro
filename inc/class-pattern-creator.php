@@ -188,6 +188,10 @@ class GutenBlock_Pro_Pattern_Creator {
 		$content = preg_replace( '/,"color":\[\]/', '', $content );
 		$content = preg_replace( '/"color":\[\],?/', '', $content );
 
+		// Immer: mediaLink mit Site-URL entfernen (enthält sonst localhost-/Staging-URLs)
+		$escaped_site = preg_quote( site_url(), '/' );
+		$content = preg_replace( '/"mediaLink":"' . $escaped_site . '[^"]*",?/', '', $content );
+
 		// Add pattern marker class to content
 		$css_class = 'gb-pattern-' . $slug;
 		$content = $this->add_pattern_class( $content, $css_class );
@@ -493,8 +497,20 @@ return array(
 			$content
 		);
 
-		$content = preg_replace( '/wp-image-\d+/', '', $content );
+		// wp-image-{n} Klasse aus <img> entfernen (wird zum führenden Leerzeichen → bereinigen)
+		$content = preg_replace( '/\bwp-image-\d+\b/', '', $content );
+		// Verbleibende Leerzeichen in class-Attributen normalisieren
+		$content = preg_replace( '/class="\s+/', 'class="', $content );
+		// size-full Klasse entfernen (nur gültig bei lokal referenzierten Anhängen)
+		$content = preg_replace( '/\bsize-full\b\s*/', '', $content );
+		$content = preg_replace( '/class="\s*"/', '', $content );
+
+		// "id":{n} aus Block-JSON (z.B. core/image)
 		$content = preg_replace( '/"id":\d+,?/', '', $content );
+		// "mediaId":{n} aus core/media-text Block-JSON – löst Block-Validierungsfehler aus
+		$content = preg_replace( '/"mediaId":\d+,?/', '', $content );
+		// "mediaLink":"..." – enthält lokale Upload-/Attachment-URLs
+		$content = preg_replace( '/"mediaLink":"[^"]*",?/', '', $content );
 
 		return $content;
 	}

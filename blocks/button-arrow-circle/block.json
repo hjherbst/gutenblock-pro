@@ -1,0 +1,7 @@
+{
+	"block": "core/button",
+	"name": "button-arrow-circle",
+	"label": "Arrow Circle",
+	"type": "variant",
+	"description": "Pill-förmiger Button mit eingebettetem Kreis-Pfeil rechts und Hover-Animation"
+}

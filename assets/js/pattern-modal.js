@@ -157,10 +157,11 @@
 				}, 'Keine Vorschau');
 			}
 
-			// Create preview iframe
-			const previewUrl = gutenblockProModal.ajaxUrl + 
-				'?action=gutenblock_pro_preview_pattern&pattern=' + 
-				encodeURIComponent(patternSlug);
+			// Create preview iframe (nonce für 400-Absicherung)
+			const previewUrl = gutenblockProModal.ajaxUrl +
+				'?action=gutenblock_pro_preview_pattern&pattern=' +
+				encodeURIComponent(patternSlug) +
+				'&_wpnonce=' + encodeURIComponent(gutenblockProModal.nonce || '');
 
 			return el('div', {
 				className: 'gutenblock-pro-modal-pattern-preview'

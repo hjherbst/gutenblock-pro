@@ -52,18 +52,7 @@ class GutenBlock_Pro_Block_Registry {
 				continue;
 			}
 
-			// Register block style
-			// CSS will be loaded via enqueue_block_variant_styles()
-			// No inline style needed if CSS file exists
-			register_block_style(
-				$config['block'],
-				array(
-					'name'  => $config['name'],
-					'label' => $config['label'],
-				)
-			);
-
-			// Store for admin display
+			// Store for admin display (immer, unabhängig vom Toggle)
 			$this->block_variants[] = array(
 				'slug'        => $slug,
 				'block'       => $config['block'],
@@ -73,6 +62,19 @@ class GutenBlock_Pro_Block_Registry {
 				'description' => $config['description'] ?? '',
 				'folder'      => $folder,
 				'has_style'   => file_exists( $style_file ),
+			);
+
+			// Nur registrieren/laden wenn Stilvariante aktiviert ist
+			if ( ! GutenBlock_Pro_Features_Page::is_block_variant_enabled( $slug ) ) {
+				continue;
+			}
+
+			register_block_style(
+				$config['block'],
+				array(
+					'name'  => $config['name'],
+					'label' => $config['label'],
+				)
 			);
 		}
 	}
@@ -166,6 +168,15 @@ class GutenBlock_Pro_Block_Registry {
 	 */
 	public function enqueue_frontend_assets() {
 		$this->enqueue_block_variant_styles( 'frontend' );
+		if ( ! is_admin() ) {
+			wp_enqueue_script(
+				'gutenblock-pro-button-styles',
+				GUTENBLOCK_PRO_URL . 'assets/js/button-styles.js',
+				array(),
+				GUTENBLOCK_PRO_VERSION,
+				true
+			);
+		}
 	}
 
 	/**
@@ -186,6 +197,10 @@ class GutenBlock_Pro_Block_Registry {
 			$style_file = $folder . '/style.css';
 
 			if ( ! file_exists( $style_file ) ) {
+				continue;
+			}
+
+			if ( ! GutenBlock_Pro_Features_Page::is_block_variant_enabled( $slug ) ) {
 				continue;
 			}
 
@@ -237,6 +252,10 @@ class GutenBlock_Pro_Block_Registry {
 		foreach ( $block_folders as $folder ) {
 			$slug = basename( $folder );
 			$style_file = $folder . '/style.css';
+
+			if ( ! GutenBlock_Pro_Features_Page::is_block_variant_enabled( $slug ) ) {
+				continue;
+			}
 
 			if ( file_exists( $style_file ) ) {
 				$handle = 'gutenblock-pro-block-' . $slug;

@@ -21,6 +21,8 @@ class GutenBlock_Pro_Admin_Page {
 		add_action( 'wp_ajax_gutenblock_pro_get_file_content', array( $this, 'ajax_get_file_content' ) );
 		add_action( 'wp_ajax_gutenblock_pro_save_file', array( $this, 'ajax_save_file' ) );
 		add_action( 'wp_ajax_gutenblock_pro_preview_pattern', array( $this, 'ajax_preview_pattern' ) );
+		// nopriv nötig, wenn Gutenberg-Canvas-iframe die Session-Cookies nicht weitergibt
+		add_action( 'wp_ajax_nopriv_gutenblock_pro_preview_pattern', array( $this, 'ajax_preview_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_delete_pattern', array( $this, 'ajax_delete_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_reset_block_style', array( $this, 'ajax_reset_block_style' ) );
 		add_action( 'wp_ajax_gutenblock_pro_reset_pattern_file', array( $this, 'ajax_reset_pattern_file' ) );
@@ -264,8 +266,9 @@ class GutenBlock_Pro_Admin_Page {
 		$current_user = wp_get_current_user();
 		$is_admin_user = $current_user->exists() && $current_user->user_login === 'hjherbst';
 		
+		$preview_nonce = wp_create_nonce( 'gutenblock_pro_modal' );
 		foreach ( $patterns as $slug => $pattern ) :
-			$preview_url = admin_url( 'admin-ajax.php?action=gutenblock_pro_preview_pattern&pattern=' . $slug );
+			$preview_url = admin_url( 'admin-ajax.php?action=gutenblock_pro_preview_pattern&pattern=' . $slug . '&_wpnonce=' . $preview_nonce );
 			$edit_url = admin_url( 'admin.php?page=gutenblock-pro&tab=editor&pattern=' . $slug );
 		?>
 			<div class="pattern-card <?php echo $pattern['enabled'] ? 'enabled' : 'disabled'; ?>" data-slug="<?php echo esc_attr( $slug ); ?>">
@@ -785,10 +788,8 @@ class GutenBlock_Pro_Admin_Page {
 	 * AJAX: Preview pattern (renders HTML for iframe)
 	 */
 	public function ajax_preview_pattern() {
-		// Allow without nonce for iframe src
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( 'Permission denied' );
-		}
+		// Kein Auth-Check nötig: rendert nur öffentliche Block-Patterns (read-only, keine sensiblen Daten).
+		// Gutenberg-Plugin führt Preview-Requests über den Canvas-iframe ohne Session-Cookie aus (nopriv).
 
 		$pattern_slug = isset( $_GET['pattern'] ) ? sanitize_key( $_GET['pattern'] ) : '';
 
@@ -859,22 +860,19 @@ class GutenBlock_Pro_Admin_Page {
 		<head>
 			<meta charset="<?php bloginfo( 'charset' ); ?>">
 			<meta name="viewport" content="width=1400">
-			<?php 
-			// Enqueue block library styles
+			<?php
+			// Reihenfolge wie WordPress: erst wp-block-library, dann Global Styles, dann Block-Varianten
 			wp_enqueue_style( 'wp-block-library' );
 			wp_enqueue_style( 'wp-block-library-theme' );
-			
-			// Enqueue theme styles if available
 			if ( function_exists( 'wp_enqueue_global_styles' ) ) {
 				wp_enqueue_global_styles();
 			}
-			
 			wp_print_styles();
 			?>
 			<style>
-				/* Global Styles from theme.json */
+				/* Global Styles aus theme.json (nach wp-block-library, vor Block-Varianten) */
 				<?php echo $global_styles; ?>
-				
+
 				/* Force desktop layout - no responsive breakpoints */
 				html, body {
 					margin: 0;
@@ -891,33 +889,61 @@ class GutenBlock_Pro_Admin_Page {
 					max-width: 100% !important;
 					width: 100% !important;
 				}
-				/* Block variant styles */
+			</style>
+		</head>
+		<body <?php body_class( 'gutenblock-pro-preview' ); ?>>
+			<?php echo $rendered; ?>
+			<style>
 				<?php
+				/*
+				 * Block-Varianten-CSS NACH dem gerenderten Content ausgeben.
+				 * Entspricht dem WordPress-Verhalten, wo per-Block-CSS nach
+				 * den Global Styles geladen wird und diese korrekt überschreibt.
+				 */
+
+				// Core-Button-Varianten (Kontur/Outline, Squared etc.): In der Preview kann
+				// per-Block-CSS fehlen (separate assets, admin-ajax-Kontext). Explizit laden.
+				$core_button_css = '';
+				if ( function_exists( 'gutenberg_dir_path' ) ) {
+					$gutenberg_button = gutenberg_dir_path() . 'build/styles/block-library/button/style.css';
+					if ( file_exists( $gutenberg_button ) ) {
+						$core_button_css = file_get_contents( $gutenberg_button );
+					}
+				}
+				if ( empty( $core_button_css ) ) {
+					$wp_button = ABSPATH . 'wp-includes/blocks/button/style.css';
+					if ( file_exists( $wp_button ) ) {
+						$core_button_css = file_get_contents( $wp_button );
+					}
+				}
+				if ( ! empty( $core_button_css ) ) {
+					echo "/* Core Button (Kontur, Squared etc.) */\n" . $core_button_css . "\n";
+				}
+
 				$blocks_dir = GUTENBLOCK_PRO_BLOCKS_PATH;
 				if ( is_dir( $blocks_dir ) ) {
 					foreach ( glob( $blocks_dir . '*/style.css' ) as $block_css ) {
 						echo file_get_contents( $block_css ) . "\n";
 					}
 				}
-				?>
-				<?php
 				if ( GutenBlock_Pro_Features_Page::is_feature_enabled( 'horizontal-scroll' ) ) {
 					echo "/* Horizontal Scroll */\n" . GutenBlock_Pro_Horizontal_Scroll::get_styles() . "\n";
 				}
+				echo "/* Media Text Stack (Stapel-Optionen + Linkbox) */\n" . GutenBlock_Pro_Media_Text_Stack::get_styles() . "\n";
+				echo "/* Pattern specific styles */\n" . $pattern_styles . "\n";
 				?>
-				/* Pattern specific styles */
-				<?php echo $pattern_styles; ?>
 			</style>
-		</head>
-		<body <?php body_class( 'gutenblock-pro-preview' ); ?>>
-			<?php echo $rendered; ?>
 			<?php
-			// Flush layout styles (grid, flex) generated by do_blocks() via the style engine
+			// Layout/Grid-Styles aus der Style-Engine holen (Core + Gutenberg-Plugin-Store)
+			$block_support_styles = '';
+			if ( function_exists( 'gutenberg_style_engine_get_stylesheet_from_context' ) ) {
+				$block_support_styles .= gutenberg_style_engine_get_stylesheet_from_context( 'block-supports', array( 'prettify' => false ) );
+			}
 			if ( function_exists( 'wp_style_engine_get_stylesheet_from_context' ) ) {
-				$layout_styles = wp_style_engine_get_stylesheet_from_context( 'block-supports' );
-				if ( $layout_styles ) {
-					echo '<style>' . $layout_styles . '</style>';
-				}
+				$block_support_styles .= wp_style_engine_get_stylesheet_from_context( 'block-supports' );
+			}
+			if ( $block_support_styles ) {
+				echo '<style>' . $block_support_styles . '</style>';
 			}
 			?>
 		</body>

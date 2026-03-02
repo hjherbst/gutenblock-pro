@@ -1,0 +1,7 @@
+{
+	"block": "core/button",
+	"name": "button-simple",
+	"label": "Simple",
+	"type": "variant",
+	"description": "Transparenter Button ohne Hintergrund – nur Text mit Pfeil-Icon und Hover-Animation"
+}

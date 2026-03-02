@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.9.5
+ * Version: 1.9.6
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.9.5' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.9.6' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -77,6 +77,7 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-features-page.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-admin-bar.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-container-forms.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-horizontal-scroll.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-media-text-stack.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-material-icons.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-translation-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-bridge-installer.php';
@@ -165,6 +166,10 @@ function gutenblock_pro_init() {
 	// Initialize Horizontal Scroll (columns block when feature enabled)
 	$horizontal_scroll = new GutenBlock_Pro_Horizontal_Scroll();
 	$horizontal_scroll->init();
+
+	// Initialize Media Text Stack (Text/Medien block: immer stapeln, reverse stapeln)
+	$media_text_stack = new GutenBlock_Pro_Media_Text_Stack();
+	$media_text_stack->init();
 
 	// Initialize Material Icons Block (when feature enabled)
 	$material_icons = new GutenBlock_Pro_Material_Icons();

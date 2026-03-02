@@ -11,7 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class GutenBlock_Pro_Features_Page {
 
-	const OPTION_NAME = 'gutenblock_pro_features';
+	const OPTION_NAME     = 'gutenblock_pro_features';
+	const OPTION_VARIANTS = 'gutenblock_pro_block_variants';
 
 	/**
 	 * Feature definitions (raw strings; translated in get_features()).
@@ -72,6 +73,122 @@ class GutenBlock_Pro_Features_Page {
 		return isset( $icons[ $key ] ) ? $icons[ $key ] : '';
 	}
 
+	// -------------------------------------------------------------------------
+	// Block Variant Definitions
+	// -------------------------------------------------------------------------
+
+	/**
+	 * SVG-Icon für eine Stilvariante
+	 *
+	 * @param string $slug Block-Varianten-Slug.
+	 * @return string
+	 */
+	private function get_variant_icon( $slug ) {
+		$icons = array(
+			'button-simple' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z"/></svg>',
+			'button-arrow-circle' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>',
+			'space-between' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h18v2H3zm0 16h18v2H3zm4-4h10v2H7zm0-6h10v2H7z"/></svg>',
+			'step-circle' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+			'vertical-center' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H9v6H5V3H3zm8 2H3v8h2v-6h4v6h2zm2-2h8V3h-2v6h-4V3h-2zm8 2h-8v8h2v-6h4v6h2z"/></svg>',
+			'checkmark-list' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>',
+		);
+		return isset( $icons[ $slug ] ) ? $icons[ $slug ] : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>';
+	}
+
+	/**
+	 * Liest alle Block-Varianten aus dem blocks/-Verzeichnis
+	 *
+	 * @return array slug => ['name', 'label', 'description', 'block']
+	 */
+	private function get_block_variant_definitions() {
+		$blocks_dir = GUTENBLOCK_PRO_BLOCKS_PATH;
+		$variants   = array();
+
+		if ( ! is_dir( $blocks_dir ) ) {
+			return $variants;
+		}
+
+		foreach ( glob( $blocks_dir . '*', GLOB_ONLYDIR ) as $folder ) {
+			$slug        = basename( $folder );
+			$config_file = $folder . '/block.json';
+
+			if ( ! file_exists( $config_file ) ) {
+				continue;
+			}
+
+			$config = json_decode( file_get_contents( $config_file ), true );
+			if ( ! $config || empty( $config['block'] ) ) {
+				continue;
+			}
+
+			$variants[ $slug ] = array(
+				'label'       => $config['label'] ?? $slug,
+				'description' => $config['description'] ?? '',
+				'block'       => $config['block'],
+			);
+		}
+
+		return $variants;
+	}
+
+	/**
+	 * Default-States für Stilvarianten (alle aktiv)
+	 *
+	 * @return array
+	 */
+	private function get_variant_defaults() {
+		$defaults = array();
+		foreach ( array_keys( $this->get_block_variant_definitions() ) as $slug ) {
+			$defaults[ $slug ] = true;
+		}
+		return $defaults;
+	}
+
+	/**
+	 * Aktuelle Toggle-Zustände der Stilvarianten
+	 *
+	 * @return array
+	 */
+	public static function get_block_variant_states() {
+		$saved    = get_option( self::OPTION_VARIANTS, array() );
+		$instance = new self();
+		$defaults = $instance->get_variant_defaults();
+		return array_merge( $defaults, $saved );
+	}
+
+	/**
+	 * Prüft ob eine Stilvariante aktiviert ist
+	 *
+	 * @param string $slug Stilvarianten-Slug (= Ordnername in blocks/).
+	 * @return bool
+	 */
+	public static function is_block_variant_enabled( $slug ) {
+		$states = self::get_block_variant_states();
+		// Unbekannte Slugs (neu hinzugefügte Varianten) gelten als aktiv
+		return ! isset( $states[ $slug ] ) || ! empty( $states[ $slug ] );
+	}
+
+	/**
+	 * Sanitize für Stilvarianten-Option
+	 *
+	 * @param array|mixed $value Raw POST value.
+	 * @return array
+	 */
+	public function sanitize_variants( $value ) {
+		if ( ! is_array( $value ) ) {
+			return $this->get_variant_defaults();
+		}
+		$out = array();
+		foreach ( array_keys( $this->get_block_variant_definitions() ) as $slug ) {
+			$out[ $slug ] = ! empty( $value[ $slug ] );
+		}
+		return $out;
+	}
+
+	// -------------------------------------------------------------------------
+	// WordPress Hooks
+	// -------------------------------------------------------------------------
+
 	/**
 	 * Initialize
 	 */
@@ -105,6 +222,14 @@ class GutenBlock_Pro_Features_Page {
 			array(
 				'type'              => 'array',
 				'sanitize_callback' => array( $this, 'sanitize_features' ),
+			)
+		);
+		register_setting(
+			'gutenblock_pro_features',
+			self::OPTION_VARIANTS,
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( $this, 'sanitize_variants' ),
 			)
 		);
 	}
@@ -145,7 +270,7 @@ class GutenBlock_Pro_Features_Page {
 	 * @return array
 	 */
 	public static function get_feature_states() {
-		$saved = get_option( self::OPTION_NAME, array() );
+		$saved    = get_option( self::OPTION_NAME, array() );
 		$instance = new self();
 		$defaults = $instance->get_defaults();
 		return array_merge( $defaults, $saved );
@@ -188,8 +313,10 @@ class GutenBlock_Pro_Features_Page {
 			.gbp-feature-icon svg { width: 100%; height: 100%; }
 			.gbp-feature-card h3 { margin: 0 0 0.5rem 0; font-size: 1.1em; }
 			.gbp-feature-card p { margin: 0 0 1rem 0; color: #646970; font-size: 13px; line-height: 1.5; flex-grow: 1; }
+			.gbp-feature-card .gbp-feature-badge { font-size: 11px; color: #646970; background: #f0f0f1; border-radius: 3px; padding: 1px 6px; display: inline-block; margin-bottom: 0.5rem; }
 			.gbp-feature-card .gbp-feature-toggle { margin-top: auto; }
 			.gbp-features-form .submit { margin-top: 1.5rem; }
+			.gbp-features-section-title { margin: 2.5rem 0 0.5rem; font-size: 1.3em; border-bottom: 1px solid #c3c4c7; padding-bottom: 0.5rem; max-width: 1200px; }
 			.gbp-toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
 			.gbp-toggle input { opacity: 0; width: 0; height: 0; }
 			.gbp-toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #c3c4c7; border-radius: 24px; transition: 0.2s; }
@@ -204,8 +331,10 @@ class GutenBlock_Pro_Features_Page {
 	 * Render Features page
 	 */
 	public function render_page() {
-		$features_state = self::get_feature_states();
-		$features_list  = $this->get_features();
+		$features_state  = self::get_feature_states();
+		$features_list   = $this->get_features();
+		$variants_state  = self::get_block_variant_states();
+		$variants_list   = $this->get_block_variant_definitions();
 		?>
 		<div class="wrap gbp-features-page">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
@@ -213,6 +342,8 @@ class GutenBlock_Pro_Features_Page {
 
 			<form method="post" action="options.php" class="gbp-features-form">
 				<?php settings_fields( 'gutenblock_pro_features' ); ?>
+
+				<!-- Features -->
 				<div class="gbp-features-grid">
 				<?php foreach ( $features_list as $key => $feature ) : ?>
 					<?php $enabled = ! empty( $features_state[ $key ] ); ?>
@@ -233,6 +364,36 @@ class GutenBlock_Pro_Features_Page {
 					</div>
 				<?php endforeach; ?>
 				</div>
+
+				<!-- Stilvarianten für Blöcke -->
+				<?php if ( ! empty( $variants_list ) ) : ?>
+				<h2 class="gbp-features-section-title"><?php esc_html_e( 'Stilvarianten für Blöcke', 'gutenblock-pro' ); ?></h2>
+				<p class="description"><?php esc_html_e( 'Aktiviere oder deaktiviere einzelne Block-Stilvarianten. Deaktivierte Varianten werden weder registriert noch geladen.', 'gutenblock-pro' ); ?></p>
+				<div class="gbp-features-grid">
+				<?php foreach ( $variants_list as $slug => $variant ) : ?>
+					<?php $enabled = self::is_block_variant_enabled( $slug ); ?>
+					<div class="gbp-feature-card">
+						<div class="gbp-feature-icon"><?php echo $this->get_variant_icon( $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG from plugin. ?></div>
+						<span class="gbp-feature-badge"><?php echo esc_html( $variant['block'] ); ?></span>
+						<h3><?php echo esc_html( $variant['label'] ); ?></h3>
+						<?php if ( ! empty( $variant['description'] ) ) : ?>
+						<p><?php echo esc_html( $variant['description'] ); ?></p>
+						<?php endif; ?>
+						<div class="gbp-feature-toggle">
+							<label class="gbp-toggle">
+								<input type="checkbox"
+									name="<?php echo esc_attr( self::OPTION_VARIANTS . '[' . $slug . ']' ); ?>"
+									value="1"
+									<?php checked( $enabled ); ?>
+								/>
+								<span class="gbp-toggle-slider"></span>
+							</label>
+						</div>
+					</div>
+				<?php endforeach; ?>
+				</div>
+				<?php endif; ?>
+
 				<?php submit_button( __( 'Einstellungen speichern', 'gutenblock-pro' ) ); ?>
 			</form>
 		</div>

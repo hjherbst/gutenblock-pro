@@ -1,0 +1,38 @@
+/**
+ * GutenBlock Pro - Button Arrow Circle (Pill with circle arrow icon)
+ */
+
+.wp-block-button.is-style-button-arrow-circle .wp-block-button__link {
+	position: relative;
+	display: inline-block;
+	background-color: transparent;
+	color: black;
+	padding: 0.75em 5em 0.75em 1.25em;
+	border: 1px solid #333;
+	border-radius: 999px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+	overflow: hidden;
+}
+
+.wp-block-button.is-style-button-arrow-circle .wp-block-button__link::after {
+	content: '';
+	position: absolute;
+	right: 0.4em;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 38px;
+	height: 38px;
+	background-image: url("data:image/svg+xml,%3Csvg width='44' height='44' viewBox='0 0 44 44' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='22' cy='22' r='22' fill='var(--wp--preset--color--contrast,%23333)'/%3E%3Cpath d='M29.2431 22.7071C29.6336 22.3166 29.6336 21.6834 29.2431 21.2929L22.8791 14.9289C22.4886 14.5384 21.8554 14.5384 21.4649 14.9289C21.0744 15.3195 21.0744 15.9526 21.4649 16.3431L27.1217 22L21.4649 27.6569C21.0744 28.0474 21.0744 28.6805 21.4649 29.0711C21.8554 29.4616 22.4886 29.4616 22.8791 29.0711L29.2431 22.7071ZM16 22V23L28.536 23V22V21L16 21V22Z' fill='white'/%3E%3C/svg%3E");
+	background-size: cover;
+	background-repeat: no-repeat;
+	transition: transform 0.3s ease;
+}
+
+.wp-block-button.is-style-button-arrow-circle .wp-block-button__link:hover::after {
+	transform: translateY(-50%) translateX(-5px);
+}
+
+.wp-block-button.is-style-button-arrow-circle .wp-block-button__link.fly::after {
+	transform: translateY(-50%) translateX(200%);
+}
