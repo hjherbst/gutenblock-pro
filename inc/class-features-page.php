@@ -101,34 +101,66 @@ class GutenBlock_Pro_Features_Page {
 	 * @return array slug => ['name', 'label', 'description', 'block']
 	 */
 	private function get_block_variant_definitions() {
+		// Statische Basis-Definitionen – immer sichtbar, auch wenn das Filesystem
+		// (z. B. nach einem Deploy ohne blocks/-Verzeichnis) leer ist.
+		$base = array(
+			'button-simple'      => array(
+				'label'       => 'Simple',
+				'description' => 'Transparenter Button ohne Hintergrund – nur Text mit Pfeil-Icon und Hover-Animation',
+				'block'       => 'core/button',
+			),
+			'button-arrow-circle' => array(
+				'label'       => 'Arrow Circle',
+				'description' => 'Pill-Button mit animiertem Kreis-Pfeil-Icon rechts',
+				'block'       => 'core/button',
+			),
+			'checkmark-list'     => array(
+				'label'       => 'Checkmark',
+				'description' => 'Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente',
+				'block'       => 'core/list',
+			),
+			'space-between'      => array(
+				'label'       => 'Space Between',
+				'description' => 'Verteilt Kinder-Elemente gleichmäßig (justify-content: space-between)',
+				'block'       => 'core/group',
+			),
+			'step-circle'        => array(
+				'label'       => 'Step Circle',
+				'description' => 'Zeigt nummerierte Schritt-Kreise in einer Gruppe',
+				'block'       => 'core/group',
+			),
+			'vertical-center'    => array(
+				'label'       => 'Vertical Center',
+				'description' => 'Zentriert Kinder-Elemente vertikal (align-items: center)',
+				'block'       => 'core/group',
+			),
+		);
+
+		// Filesystem-Scan: überschreibt/ergänzt die Basis-Definitionen mit aktuellen Werten.
 		$blocks_dir = GUTENBLOCK_PRO_BLOCKS_PATH;
-		$variants   = array();
+		if ( is_dir( $blocks_dir ) ) {
+			foreach ( glob( $blocks_dir . '*', GLOB_ONLYDIR ) as $folder ) {
+				$slug        = basename( $folder );
+				$config_file = $folder . '/block.json';
 
-		if ( ! is_dir( $blocks_dir ) ) {
-			return $variants;
+				if ( ! file_exists( $config_file ) ) {
+					continue;
+				}
+
+				$config = json_decode( file_get_contents( $config_file ), true );
+				if ( ! $config || empty( $config['block'] ) ) {
+					continue;
+				}
+
+				$base[ $slug ] = array(
+					'label'       => $config['label'] ?? $slug,
+					'description' => $config['description'] ?? '',
+					'block'       => $config['block'],
+				);
+			}
 		}
 
-		foreach ( glob( $blocks_dir . '*', GLOB_ONLYDIR ) as $folder ) {
-			$slug        = basename( $folder );
-			$config_file = $folder . '/block.json';
-
-			if ( ! file_exists( $config_file ) ) {
-				continue;
-			}
-
-			$config = json_decode( file_get_contents( $config_file ), true );
-			if ( ! $config || empty( $config['block'] ) ) {
-				continue;
-			}
-
-			$variants[ $slug ] = array(
-				'label'       => $config['label'] ?? $slug,
-				'description' => $config['description'] ?? '',
-				'block'       => $config['block'],
-			);
-		}
-
-		return $variants;
+		return $base;
 	}
 
 	/**
@@ -394,9 +426,46 @@ class GutenBlock_Pro_Features_Page {
 				</div>
 				<?php endif; ?>
 
-				<?php submit_button( __( 'Einstellungen speichern', 'gutenblock-pro' ) ); ?>
-			</form>
-		</div>
-		<?php
-	}
+			<?php submit_button( __( 'Einstellungen speichern', 'gutenblock-pro' ) ); ?>
+		</form>
+
+		<!-- KI-Übersetzungssprachen -->
+		<h2 class="gbp-features-section-title"><?php esc_html_e( 'KI-Übersetzungssprachen', 'gutenblock-pro' ); ?></h2>
+		<p class="description"><?php esc_html_e( 'Aktiviere die Sprachen, in die im Editor übersetzt werden kann. Jede aktivierte Sprache erscheint als Button in der Sidebar.', 'gutenblock-pro' ); ?></p>
+
+		<form method="post" action="options.php" class="gbp-features-form">
+			<?php settings_fields( 'gutenblock_pro_translations' ); ?>
+			<div class="gbp-features-grid gbp-languages-grid">
+			<?php
+			$available_languages = GutenBlock_Pro_Translation_Settings::get_available_languages();
+			$saved_languages     = get_option( GutenBlock_Pro_Translation_Settings::OPTION_NAME, array() );
+			foreach ( $available_languages as $code => $meta ) :
+				$lang_enabled = ! empty( $saved_languages[ $code ] );
+			?>
+				<div class="gbp-feature-card">
+					<div class="gbp-feature-icon" style="font-size:1.6rem;line-height:1;">
+						<?php echo esc_html( strtoupper( $code ) ); ?>
+					</div>
+					<h3>
+						<?php echo esc_html( $meta['label'] ); ?>
+						<small style="color:#646970;font-weight:400;">(<?php echo esc_html( strtoupper( $code ) ); ?>)</small>
+					</h3>
+					<div class="gbp-feature-toggle">
+						<label class="gbp-toggle">
+							<input type="checkbox"
+								name="<?php echo esc_attr( GutenBlock_Pro_Translation_Settings::OPTION_NAME . '[' . $code . ']' ); ?>"
+								value="1"
+								<?php checked( $lang_enabled ); ?>
+							/>
+							<span class="gbp-toggle-slider"></span>
+						</label>
+					</div>
+				</div>
+			<?php endforeach; ?>
+			</div>
+			<?php submit_button( __( 'Sprachen speichern', 'gutenblock-pro' ) ); ?>
+		</form>
+	</div>
+	<?php
+}
 }

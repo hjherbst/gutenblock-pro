@@ -46,6 +46,7 @@ class GutenBlock_Pro_AI_Settings {
 		$this->ai_generator = GutenBlock_Pro_AI_Generator::get_instance();
 
 		add_action( 'admin_menu', array( $this, 'add_submenu' ) );
+		add_action( 'admin_menu', array( $this, 'add_license_submenu' ), 999 );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'wp_ajax_gutenblock_pro_activate_license', array( $this, 'ajax_activate_license' ) );
@@ -55,16 +56,41 @@ class GutenBlock_Pro_AI_Settings {
 	}
 
 	/**
-	 * Add submenu page
+	 * Add Prompts submenu page
 	 */
 	public function add_submenu() {
+		$title = __( 'Prompts', 'gutenblock-pro' );
+		$context = get_option( 'gutenblock_pro_ai_context', '' );
+		if ( trim( (string) $context ) === '' ) {
+			$title .= ' <span class="awaiting-mod">1</span>';
+		}
+
 		add_submenu_page(
 			'gutenblock-pro',
-			__( 'KI-Einstellungen', 'gutenblock-pro' ),
-			__( 'KI-Einstellungen', 'gutenblock-pro' ),
+			__( 'Prompts', 'gutenblock-pro' ),
+			$title,
 			'manage_options',
 			'gutenblock-pro-ai',
 			array( $this, 'render_settings_page' )
+		);
+	}
+
+	/**
+	 * Add Lizenz/Licence submenu page
+	 */
+	public function add_license_submenu() {
+		$locale = get_locale();
+		$label  = ( strpos( $locale, 'de' ) === 0 )
+			? __( 'Lizenz', 'gutenblock-pro' )
+			: __( 'Licence', 'gutenblock-pro' );
+
+		add_submenu_page(
+			'gutenblock-pro',
+			$label,
+			$label,
+			'manage_options',
+			'gutenblock-pro-license',
+			array( $this, 'render_license_page' )
 		);
 	}
 
@@ -122,7 +148,11 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.',
 	 * Enqueue assets
 	 */
 	public function enqueue_assets( $hook ) {
-		if ( 'gutenblock-pro_page_gutenblock-pro-ai' !== $hook ) {
+		$allowed_hooks = array(
+			'gutenblock-pro_page_gutenblock-pro-ai',
+			'gutenblock-pro_page_gutenblock-pro-license',
+		);
+		if ( ! in_array( $hook, $allowed_hooks, true ) ) {
 			return;
 		}
 
@@ -160,9 +190,6 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.',
 			return;
 		}
 
-		$license_info = $this->license->get_license_info();
-		$token_usage = $this->license->get_token_usage();
-		
 		// Get style prompt with default prefill
 		$style_prompt = get_option( 'gutenblock_pro_system_prompt', '' );
 		if ( empty( $style_prompt ) ) {
@@ -179,155 +206,62 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 		<div class="wrap gutenblock-pro-ai-settings">
 			<h1>
 				<span class="dashicons dashicons-admin-generic"></span>
-				<?php esc_html_e( 'GutenBlock Pro - KI-Einstellungen', 'gutenblock-pro' ); ?>
+				<?php esc_html_e( 'GutenBlock Pro - Prompts', 'gutenblock-pro' ); ?>
 			</h1>
 
-			<!-- License Section -->
-			<div class="gb-settings-section">
-				<h2><?php esc_html_e( 'Lizenz', 'gutenblock-pro' ); ?></h2>
-				
-				<div class="gb-license-box <?php echo $license_info['is_pro'] ? 'is-pro' : 'is-free'; ?>">
-					<?php if ( $license_info['is_pro'] ) : ?>
-						<div class="gb-license-status">
-							<span class="gb-status-badge pro">
+			<form method="post" action="options.php">
+				<?php settings_fields( 'gutenblock_pro_ai_settings' ); ?>
+
+				<!-- Kontext – einziges Pflichtfeld -->
+				<?php $context_filled = trim( (string) $context_prompt ) !== ''; ?>
+				<div class="gb-settings-section gb-context-required">
+					<h2>
+						<span class="dashicons dashicons-edit"></span>
+						<?php esc_html_e( 'Kontext', 'gutenblock-pro' ); ?>
+						<span class="gb-context-badge <?php echo $context_filled ? 'gb-context-filled' : 'gb-context-missing'; ?>">
+							<?php if ( $context_filled ) : ?>
 								<span class="dashicons dashicons-yes-alt"></span>
-								<?php esc_html_e( 'Pro-Lizenz aktiv', 'gutenblock-pro' ); ?>
-							</span>
-							<span class="gb-license-key"><?php echo esc_html( $this->license->get_masked_license_key() ); ?></span>
-						</div>
-						<button type="button" class="button" id="gb-deactivate-license">
-							<?php esc_html_e( 'Lizenz deaktivieren', 'gutenblock-pro' ); ?>
-						</button>
-					<?php else : ?>
-						<div class="gb-license-status">
-							<span class="gb-status-badge free">
-								<span class="dashicons dashicons-info"></span>
-								<?php esc_html_e( 'Kostenlose Version', 'gutenblock-pro' ); ?>
-							</span>
-						</div>
-						<div class="gb-license-form">
-							<input type="text" 
-							       id="gb-license-key" 
-							       placeholder="GBPRO-XXXX-XXXX-XXXX" 
-							       pattern="GBPRO-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}"
-							       maxlength="20"
-							       class="regular-text">
-							<button type="button" class="button button-primary" id="gb-activate-license">
-								<?php esc_html_e( 'Lizenz aktivieren', 'gutenblock-pro' ); ?>
-							</button>
-						</div>
-						<p class="description">
-							<?php 
-							printf(
-								/* translators: %s: link to gutenblock.com */
-								esc_html__( 'Noch keine Lizenz? %s', 'gutenblock-pro' ),
-								'<a href="https://app.gutenblock.com/gutenblock-pro" target="_blank">' . esc_html__( 'Jetzt kaufen', 'gutenblock-pro' ) . '</a>'
-							); 
-							?>
-						</p>
-						<div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; font-size: 12px; color: #646970;">
-							<span style="display: inline-flex; align-items: center; gap: 4px;">
-								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
-								<?php esc_html_e( '1 Mio. AI-Tokens monatlich', 'gutenblock-pro' ); ?>
-							</span>
-							<span style="display: inline-flex; align-items: center; gap: 4px;">
-								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
-								<?php esc_html_e( 'Alle Premium-Patterns freigeschalten', 'gutenblock-pro' ); ?>
-							</span>
-							<span style="display: inline-flex; align-items: center; gap: 4px;">
-								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
-								<?php esc_html_e( 'Einmalig zahlen, lebenslang nutzen', 'gutenblock-pro' ); ?>
-							</span>
-						</div>
-					<?php endif; ?>
-					<div id="gb-license-message" class="gb-message hidden"></div>
+								<?php esc_html_e( 'Ausgefüllt', 'gutenblock-pro' ); ?>
+							<?php else : ?>
+								<?php esc_html_e( 'Wird benötigt', 'gutenblock-pro' ); ?>
+							<?php endif; ?>
+						</span>
+					</h2>
+					<p class="description">
+						<?php esc_html_e( 'Beschreibe wer du bist und was du machst. Diese Information ist die Grundlage für alle KI-generierten Texte.', 'gutenblock-pro' ); ?>
+					</p>
+					<textarea name="gutenblock_pro_ai_context"
+					          id="gutenblock_pro_ai_context"
+					          rows="5"
+					          class="large-text gb-context-input"
+					          placeholder="<?php esc_attr_e( 'z.B. Ich bin ein Marketing-Berater und helfe Unternehmen bei der digitalen Transformation...', 'gutenblock-pro' ); ?>"
+					><?php echo esc_textarea( $context_prompt ); ?></textarea>
+					<p class="submit"><?php submit_button( __( 'Speichern', 'gutenblock-pro' ), 'primary', 'submit', false ); ?></p>
 				</div>
-			</div>
 
-			<!-- Token Usage Section -->
-			<div class="gb-settings-section">
-				<h2><?php esc_html_e( 'Token-Verbrauch', 'gutenblock-pro' ); ?></h2>
-				
-				<div class="gb-token-box">
-					<?php if ( $token_usage['is_pro'] ) : ?>
-						<div class="gb-token-unlimited">
-							<span class="dashicons dashicons-awards"></span>
-							<span><?php esc_html_e( 'Unbegrenzte Tokens (Pro)', 'gutenblock-pro' ); ?></span>
-						</div>
-					<?php else : ?>
-						<div class="gb-token-meter">
-							<div class="gb-token-bar">
-								<?php 
-								$percentage = min( 100, ( $token_usage['used'] / $token_usage['limit'] ) * 100 );
-								$bar_class = $percentage > 80 ? 'warning' : ( $percentage > 95 ? 'critical' : '' );
-								?>
-								<div class="gb-token-progress <?php echo esc_attr( $bar_class ); ?>" 
-								     style="width: <?php echo esc_attr( $percentage ); ?>%"></div>
-							</div>
-							<div class="gb-token-numbers">
-								<span class="gb-token-used">
-									<?php echo esc_html( number_format_i18n( $token_usage['used'] ) ); ?>
-								</span>
-								<span class="gb-token-separator">/</span>
-								<span class="gb-token-limit">
-									<?php echo esc_html( number_format_i18n( $token_usage['limit'] ) ); ?>
-								</span>
-								<span class="gb-token-label"><?php esc_html_e( 'Tokens', 'gutenblock-pro' ); ?></span>
-							</div>
-						</div>
-						<p class="description">
-							<?php 
-							printf(
-								/* translators: %s: reset date */
-								esc_html__( 'Verbleibend: %1$s Tokens. Reset: %2$s', 'gutenblock-pro' ),
-								'<strong>' . number_format_i18n( $token_usage['remaining'] ) . '</strong>',
-								'<strong>' . esc_html( date_i18n( 'j. F Y', strtotime( 'first day of next month' ) ) ) . '</strong>'
-							); 
-							?>
-						</p>
-					<?php endif; ?>
-				</div>
-			</div>
+				<!-- Optional für Feintuning -->
+				<div class="gb-settings-section gb-optional-section">
+					<h2 class="gb-optional-title">
+						<span class="dashicons dashicons-admin-tools"></span>
+						<?php esc_html_e( 'Optional: Feintuning', 'gutenblock-pro' ); ?>
+					</h2>
+					<p class="description gb-optional-intro">
+						<?php esc_html_e( 'Diese Einstellungen sind optional und dienen der Verfeinerung. Der Kontext oben reicht für den Start.', 'gutenblock-pro' ); ?>
+					</p>
 
-			<!-- System Prompt Section -->
-			<div class="gb-settings-section">
-				<h2><?php esc_html_e( 'KI-Prompts', 'gutenblock-pro' ); ?></h2>
-				<p class="description">
-					<?php esc_html_e( 'Definiere den Stil und Kontext für alle KI-generierten Texte. Diese Prompts werden bei jeder Generierung kombiniert verwendet.', 'gutenblock-pro' ); ?>
-				</p>
-				
-				<form method="post" action="options.php">
-					<?php settings_fields( 'gutenblock_pro_ai_settings' ); ?>
-					
 					<table class="form-table">
 						<tr>
 							<th scope="row">
 								<label for="gutenblock_pro_system_prompt"><?php esc_html_e( 'Stil', 'gutenblock-pro' ); ?></label>
 							</th>
 							<td>
-								<textarea name="gutenblock_pro_system_prompt" 
-								          id="gutenblock_pro_system_prompt" 
-								          rows="6" 
+								<textarea name="gutenblock_pro_system_prompt"
+								          id="gutenblock_pro_system_prompt"
+								          rows="6"
 								          class="large-text code"
 								><?php echo esc_textarea( $style_prompt ); ?></textarea>
 								<p class="description">
 									<?php esc_html_e( 'Definiere den Schreibstil und technische Vorgaben für die Texte.', 'gutenblock-pro' ); ?>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row">
-								<label for="gutenblock_pro_ai_context"><?php esc_html_e( 'Kontext', 'gutenblock-pro' ); ?></label>
-							</th>
-							<td>
-								<textarea name="gutenblock_pro_ai_context" 
-								          id="gutenblock_pro_ai_context" 
-								          rows="4" 
-								          class="large-text code"
-								          placeholder="<?php esc_attr_e( 'z.B. Ich bin ein Marketing-Berater und helfe Unternehmen bei der digitalen Transformation...', 'gutenblock-pro' ); ?>"
-								><?php echo esc_textarea( $context_prompt ); ?></textarea>
-								<p class="description">
-									<?php esc_html_e( 'Beschreibe wer du bist und was du machst. Diese Informationen werden mit dem Stil kombiniert.', 'gutenblock-pro' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -402,13 +336,13 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 						</tr>
 						<?php endif; ?>
 					</table>
-					
-					<?php submit_button( __( 'Einstellungen speichern', 'gutenblock-pro' ) ); ?>
-				</form>
-			</div>
+				</div>
 
-			<!-- Block Prompts Section (read-only from API) -->
-			<div class="gb-settings-section">
+				<?php submit_button( __( 'Einstellungen speichern', 'gutenblock-pro' ) ); ?>
+			</form>
+
+			<!-- Block Prompts Section (optional) -->
+			<div class="gb-settings-section gb-optional-section">
 				<h2>
 					<?php esc_html_e( 'Block-Prompts', 'gutenblock-pro' ); ?>
 					<button type="button" class="button button-secondary button-small" id="gb-refresh-prompts">
@@ -416,7 +350,7 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 					</button>
 				</h2>
 				<p class="description">
-					<?php esc_html_e( 'Diese Prompts werden mit der API von gutenblock.com synchronisiert und definieren, welcher Text für welches Block-Element generiert wird. Custom Prompts überschreiben die API-Prompts.', 'gutenblock-pro' ); ?>
+					<?php esc_html_e( 'Optional: Diese Prompts werden mit der API von gutenblock.com synchronisiert und definieren, welcher Text für welches Block-Element generiert wird. Custom Prompts überschreiben die API-Prompts.', 'gutenblock-pro' ); ?>
 				</p>
 
 				<?php if ( ! empty( $prompts ) ) : ?>
@@ -458,6 +392,132 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 					</div>
 				<?php endif; ?>
 				<div id="gb-prompts-message" class="gb-message hidden"></div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render License page
+	 */
+	public function render_license_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$license_info = $this->license->get_license_info();
+		$token_usage  = $this->license->get_token_usage();
+
+		$locale = get_locale();
+		$title  = ( strpos( $locale, 'de' ) === 0 )
+			? __( 'GutenBlock Pro - Lizenz', 'gutenblock-pro' )
+			: __( 'GutenBlock Pro - Licence', 'gutenblock-pro' );
+		?>
+		<div class="wrap gutenblock-pro-ai-settings">
+			<h1>
+				<span class="dashicons dashicons-admin-network"></span>
+				<?php echo esc_html( $title ); ?>
+			</h1>
+
+			<!-- License Section -->
+			<div class="gb-settings-section">
+				<h2><?php esc_html_e( 'Lizenz', 'gutenblock-pro' ); ?></h2>
+
+				<div class="gb-license-box <?php echo $license_info['is_pro'] ? 'is-pro' : 'is-free'; ?>">
+					<?php if ( $license_info['is_pro'] ) : ?>
+						<div class="gb-license-status">
+							<span class="gb-status-badge pro">
+								<span class="dashicons dashicons-yes-alt"></span>
+								<?php esc_html_e( 'Pro-Lizenz aktiv', 'gutenblock-pro' ); ?>
+							</span>
+							<span class="gb-license-key"><?php echo esc_html( $this->license->get_masked_license_key() ); ?></span>
+						</div>
+						<button type="button" class="button" id="gb-deactivate-license">
+							<?php esc_html_e( 'Lizenz deaktivieren', 'gutenblock-pro' ); ?>
+						</button>
+					<?php else : ?>
+						<div class="gb-license-status">
+							<span class="gb-status-badge free">
+								<span class="dashicons dashicons-info"></span>
+								<?php esc_html_e( 'Kostenlose Version', 'gutenblock-pro' ); ?>
+							</span>
+						</div>
+						<div class="gb-license-form">
+							<input type="text"
+							       id="gb-license-key"
+							       placeholder="GBPRO-XXXX-XXXX-XXXX"
+							       pattern="GBPRO-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}"
+							       maxlength="20"
+							       class="regular-text">
+							<button type="button" class="button button-primary" id="gb-activate-license">
+								<?php esc_html_e( 'Lizenz aktivieren', 'gutenblock-pro' ); ?>
+							</button>
+						</div>
+						<p class="description">
+							<?php
+							printf(
+								esc_html__( 'Noch keine Lizenz? %s', 'gutenblock-pro' ),
+								'<a href="https://app.gutenblock.com/gutenblock-pro" target="_blank">' . esc_html__( 'Jetzt kaufen', 'gutenblock-pro' ) . '</a>'
+							);
+							?>
+						</p>
+						<div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; font-size: 12px; color: #646970;">
+							<span style="display: inline-flex; align-items: center; gap: 4px;">
+								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
+								<?php esc_html_e( '1 Mio. AI-Tokens monatlich', 'gutenblock-pro' ); ?>
+							</span>
+							<span style="display: inline-flex; align-items: center; gap: 4px;">
+								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
+								<?php esc_html_e( 'Alle Premium-Patterns freigeschalten', 'gutenblock-pro' ); ?>
+							</span>
+							<span style="display: inline-flex; align-items: center; gap: 4px;">
+								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
+								<?php esc_html_e( 'Einmalig zahlen, lebenslang nutzen', 'gutenblock-pro' ); ?>
+							</span>
+						</div>
+					<?php endif; ?>
+					<div id="gb-license-message" class="gb-message hidden"></div>
+				</div>
+			</div>
+
+			<!-- Token Usage Section -->
+			<div class="gb-settings-section">
+				<h2><?php esc_html_e( 'Token-Verbrauch', 'gutenblock-pro' ); ?></h2>
+
+				<div class="gb-token-box">
+					<?php if ( $token_usage['is_pro'] ) : ?>
+						<div class="gb-token-unlimited">
+							<span class="dashicons dashicons-awards"></span>
+							<span><?php esc_html_e( 'Unbegrenzte Tokens (Pro)', 'gutenblock-pro' ); ?></span>
+						</div>
+					<?php else : ?>
+						<div class="gb-token-meter">
+							<div class="gb-token-bar">
+								<?php
+								$percentage = min( 100, ( $token_usage['used'] / $token_usage['limit'] ) * 100 );
+								$bar_class  = $percentage > 95 ? 'critical' : ( $percentage > 80 ? 'warning' : '' );
+								?>
+								<div class="gb-token-progress <?php echo esc_attr( $bar_class ); ?>"
+								     style="width: <?php echo esc_attr( $percentage ); ?>%"></div>
+							</div>
+							<div class="gb-token-numbers">
+								<span class="gb-token-used"><?php echo esc_html( number_format_i18n( $token_usage['used'] ) ); ?></span>
+								<span class="gb-token-separator">/</span>
+								<span class="gb-token-limit"><?php echo esc_html( number_format_i18n( $token_usage['limit'] ) ); ?></span>
+								<span class="gb-token-label"><?php esc_html_e( 'Tokens', 'gutenblock-pro' ); ?></span>
+							</div>
+						</div>
+						<p class="description">
+							<?php
+							printf(
+								esc_html__( 'Verbleibend: %1$s Tokens. Reset: %2$s', 'gutenblock-pro' ),
+								'<strong>' . number_format_i18n( $token_usage['remaining'] ) . '</strong>',
+								'<strong>' . esc_html( date_i18n( 'j. F Y', strtotime( 'first day of next month' ) ) ) . '</strong>'
+							);
+							?>
+						</p>
+					<?php endif; ?>
+				</div>
 			</div>
 		</div>
 		<?php

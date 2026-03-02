@@ -50,8 +50,8 @@ class GutenBlock_Pro_Admin_Page {
 
 		add_submenu_page(
 			'gutenblock-pro',
-			__( 'Sections/Varianten', 'gutenblock-pro' ),
-			__( 'Sections/Varianten', 'gutenblock-pro' ),
+			__( 'Sections', 'gutenblock-pro' ),
+			__( 'Sections', 'gutenblock-pro' ),
 			'manage_options',
 			'gutenblock-pro'
 		);
@@ -193,10 +193,7 @@ class GutenBlock_Pro_Admin_Page {
 				<a href="?page=gutenblock-pro&tab=patterns" class="nav-tab <?php echo $active_tab === 'patterns' ? 'nav-tab-active' : ''; ?>">
 					<?php _e( 'Sections', 'gutenblock-pro' ); ?>
 				</a>
-				<a href="?page=gutenblock-pro&tab=blocks" class="nav-tab <?php echo $active_tab === 'blocks' ? 'nav-tab-active' : ''; ?>">
-					<?php _e( 'Stilvarianten', 'gutenblock-pro' ); ?>
-				</a>
-				<a href="?page=gutenblock-pro&tab=editor" class="nav-tab <?php echo $active_tab === 'editor' ? 'nav-tab-active' : ''; ?>">
+			<a href="?page=gutenblock-pro&tab=editor" class="nav-tab <?php echo $active_tab === 'editor' ? 'nav-tab-active' : ''; ?>">
 					<?php _e( 'CSS/JS Editor', 'gutenblock-pro' ); ?>
 				</a>
 				<a href="?page=gutenblock-pro&tab=info" class="nav-tab <?php echo $active_tab === 'info' ? 'nav-tab-active' : ''; ?>">
@@ -232,6 +229,22 @@ class GutenBlock_Pro_Admin_Page {
 		// Separate patterns by type
 		$pages = array_filter( $patterns, function( $p ) { return $p['type'] === 'page'; } );
 		$sections = array_filter( $patterns, function( $p ) { return $p['type'] !== 'page'; } );
+
+		// Sections nach Gruppen-Reihenfolge aus $groups sortieren.
+		// Patterns ohne Gruppe oder mit unbekannter Gruppe kommen ans Ende.
+		$group_order = array_keys( GutenBlock_Pro_Pattern_Loader::$groups );
+		uasort( $sections, function( $a, $b ) use ( $group_order ) {
+			$pos_a = array_search( $a['group'], $group_order );
+			$pos_b = array_search( $b['group'], $group_order );
+			// false (kein Treffer) → ans Ende
+			$pos_a = $pos_a === false ? PHP_INT_MAX : $pos_a;
+			$pos_b = $pos_b === false ? PHP_INT_MAX : $pos_b;
+			if ( $pos_a !== $pos_b ) {
+				return $pos_a - $pos_b;
+			}
+			// Innerhalb derselben Gruppe alphabetisch nach Titel
+			return strcmp( $a['title'], $b['title'] );
+		} );
 		?>
 
 		<?php if ( empty( $patterns ) ) : ?>

@@ -27,6 +27,81 @@
 	margin-bottom: 20px;
 }
 
+/* Kontext – Pflichtfeld, hervorgehoben */
+.gb-context-required {
+	border-left: 4px solid #2271b1;
+	background: linear-gradient(135deg, #fff 0%, #f8fbff 100%);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.gb-context-required h2 {
+	align-items: center;
+}
+
+.gb-context-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 8px;
+	padding: 2px 10px;
+	font-size: 12px;
+	font-weight: 600;
+	border-radius: 4px;
+	vertical-align: middle;
+}
+
+.gb-context-badge.gb-context-missing {
+	background: #d63638;
+	color: #fff;
+}
+
+.gb-context-badge.gb-context-filled {
+	background: #00a32a;
+	color: #fff;
+}
+
+.gb-context-badge .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+.gb-context-required .submit {
+	margin-top: 16px;
+	margin-bottom: 0;
+}
+
+.gb-context-input {
+	width: 100%;
+	margin-top: 12px;
+	padding: 12px;
+	font-size: 15px;
+	line-height: 1.6;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+}
+
+.gb-context-input:focus {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: 2px solid transparent;
+}
+
+/* Optional-Sektion */
+.gb-optional-section {
+	opacity: 0.95;
+}
+
+.gb-optional-title {
+	color: #646970;
+}
+
+.gb-optional-intro {
+	margin-bottom: 16px;
+	color: #646970;
+	font-style: italic;
+}
+
 .gb-settings-section h2 {
 	margin-top: 0;
 	margin-bottom: 12px;
