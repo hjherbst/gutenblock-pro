@@ -20,50 +20,187 @@ class GutenBlock_Pro_Block_Registry {
 
 	/**
 	 * Default block variant definitions bundled with the plugin.
-	 * Used to auto-create missing block.json files on any installation.
+	 * Used to auto-create missing block.json and style.css files on any installation.
 	 */
 	private static $default_blocks = array(
 		'button-arrow-circle' => array(
-			'block'       => 'core/button',
-			'name'        => 'button-arrow-circle',
-			'label'       => 'Arrow Circle',
-			'type'        => 'variant',
-			'description' => 'Pill-förmiger Button mit eingebettetem Kreis-Pfeil rechts und Hover-Animation',
+			'config' => array(
+				'block'       => 'core/button',
+				'name'        => 'button-arrow-circle',
+				'label'       => 'Arrow Circle',
+				'type'        => 'variant',
+				'description' => 'Pill-förmiger Button mit eingebettetem Kreis-Pfeil rechts und Hover-Animation',
+			),
+			'css' => '.wp-block-button.is-style-button-arrow-circle .wp-block-button__link {
+	position: relative;
+	display: inline-block;
+	background-color: transparent;
+	color: black;
+	padding: 0.75em 5em 0.75em 1.25em;
+	border: 1px solid #333;
+	border-radius: 999px;
+	text-decoration: none;
+	transition: all 0.3s ease;
+	overflow: hidden;
+}
+.wp-block-button.is-style-button-arrow-circle .wp-block-button__link::after {
+	content: \'\';
+	position: absolute;
+	right: 0.4em;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 38px;
+	height: 38px;
+	background-image: url("data:image/svg+xml,%3Csvg width=\'44\' height=\'44\' viewBox=\'0 0 44 44\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'22\' cy=\'22\' r=\'22\' fill=\'var(--wp--preset--color--contrast,%23333)\'/%3E%3Cpath d=\'M29.2431 22.7071C29.6336 22.3166 29.6336 21.6834 29.2431 21.2929L22.8791 14.9289C22.4886 14.5384 21.8554 14.5384 21.4649 14.9289C21.0744 15.3195 21.0744 15.9526 21.4649 16.3431L27.1217 22L21.4649 27.6569C21.0744 28.0474 21.0744 28.6805 21.4649 29.0711C21.8554 29.4616 22.4886 29.4616 22.8791 29.0711L29.2431 22.7071ZM16 22V23L28.536 23V22V21L16 21V22Z\' fill=\'white\'/%3E%3C/svg%3E");
+	background-size: cover;
+	background-repeat: no-repeat;
+	transition: transform 0.3s ease;
+}
+.wp-block-button.is-style-button-arrow-circle .wp-block-button__link:hover::after {
+	transform: translateY(-50%) translateX(-5px);
+}
+.wp-block-button.is-style-button-arrow-circle .wp-block-button__link.fly::after {
+	transform: translateY(-50%) translateX(200%);
+}',
 		),
 		'button-simple'       => array(
-			'block'       => 'core/button',
-			'name'        => 'button-simple',
-			'label'       => 'Simple',
-			'type'        => 'variant',
-			'description' => 'Transparenter Button ohne Hintergrund – nur Text mit Pfeil-Icon und Hover-Animation',
+			'config' => array(
+				'block'       => 'core/button',
+				'name'        => 'button-simple',
+				'label'       => 'Simple',
+				'type'        => 'variant',
+				'description' => 'Transparenter Button ohne Hintergrund – nur Text mit Pfeil-Icon und Hover-Animation',
+			),
+			'css' => '.wp-block-button.is-style-button-simple .wp-block-button__link {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+	background-color: transparent;
+	border: none;
+	padding: 0 1.5em 0 0;
+	text-decoration: none;
+	overflow: hidden;
+	transition: color 0.3s ease;
+	color: var(--wp--preset--color--contrast, inherit);
+}
+.wp-block-button.is-style-button-simple .wp-block-button__link::after {
+	content: \'\';
+	position: absolute;
+	right: 0;
+	top: 50%;
+	width: 1em;
+	height: 1em;
+	background-color: currentColor;
+	-webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M9 6l6 6-6 6\'/%3E%3C/svg%3E");
+	mask-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'M9 6l6 6-6 6\'/%3E%3C/svg%3E");
+	-webkit-mask-size: contain;
+	mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	mask-position: center;
+	transform: translateY(-50%);
+	transition: transform 0.3s ease;
+}
+.wp-block-button.is-style-button-simple .wp-block-button__link:hover::after {
+	transform: translateY(-50%) translateX(-5px);
+}
+.wp-block-button.is-style-button-simple .wp-block-button__link.fly::after {
+	transform: translateY(-50%) translateX(200%);
+}',
 		),
 		'checkmark-list'      => array(
-			'block'       => 'core/list',
-			'name'        => 'checkmark-list',
-			'label'       => 'Checkmark',
-			'type'        => 'variant',
-			'description' => 'Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente',
+			'config' => array(
+				'block'       => 'core/list',
+				'name'        => 'checkmark-list',
+				'label'       => 'Checkmark',
+				'type'        => 'variant',
+				'description' => 'Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente',
+			),
+			'css' => 'ul.is-style-checkmark-list {
+	list-style-type: "\2713";
+}
+ul.is-style-checkmark-list li {
+	padding-inline-start: 1ch;
+}
+.block-editor-block-list__layout ul.is-style-checkmark-list {
+	list-style-type: "\2713";
+}
+.block-editor-block-list__layout ul.is-style-checkmark-list li {
+	padding-inline-start: 1ch;
+}',
 		),
 		'space-between'       => array(
-			'block'       => 'core/group',
-			'name'        => 'space-between',
-			'label'       => 'Space Between',
-			'type'        => 'variant',
-			'description' => 'Vertikale Verteilung: Inhalte füllen die volle Höhe mit gleichmäßigem Abstand',
+			'config' => array(
+				'block'       => 'core/group',
+				'name'        => 'space-between',
+				'label'       => 'Space Between',
+				'type'        => 'variant',
+				'description' => 'Vertikale Verteilung: Inhalte füllen die volle Höhe mit gleichmäßigem Abstand',
+			),
+			'css' => '.wp-block-group.is-style-space-between {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	height: 100%;
+}
+.wp-block-group.is-style-space-between > * {
+	flex: 0 0 auto;
+}
+.wp-block-column:has(> .is-style-space-between) {
+	align-self: stretch !important;
+}',
 		),
 		'step-circle'         => array(
-			'block'       => 'core/paragraph',
-			'name'        => 'step-circle',
-			'label'       => 'Step Circle',
-			'type'        => 'variant',
-			'description' => 'Zeigt den Absatz als nummerierte Kreisfläche (z.B. für Schritte)',
+			'config' => array(
+				'block'       => 'core/paragraph',
+				'name'        => 'step-circle',
+				'label'       => 'Step Circle',
+				'type'        => 'variant',
+				'description' => 'Zeigt den Absatz als nummerierte Kreisfläche (z.B. für Schritte)',
+			),
+			'css' => '.wp-block-paragraph.is-style-step-circle,
+p.is-style-step-circle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+	background-color: #fff;
+	color: #1e3a8a;
+	font-weight: 700;
+	line-height: 1;
+	margin-bottom: 1rem;
+	padding: 0;
+	margin-left: 0 !important;
+	margin-right: auto !important;
+}
+.wp-block-paragraph.is-style-step-circle.has-text-align-center,
+p.is-style-step-circle.has-text-align-center {
+	margin-left: auto !important;
+	margin-right: auto !important;
+}
+.wp-block-paragraph.is-style-step-circle.has-text-align-right,
+p.is-style-step-circle.has-text-align-right {
+	margin-left: auto !important;
+	margin-right: 0 !important;
+}',
 		),
 		'vertical-center'     => array(
-			'block'       => 'core/group',
-			'name'        => 'vertical-center',
-			'label'       => 'Vertikal zentriert',
-			'type'        => 'variant',
-			'description' => 'Zentriert den Inhalt vertikal per Flexbox',
+			'config' => array(
+				'block'       => 'core/group',
+				'name'        => 'vertical-center',
+				'label'       => 'Vertikal zentriert',
+				'type'        => 'variant',
+				'description' => 'Zentriert den Inhalt vertikal per Flexbox',
+			),
+			'css' => '.wp-block-group.is-style-vertical-center {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}',
 		),
 	);
 
@@ -80,7 +217,7 @@ class GutenBlock_Pro_Block_Registry {
 
 	/**
 	 * Ensure all default block definitions exist on disk.
-	 * Creates missing directories and block.json files so the plugin
+	 * Creates missing directories, block.json and style.css files so the plugin
 	 * is self-contained regardless of which version was deployed.
 	 */
 	private function ensure_default_blocks() {
@@ -90,22 +227,25 @@ class GutenBlock_Pro_Block_Registry {
 			wp_mkdir_p( $blocks_dir );
 		}
 
-		foreach ( self::$default_blocks as $slug => $config ) {
-			$folder     = $blocks_dir . $slug;
+		foreach ( self::$default_blocks as $slug => $block ) {
+			$folder      = $blocks_dir . $slug;
 			$config_file = $folder . '/block.json';
-
-			if ( file_exists( $config_file ) ) {
-				continue;
-			}
+			$style_file  = $folder . '/style.css';
 
 			if ( ! is_dir( $folder ) ) {
 				wp_mkdir_p( $folder );
 			}
 
-			file_put_contents(
-				$config_file,
-				wp_json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . "\n"
-			);
+			if ( ! file_exists( $config_file ) ) {
+				file_put_contents(
+					$config_file,
+					wp_json_encode( $block['config'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . "\n"
+				);
+			}
+
+			if ( ! file_exists( $style_file ) && ! empty( $block['css'] ) ) {
+				file_put_contents( $style_file, $block['css'] . "\n" );
+			}
 		}
 	}
 
@@ -175,16 +315,9 @@ class GutenBlock_Pro_Block_Registry {
 			}
 		}
 
-		// Fallback: Use defaults based on folder name
-		// For checkmark-list variant
-		if ( $slug === 'checkmark-list' ) {
-			return array(
-				'block'       => 'core/list',
-				'name'        => 'checkmark-list',
-				'label'       => __( 'Checkmark', 'gutenblock-pro' ),
-				'type'        => 'variant',
-				'description' => __( 'Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente', 'gutenblock-pro' ),
-			);
+		// Fallback: use inline defaults if available
+		if ( isset( self::$default_blocks[ $slug ]['config'] ) ) {
+			return self::$default_blocks[ $slug ]['config'];
 		}
 
 		return null;
