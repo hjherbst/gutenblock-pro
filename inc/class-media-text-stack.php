@@ -18,6 +18,8 @@ class GutenBlock_Pro_Media_Text_Stack {
 	const ATTR         = 'stackMode';
 	const ATTR_LINKBOX = 'linkbox';
 
+	const LINKBOX_BLOCKS = array( 'core/media-text', 'core/group', 'core/stack' );
+
 	public function init() {
 		add_filter( 'register_block_type_args', array( $this, 'register_attribute' ), 10, 2 );
 		add_filter( 'render_block', array( $this, 'add_class' ), 10, 2 );
@@ -28,16 +30,18 @@ class GutenBlock_Pro_Media_Text_Stack {
 	}
 
 	public function register_attribute( $args, $name ) {
-		if ( 'core/media-text' !== $name ) {
+		if ( ! in_array( $name, self::LINKBOX_BLOCKS, true ) ) {
 			return $args;
 		}
 		if ( ! isset( $args['attributes'] ) ) {
 			$args['attributes'] = array();
 		}
-		$args['attributes'][ self::ATTR ] = array(
-			'type'    => 'string',
-			'default' => '',
-		);
+		if ( 'core/media-text' === $name ) {
+			$args['attributes'][ self::ATTR ] = array(
+				'type'    => 'string',
+				'default' => '',
+			);
+		}
 		$args['attributes'][ self::ATTR_LINKBOX ] = array(
 			'type'    => 'boolean',
 			'default' => false,
@@ -61,32 +65,52 @@ class GutenBlock_Pro_Media_Text_Stack {
 	}
 
 	/**
-	 * Linkbox: Ganzes Media-Text als Link, innere Links entfernen
+	 * Linkbox: Ganzen Block als Link, innere Links entfernen.
+	 * Unterstützt: core/media-text, core/group, core/stack
 	 */
 	public function apply_linkbox( $content, $block ) {
-		if ( 'core/media-text' !== $block['blockName'] ) {
+		if ( ! in_array( $block['blockName'], self::LINKBOX_BLOCKS, true ) ) {
 			return $content;
 		}
 		if ( empty( $block['attrs'][ self::ATTR_LINKBOX ] ) ) {
 			return $content;
 		}
-		// Erste Link-URL im Content finden
 		$url = $this->extract_first_link_url( $content );
 		if ( '' === $url ) {
 			return $content;
 		}
-		// Innere <a> durch <span> ersetzen (nested links vermeiden)
 		$inner = $this->strip_inner_links( $content );
 		$url   = esc_url( $url );
-		// Inline padding-left/right von has-global-padding entfernen, damit die CSS-Regel greift
-		$inner = $this->restore_global_padding( $inner );
-		// Link als Kind des media-text-Containers, nicht außen (Breiteneinstellungen erhalten)
-		return preg_replace(
-			'/^(\s*<div[^>]*class="[^"]*wp-block-media-text[^"]*"[^>]*>)([\s\S]+)(<\/div>\s*)$/',
-			'$1<a href="' . $url . '" class="gbp-media-text-linkbox">$2</a>$3',
-			$inner,
-			1
-		);
+
+		if ( 'core/media-text' === $block['blockName'] ) {
+			$inner = $this->restore_global_padding( $inner );
+			return preg_replace(
+				'/^(\s*<div[^>]*class="[^"]*wp-block-media-text[^"]*"[^>]*>)([\s\S]+)(<\/div>\s*)$/',
+				'$1<a href="' . $url . '" class="gbp-media-text-linkbox">$2</a>$3',
+				$inner,
+				1
+			);
+		}
+
+		if ( 'core/group' === $block['blockName'] ) {
+			return preg_replace(
+				'/^(\s*<div[^>]*class="[^"]*wp-block-group[^"]*"[^>]*>)([\s\S]+)(<\/div>\s*)$/',
+				'$1<a href="' . $url . '" class="gbp-linkbox">$2</a>$3',
+				$inner,
+				1
+			);
+		}
+
+		if ( 'core/stack' === $block['blockName'] ) {
+			return preg_replace(
+				'/^(\s*<div[^>]*class="[^"]*wp-block-stack[^"]*"[^>]*>)([\s\S]+)(<\/div>\s*)$/',
+				'$1<a href="' . $url . '" class="gbp-linkbox">$2</a>$3',
+				$inner,
+				1
+			);
+		}
+
+		return $content;
 	}
 
 	private function extract_first_link_url( $html ) {
@@ -236,6 +260,32 @@ class GutenBlock_Pro_Media_Text_Stack {
 					grid-row: 2 !important;
 				}
 			}
+			/* Linkbox für Group/Stack: display:contents, Layout unverändert */
+			.wp-block-group:has(> .gbp-linkbox),
+			.wp-block-stack:has(> .gbp-linkbox) {
+				cursor: pointer;
+				overflow: hidden;
+			}
+			.wp-block-group > .gbp-linkbox,
+			.wp-block-stack > .gbp-linkbox {
+				display: contents;
+				text-decoration: none;
+				color: inherit;
+			}
+			.wp-block-group > .gbp-linkbox:hover,
+			.wp-block-stack > .gbp-linkbox:hover {
+				text-decoration: none;
+				color: inherit;
+			}
+			.gbp-linkbox img {
+				display: block;
+				width: 100%;
+				height: auto;
+				transition: transform 0.8s ease;
+			}
+			.gbp-linkbox:hover img {
+				transform: scale(1.05);
+			}
 		';
 		$editor = '
 			/* Editor: Klasse sitzt am BlockListBlock-Wrapper, innere .wp-block-media-text ansprechen */
@@ -302,6 +352,13 @@ class GutenBlock_Pro_Media_Text_Stack {
 			}
 			.gbp-linkbox-inner {
 				display: inline;
+			}
+			/* Linkbox für Group/Stack (Editor) */
+			.wp-block-group > .gbp-linkbox,
+			.wp-block-stack > .gbp-linkbox {
+				display: contents;
+				text-decoration: none;
+				color: inherit;
 			}
 		';
 		return $frontend . $editor;

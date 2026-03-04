@@ -19,6 +19,7 @@
 		hScrollPeekMobile: 'hScrollPeekMobile',
 		hScrollDots: 'hScrollDots',
 		hScrollArrows: 'hScrollArrows',
+		hScrollMobileOnly: 'hScrollMobileOnly',
 	};
 
 	var defaultAttrs = {
@@ -32,6 +33,7 @@
 		hScrollDots: { type: 'boolean', default: true },
 		hScrollArrows: { type: 'boolean', default: true },
 		hScrollInfinite: { type: 'boolean', default: false },
+		hScrollMobileOnly: { type: 'boolean', default: false },
 	};
 
 	addFilter(
@@ -73,6 +75,12 @@
 							onChange: function( val ) {
 								props.setAttributes( { horizontalScroll: val } );
 							},
+						} ),
+						active && createElement( ToggleControl, {
+							label: __( 'Nur Mobile', 'gutenblock-pro' ),
+							help: __( 'Scroll nur auf Mobilgeräten (≤600px) – auf Tablet und Desktop normale Spalten.', 'gutenblock-pro' ),
+							checked: attrs.hScrollMobileOnly || false,
+							onChange: function( val ) { props.setAttributes( { hScrollMobileOnly: val } ); },
 						} ),
 						active && createElement( Fragment, {},
 							createElement( RangeControl, {

@@ -15,6 +15,11 @@ const DEBOUNCE_MS = 200;
 const MAX_PATHS_TO_FETCH = 60;
 const GRID_ICON_SIZE = 32;
 
+/** Plugin custom icons (not in @material-symbols-svg), e.g. filled star */
+const CUSTOM_ICONS = [
+	{ name: 'rate_star_filled', searchTerms: [ 'star', 'filled', 'rating', 'favorit' ] },
+];
+
 /**
  * Debounced search term.
  */
@@ -31,22 +36,31 @@ function useDebouncedValue( value, delay ) {
 
 /**
  * Filter icon index by search string (name + searchTerms).
+ * Merges plugin custom icons (e.g. rate_star_filled) when they match the query.
  */
 function filterIcons( index, query ) {
-	if ( ! query || query.length < 2 ) {
-		return Object.keys( index ).slice( 0, 100 );
-	}
-	const q = query.toLowerCase().trim();
-	const keys = Object.keys( index );
-	const matched = keys.filter( ( key ) => {
-		const entry = index[ key ];
-		if ( entry.name && entry.name.toLowerCase().includes( q ) ) return true;
-		if ( entry.searchTerms && Array.isArray( entry.searchTerms ) ) {
-			if ( entry.searchTerms.some( ( t ) => String( t ).toLowerCase().includes( q ) ) ) return true;
-		}
-		return false;
-	} );
-	return matched.slice( 0, 200 );
+	const q = ! query ? '' : query.toLowerCase().trim();
+	const fromIndex =
+		q.length < 2
+			? Object.keys( index ).slice( 0, 100 )
+			: Object.keys( index ).filter( ( key ) => {
+					const entry = index[ key ];
+					if ( entry.name && entry.name.toLowerCase().includes( q ) ) return true;
+					if ( entry.searchTerms && Array.isArray( entry.searchTerms ) ) {
+						if ( entry.searchTerms.some( ( t ) => String( t ).toLowerCase().includes( q ) ) ) return true;
+					}
+					return false;
+				} );
+	const customMatched =
+		q.length < 2
+			? CUSTOM_ICONS.map( ( c ) => c.name )
+			: CUSTOM_ICONS.filter(
+					( c ) =>
+						c.name.toLowerCase().includes( q ) ||
+						( c.searchTerms && c.searchTerms.some( ( t ) => t.toLowerCase().includes( q ) ) )
+				).map( ( c ) => c.name );
+	const combined = [ ...new Set( [ ...customMatched, ...fromIndex ] ) ];
+	return combined.slice( 0, 200 );
 }
 
 /**
@@ -71,8 +85,9 @@ function IconThumb( { path, viewBox, size = GRID_ICON_SIZE, color = '#444' } ) {
 
 /**
  * IconSearch – Suchfeld + Grid mit SVG-Vorschau, ruft onSelect( iconName ) auf.
+ * getPathForIcon returns { path, viewBox } or null.
  */
-export default function IconSearch( { onSelect, getPathForIcon, viewBox = '0 -960 960 960' } ) {
+export default function IconSearch( { onSelect, getPathForIcon, defaultViewBox = '0 -960 960 960' } ) {
 	const [ search, setSearch ] = useState( '' );
 	const [ pathCache, setPathCache ] = useState( {} );
 	const debouncedSearch = useDebouncedValue( search, DEBOUNCE_MS );
@@ -98,13 +113,15 @@ export default function IconSearch( { onSelect, getPathForIcon, viewBox = '0 -96
 		if ( toFetch.length === 0 ) return;
 		toFetch.forEach( ( name ) => {
 			pendingRef.current.add( name );
-			getPathForIcon( name ).then( ( path ) => {
+			getPathForIcon( name ).then( ( data ) => {
 				if ( generation !== searchGenerationRef.current ) return;
 				pendingRef.current.delete( name );
-				setPathCache( ( prev ) => ( path != null ? { ...prev, [ name ]: path } : prev ) );
+				setPathCache( ( prev ) =>
+					data != null && data.path ? { ...prev, [ name ]: { path: data.path, viewBox: data.viewBox || defaultViewBox } } : prev
+				);
 			} );
 		} );
-	}, [ iconNames.join( ',' ), getPathForIcon, pathCache ] );
+	}, [ iconNames.join( ',' ), getPathForIcon, pathCache, defaultViewBox ] );
 
 	const handleSelect = useCallback(
 		( name ) => {
@@ -140,7 +157,11 @@ export default function IconSearch( { onSelect, getPathForIcon, viewBox = '0 -96
 							title={ name }
 						>
 							{ pathCache[ name ] ? (
-								<IconThumb path={ pathCache[ name ] } viewBox={ viewBox } size={ GRID_ICON_SIZE } />
+								<IconThumb
+									path={ pathCache[ name ].path }
+									viewBox={ pathCache[ name ].viewBox || defaultViewBox }
+									size={ GRID_ICON_SIZE }
+								/>
 							) : (
 								<span className="gutenblock-material-icon-grid-loading" aria-hidden="true" />
 							) }

@@ -196,6 +196,9 @@ class GutenBlock_Pro_Pattern_Creator {
 		$css_class = 'gb-pattern-' . $slug;
 		$content = $this->add_pattern_class( $content, $css_class );
 
+		// Normalize core/image blocks so they pass validation when pattern is inserted
+		$content = GutenBlock_Pro_Pattern_Loader::normalize_core_image_blocks( $content );
+
 		// Determine content filename based on language
 		$content_filename = 'content.html';
 		if ( ! empty( $language ) && $language !== 'default' ) {
@@ -501,8 +504,7 @@ return array(
 		$content = preg_replace( '/\bwp-image-\d+\b/', '', $content );
 		// Verbleibende Leerzeichen in class-Attributen normalisieren
 		$content = preg_replace( '/class="\s+/', 'class="', $content );
-		// size-full Klasse entfernen (nur gültig bei lokal referenzierten Anhängen)
-		$content = preg_replace( '/\bsize-full\b\s*/', '', $content );
+		// size-full nicht entfernen – core/image erwartet size-{sizeSlug} am figure für Validierung
 		$content = preg_replace( '/class="\s*"/', '', $content );
 
 		// "id":{n} aus Block-JSON (z.B. core/image)

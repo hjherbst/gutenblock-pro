@@ -21,6 +21,7 @@ registerBlockType( 'gutenblock-pro/material-icon', {
 		color: { type: 'string', default: '#000000' },
 		colorSlug: { type: 'string', default: '' },
 		svgPath: { type: 'string', default: '' },
+		viewBox: { type: 'string', default: '0 -960 960 960' },
 		iconSource: { type: 'string', default: 'material' },
 		customSvgId: { type: 'number', default: 0 },
 		customSvgMarkup: { type: 'string', default: '' },

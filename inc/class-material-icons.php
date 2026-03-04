@@ -139,13 +139,21 @@ class GutenBlock_Pro_Material_Icons {
 			return '';
 		}
 
+		$viewbox = isset( $attributes['viewBox'] ) && $attributes['viewBox'] !== ''
+			? $attributes['viewBox']
+			: $this->get_viewbox_for_icon( $icon );
+		if ( $viewbox === '' ) {
+			$viewbox = '0 -960 960 960';
+		}
+
 		$aria = $icon ? ' aria-hidden="false" role="img" aria-label="' . esc_attr( str_replace( '_', ' ', $icon ) ) . '"' : ' aria-hidden="true"';
 
 		return sprintf(
 			'<span class="wp-block-gutenblock-pro-material-icon" style="display:inline-block; width:%1$s; height:%1$s;">' .
-			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="%1$s" height="%1$s" fill="%2$s"%3$s><path d="%4$s"/></svg>' .
+			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="%2$s" width="%1$s" height="%1$s" fill="%3$s"%4$s><path d="%5$s"/></svg>' .
 			'</span>',
 			esc_attr( $size_attr ),
+			esc_attr( $viewbox ),
 			$fill,
 			$aria,
 			esc_attr( $path )
@@ -209,6 +217,13 @@ class GutenBlock_Pro_Material_Icons {
 	 */
 	private static $bundle_cache = null;
 
+	/**
+	 * Lazily load icon viewBox overrides (icons with non-960 viewBox, e.g. rate_star_filled).
+	 *
+	 * @var array|null
+	 */
+	private static $viewbox_cache = null;
+
 	private static function get_bundle() {
 		if ( self::$bundle_cache === null ) {
 			$plugin_dir = defined( 'GUTENBLOCK_PRO_PATH' ) ? GUTENBLOCK_PRO_PATH : plugin_dir_path( dirname( __FILE__ ) );
@@ -221,6 +236,20 @@ class GutenBlock_Pro_Material_Icons {
 			}
 		}
 		return self::$bundle_cache;
+	}
+
+	private static function get_viewbox_bundle() {
+		if ( self::$viewbox_cache === null ) {
+			$plugin_dir = defined( 'GUTENBLOCK_PRO_PATH' ) ? GUTENBLOCK_PRO_PATH : plugin_dir_path( dirname( __FILE__ ) );
+			$file       = $plugin_dir . 'assets/data/icon-viewboxes.json';
+			if ( file_exists( $file ) ) {
+				self::$viewbox_cache = json_decode( file_get_contents( $file ), true );
+			}
+			if ( ! is_array( self::$viewbox_cache ) ) {
+				self::$viewbox_cache = array();
+			}
+		}
+		return self::$viewbox_cache;
 	}
 
 	/**
@@ -239,8 +268,24 @@ class GutenBlock_Pro_Material_Icons {
 	}
 
 	/**
+	 * Get viewBox for an icon when it uses a non-default viewBox (e.g. rate_star_filled).
+	 *
+	 * @param string $icon_name Icon name.
+	 * @return string viewBox or empty string to use default.
+	 */
+	private function get_viewbox_for_icon( $icon_name ) {
+		$icon_name = sanitize_file_name( $icon_name );
+		if ( '' === $icon_name ) {
+			return '';
+		}
+		$viewboxes = self::get_viewbox_bundle();
+		return isset( $viewboxes[ $icon_name ] ) ? $viewboxes[ $icon_name ] : '';
+	}
+
+	/**
 	 * AJAX: Return path data for an icon (all styles/weights for editor).
 	 * Falls back to bundled outlined/w400 path when individual files are unavailable.
+	 * Includes viewBox when the icon has a custom viewBox override.
 	 */
 	public function ajax_icon_paths() {
 		$icon_name = isset( $_GET['icon'] ) ? sanitize_file_name( wp_unslash( $_GET['icon'] ) ) : '';
@@ -250,11 +295,16 @@ class GutenBlock_Pro_Material_Icons {
 
 		$bundle = self::get_bundle();
 		if ( isset( $bundle[ $icon_name ] ) ) {
-			wp_send_json_success( array(
+			$payload = array(
 				'outlined' => array(
 					'outline' => array( 'w400' => $bundle[ $icon_name ] ),
 				),
-			) );
+			);
+			$viewbox = $this->get_viewbox_for_icon( $icon_name );
+			if ( $viewbox !== '' ) {
+				$payload['viewBox'] = $viewbox;
+			}
+			wp_send_json_success( $payload );
 		}
 
 		wp_send_json_error( array( 'message' => 'Icon not found' ) );

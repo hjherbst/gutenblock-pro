@@ -76,6 +76,10 @@ class GutenBlock_Pro_Horizontal_Scroll {
 			'type'    => 'boolean',
 			'default' => false,
 		);
+		$args['attributes']['hScrollMobileOnly'] = array(
+			'type'    => 'boolean',
+			'default' => false,
+		);
 		return $args;
 	}
 
@@ -97,9 +101,10 @@ class GutenBlock_Pro_Horizontal_Scroll {
 		$peek_d  = isset( $attrs['hScrollPeekDesktop'] ) ? (int) $attrs['hScrollPeekDesktop'] : 40;
 		$peek_t  = isset( $attrs['hScrollPeekTablet'] ) ? (int) $attrs['hScrollPeekTablet'] : 30;
 		$peek_m  = isset( $attrs['hScrollPeekMobile'] ) ? (int) $attrs['hScrollPeekMobile'] : 0;
-		$dots     = ! isset( $attrs['hScrollDots'] ) || $attrs['hScrollDots'];
-		$arrows   = ! isset( $attrs['hScrollArrows'] ) || $attrs['hScrollArrows'];
-		$infinite = ! empty( $attrs['hScrollInfinite'] );
+		$dots        = ! isset( $attrs['hScrollDots'] ) || $attrs['hScrollDots'];
+		$arrows      = ! isset( $attrs['hScrollArrows'] ) || $attrs['hScrollArrows'];
+		$infinite    = ! empty( $attrs['hScrollInfinite'] );
+		$mobile_only = ! empty( $attrs['hScrollMobileOnly'] );
 
 		$processor = new WP_HTML_Tag_Processor( $content );
 		if ( ! $processor->next_tag() ) {
@@ -117,6 +122,10 @@ class GutenBlock_Pro_Horizontal_Scroll {
 		$processor->set_attribute( 'data-hscroll-dots', $dots ? 'true' : 'false' );
 		$processor->set_attribute( 'data-hscroll-arrows', $arrows ? 'true' : 'false' );
 		$processor->set_attribute( 'data-hscroll-infinite', $infinite ? 'true' : 'false' );
+		$processor->set_attribute( 'data-hscroll-mobile-only', $mobile_only ? 'true' : 'false' );
+		if ( $mobile_only ) {
+			$processor->add_class( 'is-hscroll-mobile-only' );
+		}
 		$hscroll_style = $this->get_inline_style( $desktop, $tablet, $mobile, $peek_d, $peek_t, $peek_m );
 		$existing_style = $processor->get_attribute( 'style' );
 		$processor->set_attribute( 'style', $existing_style ? $hscroll_style . ' ' . $existing_style : $hscroll_style );
@@ -320,6 +329,22 @@ class GutenBlock_Pro_Horizontal_Scroll {
 }
 .gb-hscroll-prev:hover, .gb-hscroll-next:hover {
 	background: rgba(0,0,0,0.05);
+}
+@media (min-width: 601px) {
+	.has-horizontal-scroll.is-hscroll-mobile-only {
+		display: revert !important;
+		flex-wrap: revert !important;
+		overflow-x: revert;
+		scroll-snap-type: revert;
+	}
+	.has-horizontal-scroll.is-hscroll-mobile-only > .wp-block-column {
+		flex: revert;
+		scroll-snap-align: revert;
+		min-width: revert;
+	}
+	.gb-hscroll-wrapper:has(.is-hscroll-mobile-only) .gb-hscroll-nav {
+		display: none;
+	}
 }
 ";
 	}

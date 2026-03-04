@@ -286,7 +286,7 @@ class GutenBlock_Pro_Pattern_Loader {
 	private function register_single_pattern( $slug, $pattern ) {
 		// Load content from separate file if not inline
 		$content = $pattern['content'];
-		
+
 		if ( empty( $content ) ) {
 			$content = $this->load_localized_content( $pattern['folder'] );
 		}
@@ -294,6 +294,8 @@ class GutenBlock_Pro_Pattern_Loader {
 		if ( empty( $content ) ) {
 			return;
 		}
+
+		$content = self::normalize_core_image_blocks( $content );
 
 		// Check if pattern is premium
 		$is_premium = isset( $pattern['premium'] ) && $pattern['premium'] === true;
@@ -341,6 +343,65 @@ class GutenBlock_Pro_Pattern_Loader {
 	}
 
 	/**
+	 * Normalize core/image blocks so they pass block validation when inserted.
+	 * Ensures: url/alt in block comment, figure has wp-block-image and size-{sizeSlug} class.
+	 *
+	 * @param string $content Pattern block content
+	 * @return string Normalized content
+	 */
+	public static function normalize_core_image_blocks( $content ) {
+		if ( strpos( $content, 'wp:image' ) === false ) {
+			return $content;
+		}
+
+		return preg_replace_callback(
+			'/<!-- wp:image (.*?) -->\s*(.*?)\s*<!-- \/wp:image -->/s',
+			function ( $m ) {
+				$attrs_str = trim( $m[1] );
+				$inner    = $m[2];
+				$attrs    = json_decode( $attrs_str, true );
+				if ( ! is_array( $attrs ) ) {
+					return $m[0];
+				}
+
+				// Ensure url and alt in block comment (from img if missing)
+				if ( preg_match( '/<img[^>]+src=["\']([^"\']+)["\']/', $inner, $src_m ) ) {
+					$img_url = $src_m[1];
+					if ( isset( $attrs['url'] ) && $attrs['url'] === '' ) {
+						unset( $attrs['url'] );
+					}
+					if ( ! isset( $attrs['url'] ) || $attrs['url'] === '' ) {
+						$attrs['url'] = $img_url;
+					}
+				}
+				if ( ! array_key_exists( 'alt', $attrs ) ) {
+					$attrs['alt'] = '';
+					if ( preg_match( '/<img[^>]+alt=["\']([^"\']*)["\']/', $inner, $alt_m ) ) {
+						$attrs['alt'] = $alt_m[1];
+					}
+				}
+
+				// Ensure figure has wp-block-image and size-{sizeSlug} when sizeSlug is set
+				$size_slug = isset( $attrs['sizeSlug'] ) ? trim( $attrs['sizeSlug'] ) : '';
+				if ( preg_match( '/<figure\s+class=["\']([^"\']*)["\']/', $inner, $fig_m ) ) {
+					$classes   = array_filter( array_map( 'trim', explode( ' ', $fig_m[1] ) ) );
+					$classes[] = 'wp-block-image';
+					if ( $size_slug && ! in_array( 'size-' . $size_slug, $classes, true ) ) {
+						$classes[] = 'size-' . $size_slug;
+					}
+					$classes   = array_unique( $classes );
+					$new_class = implode( ' ', $classes );
+					$inner     = preg_replace( '/<figure\s+class=["\'][^"\']*["\']/', '<figure class="' . esc_attr( $new_class ) . '"', $inner, 1 );
+				}
+
+				$new_attrs = wp_json_encode( $attrs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+				return '<!-- wp:image ' . $new_attrs . ' -->' . "\n" . $inner . "\n" . '<!-- /wp:image -->';
+			},
+			$content
+		);
+	}
+
+	/**
 	 * Load localized content file
 	 * Tries: content-{locale}.html -> content-{lang}.html -> content.html
 	 *
@@ -362,11 +423,11 @@ class GutenBlock_Pro_Pattern_Loader {
 		foreach ( $candidates as $filename ) {
 			$custom = gutenblock_pro_custom_pattern_file( $slug, $filename );
 			if ( file_exists( $custom['path'] ) ) {
-				return file_get_contents( $custom['path'] );
+				return self::normalize_core_image_blocks( file_get_contents( $custom['path'] ) );
 			}
 			$default = $folder . '/' . $filename;
 			if ( file_exists( $default ) ) {
-				return file_get_contents( $default );
+				return self::normalize_core_image_blocks( file_get_contents( $default ) );
 			}
 		}
 
@@ -467,7 +528,7 @@ class GutenBlock_Pro_Pattern_Loader {
 			// Load content (ALWAYS load, even for premium patterns - they can be inserted but not edited)
 			$content = '';
 			if ( ! empty( $pattern['content'] ) ) {
-				$content = $pattern['content'];
+				$content = self::normalize_core_image_blocks( $pattern['content'] );
 			} else {
 				$content = $this->load_localized_content( $pattern['folder'] );
 			}

@@ -19,7 +19,7 @@ function ajaxGet( params ) {
 	return fetch( `${ base }?${ qs }`, { credentials: 'include' } ).then( ( r ) => r.json() );
 }
 
-const VIEWBOX = '0 -960 960 960';
+const DEFAULT_VIEWBOX = '0 -960 960 960';
 
 function getPathFromData( data ) {
 	if ( ! data ) return '';
@@ -27,11 +27,16 @@ function getPathFromData( data ) {
 	return '';
 }
 
-function SvgPreview( { path, size, color } ) {
+function getViewBoxFromData( data ) {
+	if ( ! data || ! data.viewBox ) return DEFAULT_VIEWBOX;
+	return data.viewBox;
+}
+
+function SvgPreview( { path, size, color, viewBox = DEFAULT_VIEWBOX } ) {
 	if ( ! path ) return null;
 	return (
 		<span className="wp-block-gutenblock-pro-material-icon" style={ { display: 'inline-block', width: size + 'px', height: size + 'px' } }>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox={ VIEWBOX } width={ size } height={ size } fill={ color } aria-hidden="true">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox={ viewBox } width={ size } height={ size } fill={ color } aria-hidden="true">
 				<path d={ path } />
 			</svg>
 		</span>
@@ -55,7 +60,7 @@ function CustomSvgPreview( { markup, size, color } ) {
 }
 
 export default function Edit( { attributes, setAttributes } ) {
-	const { icon, size, color, colorSlug, svgPath, iconSource, customSvgId, customSvgMarkup } = attributes;
+	const { icon, size, color, colorSlug, svgPath, viewBox, iconSource, customSvgId, customSvgMarkup } = attributes;
 	const [ isModalOpen, setIsModalOpen ] = useState( false );
 	const [ pathData, setPathData ] = useState( null );
 	const [ loadingPaths, setLoadingPaths ] = useState( false );
@@ -84,7 +89,10 @@ export default function Edit( { attributes, setAttributes } ) {
 			.then( ( res ) => {
 				if ( res && res.success && res.data ) {
 					setPathData( res.data );
-					setAttributes( { svgPath: getPathFromData( res.data ) } );
+					setAttributes( {
+						svgPath: getPathFromData( res.data ),
+						viewBox: getViewBoxFromData( res.data ),
+					} );
 				}
 			} )
 			.catch( () => setPathData( null ) )
@@ -128,8 +136,10 @@ export default function Edit( { attributes, setAttributes } ) {
 		return ajaxGet( { action: 'gutenblock_pro_icon_paths', icon: iconName } ).then( ( res ) => {
 			if ( res && res.success && res.data ) {
 				const path = getPathFromData( res.data );
-				cache[ iconName ] = path;
-				return path;
+				const viewBox = getViewBoxFromData( res.data );
+				const out = path ? { path, viewBox } : null;
+				cache[ iconName ] = out;
+				return out;
 			}
 			cache[ iconName ] = null;
 			return null;
@@ -181,7 +191,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						) : loadingPaths ? (
 							<span className="gutenblock-material-icon-loading">{ __( 'Laden…', 'gutenblock-pro' ) }</span>
 						) : svgPath ? (
-							<SvgPreview path={ svgPath } size={ size } color={ displayColor } />
+							<SvgPreview path={ svgPath } size={ size } color={ displayColor } viewBox={ viewBox || DEFAULT_VIEWBOX } />
 						) : (
 							<div className="gutenblock-material-icon-error">
 								<span>{ __( 'Icon konnte nicht geladen werden.', 'gutenblock-pro' ) }</span>
@@ -219,7 +229,7 @@ export default function Edit( { attributes, setAttributes } ) {
 							>
 								{ ( tab ) => (
 									tab.name === 'material' ? (
-										<IconSearch onSelect={ onSelectIcon } getPathForIcon={ getPathForIcon } viewBox={ VIEWBOX } />
+										<IconSearch onSelect={ onSelectIcon } getPathForIcon={ getPathForIcon } defaultViewBox={ DEFAULT_VIEWBOX } />
 									) : (
 										<CustomSvgTab onSelect={ onSelectCustomSvg } onClose={ () => setIsModalOpen( false ) } />
 									)
