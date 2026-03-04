@@ -1,0 +1,20 @@
+/**
+ * Editor-only overrides so Sketch Highlight (::before/::after) is visible.
+ * In the editor, z-index: -1 would paint behind the editable area; we use a stacking context.
+ *
+ * @package GutenBlockPro
+ */
+
+/* Stacking context so ::before/::after are visible (not behind editor bg) */
+.editor-styles-wrapper .gb-fmt-circle,
+.block-editor-rich-text__editable .gb-fmt-circle {
+	position: relative;
+	z-index: 1;
+}
+
+.editor-styles-wrapper .gb-fmt-circle::before,
+.editor-styles-wrapper .gb-fmt-circle::after,
+.block-editor-rich-text__editable .gb-fmt-circle::before,
+.block-editor-rich-text__editable .gb-fmt-circle::after {
+	z-index: 0;
+}

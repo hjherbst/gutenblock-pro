@@ -22,6 +22,12 @@ import './editor.scss';
 // Material Icon Block (Feature: material-icons)
 import './blocks/material-icon';
 
+// Text Formats (Feature: text-formats) – Sketch Highlight, Marker
+import './blocks/text-formats';
+
+// Heading Text Image – background-clip:text fill for headings
+import './blocks/heading-text-image';
+
 /**
  * Set/remove generating animation on a block
  */

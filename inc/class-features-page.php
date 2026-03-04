@@ -37,6 +37,10 @@ class GutenBlock_Pro_Features_Page {
 				'name'        => 'Horizontal Scroll',
 				'description' => 'Horizontales Scrollen für Spalten-Blöcke mit Snap, Dots und Pfeilen.',
 			),
+			'text-formats' => array(
+				'name'        => 'Text-Dekorationen (Toolbar)',
+				'description' => 'Fügt Einkreisen, Freihand-Unterstreichen und Marker als Toolbar-Buttons für Überschriften und Absätze hinzu.',
+			),
 		);
 	}
 
@@ -69,6 +73,7 @@ class GutenBlock_Pro_Features_Page {
 			'container-forms'  => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 16" fill="currentColor"><path d="M0 16c8-4 16-4 24 0s16-4 24 0V0H0v16z"/></svg>',
 			'material-icons'   => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
 			'horizontal-scroll' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M100-160q-24 0-42-18t-18-42v-520q0-24 18-42t42-18h120q24 0 42 18t18 42v520q0 24-18 42t-42 18H100Zm0-59h120v-521H100v521Zm320 59q-24 0-42-18t-18-42v-520q0-24 18-42t42-18h440q24 0 42 18t18 42v520q0 24-18 42t-42 18H420Zm0-59h440v-521H420v521Zm-200 0v-521 521Zm200 0v-521 521Z"/></svg>',
+			'text-formats'      => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
 		);
 		return isset( $icons[ $key ] ) ? $icons[ $key ] : '';
 	}

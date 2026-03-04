@@ -108,6 +108,7 @@ class GutenBlock_Pro_AI_Generator {
 			'aiSettingsUrl'      => admin_url( 'admin.php?page=gutenblock-pro-ai' ),
 			'translateLanguages' => GutenBlock_Pro_Translation_Settings::get_enabled_languages(),
 			'premiumPatterns'    => self::get_premium_pattern_slugs(),
+			'hasTextFormats'     => GutenBlock_Pro_Features_Page::is_feature_enabled( 'text-formats' ),
 		) );
 	}
 

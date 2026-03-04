@@ -19,13 +19,94 @@ class GutenBlock_Pro_Block_Registry {
 	private $block_variants = array();
 
 	/**
+	 * Default block variant definitions bundled with the plugin.
+	 * Used to auto-create missing block.json files on any installation.
+	 */
+	private static $default_blocks = array(
+		'button-arrow-circle' => array(
+			'block'       => 'core/button',
+			'name'        => 'button-arrow-circle',
+			'label'       => 'Arrow Circle',
+			'type'        => 'variant',
+			'description' => 'Pill-förmiger Button mit eingebettetem Kreis-Pfeil rechts und Hover-Animation',
+		),
+		'button-simple'       => array(
+			'block'       => 'core/button',
+			'name'        => 'button-simple',
+			'label'       => 'Simple',
+			'type'        => 'variant',
+			'description' => 'Transparenter Button ohne Hintergrund – nur Text mit Pfeil-Icon und Hover-Animation',
+		),
+		'checkmark-list'      => array(
+			'block'       => 'core/list',
+			'name'        => 'checkmark-list',
+			'label'       => 'Checkmark',
+			'type'        => 'variant',
+			'description' => 'Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente',
+		),
+		'space-between'       => array(
+			'block'       => 'core/group',
+			'name'        => 'space-between',
+			'label'       => 'Space Between',
+			'type'        => 'variant',
+			'description' => 'Vertikale Verteilung: Inhalte füllen die volle Höhe mit gleichmäßigem Abstand',
+		),
+		'step-circle'         => array(
+			'block'       => 'core/paragraph',
+			'name'        => 'step-circle',
+			'label'       => 'Step Circle',
+			'type'        => 'variant',
+			'description' => 'Zeigt den Absatz als nummerierte Kreisfläche (z.B. für Schritte)',
+		),
+		'vertical-center'     => array(
+			'block'       => 'core/group',
+			'name'        => 'vertical-center',
+			'label'       => 'Vertikal zentriert',
+			'type'        => 'variant',
+			'description' => 'Zentriert den Inhalt vertikal per Flexbox',
+		),
+	);
+
+	/**
 	 * Initialize the block registry
 	 */
 	public function init() {
+		$this->ensure_default_blocks();
 		add_action( 'init', array( $this, 'register_block_variants' ) );
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_block_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
 		add_action( 'init', array( $this, 'register_block_styles' ) );
+	}
+
+	/**
+	 * Ensure all default block definitions exist on disk.
+	 * Creates missing directories and block.json files so the plugin
+	 * is self-contained regardless of which version was deployed.
+	 */
+	private function ensure_default_blocks() {
+		$blocks_dir = GUTENBLOCK_PRO_BLOCKS_PATH;
+
+		if ( ! is_dir( $blocks_dir ) ) {
+			wp_mkdir_p( $blocks_dir );
+		}
+
+		foreach ( self::$default_blocks as $slug => $config ) {
+			$folder     = $blocks_dir . $slug;
+			$config_file = $folder . '/block.json';
+
+			if ( file_exists( $config_file ) ) {
+				continue;
+			}
+
+			if ( ! is_dir( $folder ) ) {
+				wp_mkdir_p( $folder );
+			}
+
+			file_put_contents(
+				$config_file,
+				wp_json_encode( $config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . "\n"
+			);
+		}
 	}
 
 	/**
