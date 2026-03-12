@@ -28,6 +28,9 @@ import './blocks/text-formats';
 // Heading Text Image – background-clip:text fill for headings
 import './blocks/heading-text-image';
 
+// Sticky Feature Block
+import './blocks/sticky-feature';
+
 /**
  * Set/remove generating animation on a block
  */

@@ -1,0 +1,258 @@
+/**
+ * Sticky Feature Block – Frontend styles
+ * Adapted from CodyHouse Sticky Feature. Usage: codyhouse.co/license
+ *
+ * @package GutenBlockPro
+ */
+
+/* Block wrapper */
+.wp-block-gutenblock-pro-sticky-feature.gb-sticky-feature {
+	position: relative;
+	z-index: 1;
+	padding: var(--wp--preset--spacing--50, 2rem) 0;
+}
+
+.gbp-sticky-feature__container {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: var(--wp--style--global--content-size, 32rem);
+}
+
+@media (min-width: 48rem) {
+	.gbp-sticky-feature__container {
+		max-width: 48rem;
+	}
+}
+
+@media (min-width: 64rem) {
+	.gbp-sticky-feature__container {
+		max-width: var(--wp--style--global--wide-size, 64rem);
+	}
+}
+
+@media (min-width: 80rem) {
+	.gbp-sticky-feature__container {
+		max-width: 80rem;
+	}
+}
+
+/* Two-column grid on desktop */
+.gbp-sticky-feature__grid-1 {
+	display: grid;
+}
+
+@media (min-width: 64rem) {
+	.gbp-sticky-feature__grid-1 {
+		grid-template-columns: 1fr 1fr;
+		gap: var(--wp--preset--spacing--40, 1.25rem);
+	}
+}
+
+/* Content list (left column) */
+.gbp-sticky-feature__content-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: var(--wp--preset--spacing--60, 3.25rem);
+}
+
+@media (min-width: 64rem) {
+	.gbp-sticky-feature__content-list {
+		gap: var(--wp--preset--spacing--70, 5.25rem);
+	}
+}
+
+/* Content item: title + subline; on mobile also inline figure */
+.gbp-sticky-feature__content-item {
+	margin: 0;
+}
+
+/* Mobile: Bild oben, dann Titel, dann Subline (Reihenfolge erzwingen) */
+@media (max-width: 63.9375rem) {
+	.gbp-sticky-feature__content-item {
+		display: flex;
+		flex-direction: column;
+	}
+	.gbp-sticky-feature__content-item .gbp-sticky-feature__content-figure {
+		order: 1;
+	}
+	.gbp-sticky-feature__content-item .gbp-sticky-feature__title {
+		order: 2;
+	}
+	.gbp-sticky-feature__content-item .gbp-sticky-feature__subline {
+		order: 3;
+	}
+}
+
+.gbp-sticky-feature__content-figure {
+	border-radius: 0.375em;
+	overflow: hidden;
+	box-shadow: 0 0.3px 0.4px rgba(0, 0, 0, 0.025), 0 0.9px 1.5px rgba(0, 0, 0, 0.05), 0 3.5px 6px rgba(0, 0, 0, 0.1);
+	margin-bottom: var(--wp--preset--spacing--40, 1.25rem);
+}
+
+.gbp-sticky-feature__content-figure img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.gbp-sticky-feature__content-figure.gbp-sticky-feature__media-figure--1-1 { aspect-ratio: 1 / 1; }
+.gbp-sticky-feature__content-figure.gbp-sticky-feature__media-figure--4-3 { aspect-ratio: 4 / 3; }
+.gbp-sticky-feature__content-figure.gbp-sticky-feature__media-figure--16-9 { aspect-ratio: 16 / 9; }
+.gbp-sticky-feature__content-figure.gbp-sticky-feature__media-figure--3-2 { aspect-ratio: 3 / 2; }
+.gbp-sticky-feature__content-figure.gbp-sticky-feature__media-figure--2-1 { aspect-ratio: 2 / 1; }
+
+.gbp-sticky-feature__title {
+	margin: 0 0 0.25em;
+	line-height: 1.2;
+	font-weight: 700;
+}
+
+.gbp-sticky-feature__subline {
+	margin: 0.5em 0 0;
+	line-height: 1.5;
+	opacity: 0.9;
+}
+
+/* Right column: sticky media list (desktop only) */
+.gbp-sticky-feature-display-md {
+	display: none;
+}
+
+@media (min-width: 64rem) {
+	.gbp-sticky-feature-display-md {
+		display: block;
+	}
+}
+
+.gbp-sticky-feature__media-list {
+	position: -webkit-sticky;
+	position: sticky;
+	top: 0;
+	height: 100vh;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.gbp-sticky-feature__media-item {
+	position: absolute;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.gbp-sticky-feature__media-figure {
+	border-radius: 0.75em;
+	box-shadow: 0 0.3px 0.4px rgba(0, 0, 0, 0.025), 0 0.9px 1.5px rgba(0, 0, 0, 0.05), 0 3.5px 6px rgba(0, 0, 0, 0.1);
+	overflow: hidden;
+	opacity: 0;
+	margin: 0;
+	width: 100%;
+	max-width: 100%;
+}
+
+.gbp-sticky-feature__media-figure img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	max-height: 90vh;
+	object-fit: cover;
+}
+
+/* Aspect ratio: fixed ratios use a wrapper aspect; img fills with object-fit: cover */
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--1-1 {
+	aspect-ratio: 1 / 1;
+	max-height: min(90vh, 100%);
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--1-1 img {
+	max-height: 100%;
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--4-3 {
+	aspect-ratio: 4 / 3;
+	max-height: min(90vh, 100%);
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--4-3 img {
+	max-height: 100%;
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--16-9 {
+	aspect-ratio: 16 / 9;
+	max-height: min(90vh, 100%);
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--16-9 img {
+	max-height: 100%;
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--3-2 {
+	aspect-ratio: 3 / 2;
+	max-height: min(90vh, 100%);
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--3-2 img {
+	max-height: 100%;
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--2-1 {
+	aspect-ratio: 2 / 1;
+	max-height: min(90vh, 100%);
+}
+.gbp-sticky-feature__media-figure.gbp-sticky-feature__media-figure--2-1 img {
+	max-height: 100%;
+}
+
+.gbp-sticky-feature__media-placeholder-inner {
+	width: 100%;
+	min-height: 200px;
+	background: var(--wp--preset--color--neutral, #f0f0f0);
+}
+
+.gbp-sticky-feature-current-item .gbp-sticky-feature__media-figure {
+	opacity: 1;
+}
+
+/* Desktop: scroll padding so items get focus; title opacity */
+@media (min-width: 64rem) {
+	.gbp-sticky-feature__content-list.js-sticky-feature__content-list {
+		padding-top: 50vh;
+		padding-bottom: 50vh;
+	}
+
+	.gbp-sticky-feature__title.js-sticky-feature__title {
+		font-size: var(--wp--preset--font-size--large, 1.728rem);
+		cursor: pointer;
+		opacity: 0.3;
+	}
+
+	.gbp-sticky-feature__title.js-sticky-feature__title:hover,
+	.gbp-sticky-feature-current-item .gbp-sticky-feature__title.js-sticky-feature__title {
+		opacity: 1;
+	}
+
+	/* Hide inline content-figure on desktop (image shown in sticky column) */
+	.gbp-sticky-feature__content-figure {
+		position: absolute;
+		clip: rect(1px, 1px, 1px, 1px);
+		-webkit-clip-path: inset(50%);
+		clip-path: inset(50%);
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		padding: 0;
+		border: 0;
+		white-space: nowrap;
+	}
+}
+
+/* Hide sticky column when viewport too small */
+@media not all and (min-width: 64rem) {
+	.gbp-sticky-feature-display-md {
+		display: none !important;
+	}
+}
