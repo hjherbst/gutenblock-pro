@@ -5,9 +5,9 @@
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from '@wordpress/element';
-import { useBlockProps } from '@wordpress/block-editor';
+import { useBlockProps, BlockControls, __experimentalLinkControl as LinkControl } from '@wordpress/block-editor';
 import { InspectorControls } from '@wordpress/block-editor';
-import { PanelBody, Button, RangeControl, ColorPalette, TabPanel } from '@wordpress/components';
+import { PanelBody, Button, RangeControl, ColorPalette, TabPanel, ToolbarGroup, ToolbarButton, Popover } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import IconSearch from './icon-search';
@@ -59,9 +59,10 @@ function CustomSvgPreview( { markup, size, color } ) {
 	);
 }
 
-export default function Edit( { attributes, setAttributes } ) {
-	const { icon, size, color, colorSlug, svgPath, viewBox, iconSource, customSvgId, customSvgMarkup } = attributes;
+export default function Edit( { attributes, setAttributes, isSelected } ) {
+	const { icon, size, color, colorSlug, svgPath, viewBox, iconSource, customSvgId, customSvgMarkup, url, linkTarget } = attributes;
 	const [ isModalOpen, setIsModalOpen ] = useState( false );
+	const [ isLinkPopoverOpen, setIsLinkPopoverOpen ] = useState( false );
 	const [ pathData, setPathData ] = useState( null );
 	const [ loadingPaths, setLoadingPaths ] = useState( false );
 
@@ -149,8 +150,51 @@ export default function Edit( { attributes, setAttributes } ) {
 		} );
 	}, [] );
 
+	const linkValue = useMemo(
+		() => ( url ? { url, opensInNewTab: linkTarget === '_blank' } : undefined ),
+		[ url, linkTarget ]
+	);
+
 	return (
 		<>
+			<BlockControls group="other">
+				<ToolbarGroup>
+					<ToolbarButton
+						icon="admin-links"
+						title={ url ? __( 'Link bearbeiten', 'gutenblock-pro' ) : __( 'Link', 'gutenblock-pro' ) }
+						onClick={ () => setIsLinkPopoverOpen( ( v ) => ! v ) }
+						isPressed={ !! url }
+					/>
+					{ isLinkPopoverOpen && (
+						<Popover
+							position="bottom center"
+							onClose={ () => setIsLinkPopoverOpen( false ) }
+							focusOnMount="firstElement"
+						>
+							<LinkControl
+								value={ linkValue }
+								onChange={ ( next ) => {
+									if ( next ) {
+										setAttributes( {
+											url: next.url || '',
+											linkTarget: next.opensInNewTab ? '_blank' : '',
+										} );
+									} else {
+										setAttributes( { url: '', linkTarget: '' } );
+									}
+								} }
+								onRemove={ () => {
+									setAttributes( { url: '', linkTarget: '' } );
+									setIsLinkPopoverOpen( false );
+								} }
+								settings={ [
+									{ id: 'opensInNewTab', title: __( 'In neuem Tab öffnen', 'gutenblock-pro' ) },
+								] }
+							/>
+						</Popover>
+					) }
+				</ToolbarGroup>
+			</BlockControls>
 			<InspectorControls>
 				<PanelBody title={ __( 'Icon-Einstellungen', 'gutenblock-pro' ) } initialOpen={ true }>
 					<RangeControl

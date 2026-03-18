@@ -12,7 +12,7 @@ import { SearchControl } from '@wordpress/components';
 import iconIndex from '@material-symbols-svg/metadata/icon-index.json';
 
 const DEBOUNCE_MS = 200;
-const MAX_PATHS_TO_FETCH = 60;
+const MAX_PATHS_TO_FETCH = 20;
 const GRID_ICON_SIZE = 32;
 
 /** Plugin custom icons (not in @material-symbols-svg), e.g. filled star */
@@ -36,29 +36,27 @@ function useDebouncedValue( value, delay ) {
 
 /**
  * Filter icon index by search string (name + searchTerms).
+ * Returns empty when query length < 2 to avoid loading 60+ paths on modal open.
  * Merges plugin custom icons (e.g. rate_star_filled) when they match the query.
  */
 function filterIcons( index, query ) {
 	const q = ! query ? '' : query.toLowerCase().trim();
-	const fromIndex =
-		q.length < 2
-			? Object.keys( index ).slice( 0, 100 )
-			: Object.keys( index ).filter( ( key ) => {
-					const entry = index[ key ];
-					if ( entry.name && entry.name.toLowerCase().includes( q ) ) return true;
-					if ( entry.searchTerms && Array.isArray( entry.searchTerms ) ) {
-						if ( entry.searchTerms.some( ( t ) => String( t ).toLowerCase().includes( q ) ) ) return true;
-					}
-					return false;
-				} );
-	const customMatched =
-		q.length < 2
-			? CUSTOM_ICONS.map( ( c ) => c.name )
-			: CUSTOM_ICONS.filter(
-					( c ) =>
-						c.name.toLowerCase().includes( q ) ||
-						( c.searchTerms && c.searchTerms.some( ( t ) => t.toLowerCase().includes( q ) ) )
-				).map( ( c ) => c.name );
+	if ( q.length < 2 ) {
+		return [];
+	}
+	const fromIndex = Object.keys( index ).filter( ( key ) => {
+		const entry = index[ key ];
+		if ( entry.name && entry.name.toLowerCase().includes( q ) ) return true;
+		if ( entry.searchTerms && Array.isArray( entry.searchTerms ) ) {
+			if ( entry.searchTerms.some( ( t ) => String( t ).toLowerCase().includes( q ) ) ) return true;
+		}
+		return false;
+	} );
+	const customMatched = CUSTOM_ICONS.filter(
+		( c ) =>
+			c.name.toLowerCase().includes( q ) ||
+			( c.searchTerms && c.searchTerms.some( ( t ) => t.toLowerCase().includes( q ) ) )
+	).map( ( c ) => c.name );
 	const combined = [ ...new Set( [ ...customMatched, ...fromIndex ] ) ];
 	return combined.slice( 0, 200 );
 }
@@ -89,39 +87,33 @@ function IconThumb( { path, viewBox, size = GRID_ICON_SIZE, color = '#444' } ) {
  */
 export default function IconSearch( { onSelect, getPathForIcon, defaultViewBox = '0 -960 960 960' } ) {
 	const [ search, setSearch ] = useState( '' );
-	const [ pathCache, setPathCache ] = useState( {} );
+	const [ pathCacheVersion, setPathCacheVersion ] = useState( 0 );
+	const pathCacheRef = useRef( {} );
+	const pendingRef = useRef( new Set() );
 	const debouncedSearch = useDebouncedValue( search, DEBOUNCE_MS );
 
 	const iconNames = useMemo( () => filterIcons( iconIndex, debouncedSearch ), [ debouncedSearch ] );
-	const pendingRef = useRef( new Set() );
-	const searchGenerationRef = useRef( 0 );
 
-	// Bei neuer Suche: Cache und laufende Fetches zurücksetzen, damit nur aktuelle Treffer geladen werden
-	useEffect( () => {
-		searchGenerationRef.current += 1;
-		setPathCache( {} );
-		pendingRef.current.clear();
-	}, [ debouncedSearch ] );
-
-	// Pfade nur für die aktuell angezeigte Liste laden (erste N Icons der Suchergebnisse)
+	// Pfade für die aktuell angezeigte Liste laden (in Batches à MAX_PATHS_TO_FETCH).
+	// pathCacheVersion in deps: nach jedem Batch erneut ausführen, damit die nächsten 20 geladen werden.
 	useEffect( () => {
 		if ( ! getPathForIcon || ! iconNames.length ) return;
-		const generation = searchGenerationRef.current;
+		const cache = pathCacheRef.current;
 		const toFetch = iconNames
-			.filter( ( name ) => pathCache[ name ] === undefined && ! pendingRef.current.has( name ) )
+			.filter( ( name ) => cache[ name ] === undefined && ! pendingRef.current.has( name ) )
 			.slice( 0, MAX_PATHS_TO_FETCH );
 		if ( toFetch.length === 0 ) return;
 		toFetch.forEach( ( name ) => {
 			pendingRef.current.add( name );
 			getPathForIcon( name ).then( ( data ) => {
-				if ( generation !== searchGenerationRef.current ) return;
 				pendingRef.current.delete( name );
-				setPathCache( ( prev ) =>
-					data != null && data.path ? { ...prev, [ name ]: { path: data.path, viewBox: data.viewBox || defaultViewBox } } : prev
-				);
+				if ( data != null && data.path ) {
+					cache[ name ] = { path: data.path, viewBox: data.viewBox || defaultViewBox };
+					setPathCacheVersion( ( v ) => v + 1 );
+				}
 			} );
 		} );
-	}, [ iconNames.join( ',' ), getPathForIcon, pathCache, defaultViewBox ] );
+	}, [ iconNames.join( ',' ), pathCacheVersion, getPathForIcon, defaultViewBox ] );
 
 	const handleSelect = useCallback(
 		( name ) => {
@@ -146,28 +138,31 @@ export default function IconSearch( { onSelect, getPathForIcon, defaultViewBox =
 							: __( 'Mindestens 2 Zeichen eingeben.', 'gutenblock-pro' ) }
 					</p>
 				) : (
-					iconNames.map( ( name ) => (
-						<button
-							key={ name }
-							type="button"
-							className="gutenblock-material-icon-grid-item"
-							onClick={ () => handleSelect( name ) }
-							role="option"
-							aria-label={ name }
-							title={ name }
-						>
-							{ pathCache[ name ] ? (
-								<IconThumb
-									path={ pathCache[ name ].path }
-									viewBox={ pathCache[ name ].viewBox || defaultViewBox }
-									size={ GRID_ICON_SIZE }
-								/>
-							) : (
-								<span className="gutenblock-material-icon-grid-loading" aria-hidden="true" />
-							) }
-							<span className="gutenblock-material-icon-grid-label">{ name }</span>
-						</button>
-					) )
+					iconNames.map( ( name ) => {
+						const cached = pathCacheRef.current[ name ];
+						return (
+							<button
+								key={ name }
+								type="button"
+								className="gutenblock-material-icon-grid-item"
+								onClick={ () => handleSelect( name ) }
+								role="option"
+								aria-label={ name }
+								title={ name }
+							>
+								{ cached ? (
+									<IconThumb
+										path={ cached.path }
+										viewBox={ cached.viewBox || defaultViewBox }
+										size={ GRID_ICON_SIZE }
+									/>
+								) : (
+									<span className="gutenblock-material-icon-grid-loading" aria-hidden="true" />
+								) }
+								<span className="gutenblock-material-icon-grid-label">{ name }</span>
+							</button>
+						);
+					} )
 				) }
 			</div>
 		</div>

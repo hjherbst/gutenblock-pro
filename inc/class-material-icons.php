@@ -28,6 +28,8 @@ class GutenBlock_Pro_Material_Icons {
 		add_action( 'init', array( $this, 'enqueue_block_style' ), 20 );
 		add_action( 'wp_ajax_gutenblock_pro_icon_paths', array( $this, 'ajax_icon_paths' ) );
 		add_action( 'wp_ajax_nopriv_gutenblock_pro_icon_paths', array( $this, 'ajax_icon_paths' ) );
+		add_action( 'wp_ajax_gutenblock_pro_icon_paths_batch', array( $this, 'ajax_icon_paths_batch' ) );
+		add_action( 'wp_ajax_nopriv_gutenblock_pro_icon_paths_batch', array( $this, 'ajax_icon_paths_batch' ) );
 		add_action( 'wp_ajax_gutenblock_pro_svg_markup', array( $this, 'ajax_svg_markup' ) );
 		add_filter( 'upload_mimes', array( $this, 'allow_svg_upload' ) );
 		add_filter( 'wp_check_filetype_and_ext', array( $this, 'fix_svg_mime_type' ), 10, 5 );
@@ -111,6 +113,8 @@ class GutenBlock_Pro_Material_Icons {
 		$size       = isset( $attributes['size'] ) ? absint( $attributes['size'] ) : 48;
 		$color      = isset( $attributes['color'] ) ? $attributes['color'] : '#000000';
 		$color_slug = isset( $attributes['colorSlug'] ) ? $attributes['colorSlug'] : '';
+		$url        = isset( $attributes['url'] ) && is_string( $attributes['url'] ) ? trim( $attributes['url'] ) : '';
+		$link_target = isset( $attributes['linkTarget'] ) && $attributes['linkTarget'] === '_blank' ? '_blank' : '';
 
 		$fill = $color_slug
 			? 'var(--wp--preset--color--' . esc_attr( $color_slug ) . ')'
@@ -123,7 +127,8 @@ class GutenBlock_Pro_Material_Icons {
 			if ( $markup !== '' ) {
 				$markup = $this->sanitize_svg_markup( $markup );
 				$markup = $this->apply_svg_size_and_fill( $markup, $size_attr, $fill );
-				return '<span class="wp-block-gutenblock-pro-material-icon" style="display:inline-block; width:' . esc_attr( $size_attr ) . '; height:' . esc_attr( $size_attr ) . ';">' . $markup . '</span>';
+				$inner  = '<span class="wp-block-gutenblock-pro-material-icon" style="display:inline-block; width:' . esc_attr( $size_attr ) . '; height:' . esc_attr( $size_attr ) . ';">' . $markup . '</span>';
+				return $this->wrap_with_link( $inner, $url, $link_target );
 			}
 			return '';
 		}
@@ -148,7 +153,7 @@ class GutenBlock_Pro_Material_Icons {
 
 		$aria = $icon ? ' aria-hidden="false" role="img" aria-label="' . esc_attr( str_replace( '_', ' ', $icon ) ) . '"' : ' aria-hidden="true"';
 
-		return sprintf(
+		$inner = sprintf(
 			'<span class="wp-block-gutenblock-pro-material-icon" style="display:inline-block; width:%1$s; height:%1$s;">' .
 			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="%2$s" width="%1$s" height="%1$s" fill="%3$s"%4$s><path d="%5$s"/></svg>' .
 			'</span>',
@@ -158,6 +163,24 @@ class GutenBlock_Pro_Material_Icons {
 			$aria,
 			esc_attr( $path )
 		);
+		return $this->wrap_with_link( $inner, $url, $link_target );
+	}
+
+	/**
+	 * Wrap HTML in an anchor when URL is set.
+	 *
+	 * @param string $inner  Inner HTML (icon markup).
+	 * @param string $url    Link URL.
+	 * @param string $target Link target (e.g. '_blank').
+	 * @return string
+	 */
+	private function wrap_with_link( $inner, $url, $target ) {
+		if ( $url === '' ) {
+			return $inner;
+		}
+		$rel = ( $target === '_blank' ) ? ' rel="noopener noreferrer"' : '';
+		$target_attr = ( $target === '_blank' ) ? ' target="_blank"' : '';
+		return '<a href="' . esc_url( $url ) . '"' . $target_attr . $rel . '>' . $inner . '</a>';
 	}
 
 	/**
@@ -283,14 +306,30 @@ class GutenBlock_Pro_Material_Icons {
 	}
 
 	/**
+	 * Transient key prefix for icon path cache (persistent across requests).
+	 */
+	const TRANSIENT_ICON_PATH_PREFIX = 'gbp_icon_path_';
+
+	/**
+	 * Transient expiry for icon paths (30 days; paths are static).
+	 */
+	const TRANSIENT_ICON_PATH_EXPIRY = 30 * DAY_IN_SECONDS;
+
+	/**
 	 * AJAX: Return path data for an icon (all styles/weights for editor).
+	 * Uses transient cache in production to avoid repeated file reads.
 	 * Falls back to bundled outlined/w400 path when individual files are unavailable.
-	 * Includes viewBox when the icon has a custom viewBox override.
 	 */
 	public function ajax_icon_paths() {
 		$icon_name = isset( $_GET['icon'] ) ? sanitize_file_name( wp_unslash( $_GET['icon'] ) ) : '';
 		if ( '' === $icon_name ) {
 			wp_send_json_error( array( 'message' => 'Missing icon' ) );
+		}
+
+		$transient_key = self::TRANSIENT_ICON_PATH_PREFIX . $icon_name;
+		$cached        = get_transient( $transient_key );
+		if ( $cached !== false && is_array( $cached ) ) {
+			wp_send_json_success( $cached );
 		}
 
 		$bundle = self::get_bundle();
@@ -304,9 +343,54 @@ class GutenBlock_Pro_Material_Icons {
 			if ( $viewbox !== '' ) {
 				$payload['viewBox'] = $viewbox;
 			}
+			set_transient( $transient_key, $payload, self::TRANSIENT_ICON_PATH_EXPIRY );
 			wp_send_json_success( $payload );
 		}
 
 		wp_send_json_error( array( 'message' => 'Icon not found' ) );
+	}
+
+	/**
+	 * AJAX: Return path data for multiple icons in one request (batch).
+	 * Query param: icons[]=name1&icons[]=name2 (max 50). Uses same transient cache as ajax_icon_paths.
+	 * Response: { success: true, data: { "iconName": { outlined, viewBox? }, ... } }.
+	 */
+	public function ajax_icon_paths_batch() {
+		$icons = isset( $_GET['icons'] ) && is_array( $_GET['icons'] )
+			? array_slice( array_map( 'sanitize_file_name', array_map( 'wp_unslash', $_GET['icons'] ) ), 0, 50 )
+			: array();
+		$icons = array_filter( array_unique( $icons ) );
+		if ( empty( $icons ) ) {
+			wp_send_json_success( array() );
+		}
+
+		$result = array();
+		$bundle = self::get_bundle();
+		foreach ( $icons as $icon_name ) {
+			if ( '' === $icon_name ) {
+				continue;
+			}
+			$transient_key = self::TRANSIENT_ICON_PATH_PREFIX . $icon_name;
+			$cached        = get_transient( $transient_key );
+			if ( $cached !== false && is_array( $cached ) ) {
+				$result[ $icon_name ] = $cached;
+				continue;
+			}
+			if ( ! isset( $bundle[ $icon_name ] ) ) {
+				continue;
+			}
+			$payload = array(
+				'outlined' => array(
+					'outline' => array( 'w400' => $bundle[ $icon_name ] ),
+				),
+			);
+			$viewbox = $this->get_viewbox_for_icon( $icon_name );
+			if ( $viewbox !== '' ) {
+				$payload['viewBox'] = $viewbox;
+			}
+			set_transient( $transient_key, $payload, self::TRANSIENT_ICON_PATH_EXPIRY );
+			$result[ $icon_name ] = $payload;
+		}
+		wp_send_json_success( $result );
 	}
 }

@@ -25,6 +25,8 @@ registerBlockType( 'gutenblock-pro/material-icon', {
 		iconSource: { type: 'string', default: 'material' },
 		customSvgId: { type: 'number', default: 0 },
 		customSvgMarkup: { type: 'string', default: '' },
+		url: { type: 'string', default: '' },
+		linkTarget: { type: 'string', default: '' },
 	},
 	supports: {
 		html: false,
