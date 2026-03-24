@@ -423,28 +423,32 @@ p.is-style-step-circle.has-text-align-right {
 				continue;
 			}
 
-			// Register for FSE iframe support
-			wp_enqueue_block_style(
-				$config['block'],
-				array(
-					'handle' => 'gutenblock-pro-block-' . $slug,
-					'src'    => GUTENBLOCK_PRO_URL . 'blocks/' . $slug . '/style.css',
-					'ver'    => filemtime( $style_file ),
-					'path'   => $style_file,
-				)
-			);
+			// Register for FSE iframe support (supports single block name or array of block names)
+			$block_types = is_array( $config['block'] ) ? $config['block'] : array( $config['block'] );
+			$custom      = gutenblock_pro_custom_block_file( $slug );
 
-			$custom = gutenblock_pro_custom_block_file( $slug );
-			if ( file_exists( $custom['path'] ) ) {
+			foreach ( $block_types as $block_type ) {
 				wp_enqueue_block_style(
-					$config['block'],
+					$block_type,
 					array(
-						'handle' => 'gutenblock-pro-block-' . $slug . '-custom',
-						'src'    => $custom['url'],
-						'ver'    => filemtime( $custom['path'] ),
-						'path'   => $custom['path'],
+						'handle' => 'gutenblock-pro-block-' . $slug,
+						'src'    => GUTENBLOCK_PRO_URL . 'blocks/' . $slug . '/style.css',
+						'ver'    => filemtime( $style_file ),
+						'path'   => $style_file,
 					)
 				);
+
+				if ( file_exists( $custom['path'] ) ) {
+					wp_enqueue_block_style(
+						$block_type,
+						array(
+							'handle' => 'gutenblock-pro-block-' . $slug . '-custom',
+							'src'    => $custom['url'],
+							'ver'    => filemtime( $custom['path'] ),
+							'path'   => $custom['path'],
+						)
+					);
+				}
 			}
 		}
 	}

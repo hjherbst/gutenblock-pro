@@ -411,7 +411,7 @@ class GutenBlock_Pro_Features_Page {
 					<?php $enabled = self::is_block_variant_enabled( $slug ); ?>
 					<div class="gbp-feature-card">
 						<div class="gbp-feature-icon"><?php echo $this->get_variant_icon( $slug ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG from plugin. ?></div>
-						<span class="gbp-feature-badge"><?php echo esc_html( $variant['block'] ); ?></span>
+						<span class="gbp-feature-badge"><?php echo esc_html( is_array( $variant['block'] ) ? implode( ', ', $variant['block'] ) : $variant['block'] ); ?></span>
 						<h3><?php echo esc_html( $variant['label'] ); ?></h3>
 						<?php if ( ! empty( $variant['description'] ) ) : ?>
 						<p><?php echo esc_html( $variant['description'] ); ?></p>

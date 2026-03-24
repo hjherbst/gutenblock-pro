@@ -29,11 +29,29 @@
 		const [loading, setLoading] = useState(true);
 		const [searchTerm, setSearchTerm] = useState('');
 		const [selectedCategory, setSelectedCategory] = useState(category || 'sections');
+		const [refreshKey, setRefreshKey] = useState(0);
+		const [cacheClearing, setCacheClearing] = useState(false);
 		const { insertBlocks: insertBlocksAction } = useDispatch('core/block-editor');
 
 		// Get all registered patterns
 		useEffect(() => {
 			if (!isOpen) return;
+
+			const CACHE_KEY = 'gbp_patterns_v1';
+			const CACHE_TTL = 5 * 60 * 1000; // 5 Minuten
+
+			// sessionStorage-Cache prüfen
+			try {
+				const cached = sessionStorage.getItem(CACHE_KEY);
+				if (cached) {
+					const { data, ts } = JSON.parse(cached);
+					if (Date.now() - ts < CACHE_TTL) {
+						setPatterns(data);
+						setLoading(false);
+						return;
+					}
+				}
+			} catch (e) { /* sessionStorage nicht verfügbar */ }
 
 			setLoading(true);
 			
@@ -62,11 +80,18 @@
 						p.type === 'page'
 					);
 
-					setPatterns({
+					const patternsData = {
 						sections: sections,
 						pages: pages,
 						all: allPatterns
-					});
+					};
+
+					setPatterns(patternsData);
+
+					// In sessionStorage cachen
+					try {
+						sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: patternsData, ts: Date.now() }));
+					} catch (e) { /* sessionStorage voll oder nicht verfügbar */ }
 				}
 				setLoading(false);
 			})
@@ -74,7 +99,26 @@
 				console.error('Error loading patterns:', error);
 				setLoading(false);
 			});
-		}, [isOpen]);
+		}, [isOpen, refreshKey]);
+
+		const handleClearCache = () => {
+			setCacheClearing(true);
+			try { sessionStorage.removeItem('gbp_patterns_v1'); } catch (e) {}
+
+			fetch(gutenblockProModal.ajaxUrl, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: new URLSearchParams({
+					action: 'gutenblock_pro_clear_preview_cache',
+					nonce: gutenblockProModal.clearCacheNonce || ''
+				})
+			})
+			.finally(() => {
+				setCacheClearing(false);
+				setPatterns([]);
+				setRefreshKey(k => k + 1);
+			});
+		};
 
 		// Filter patterns by search term (for pages view)
 		const filteredPatterns = patterns[selectedCategory]?.filter(pattern => {
@@ -313,13 +357,28 @@
 						className: 'gutenblock-pro-modal-tab-button'
 					}, 'Seiten')
 				]),
-				el('a', {
+				gutenblockProModal.isAdmin && el('button', {
+					onClick: handleClearCache,
+					disabled: cacheClearing || loading,
+					style: {
+						marginLeft: 'auto',
+						fontSize: '12px',
+						background: 'none',
+						border: 'none',
+						padding: '0',
+						cursor: 'pointer',
+						color: '#787c82',
+						textDecoration: 'underline',
+						fontFamily: 'inherit'
+					}
+				}, cacheClearing ? 'Wird geladen…' : '↺ Cache erneuern'),
+			el('a', {
 					href: 'http://app.gutenblock.com/gutenblock-pro',
 					target: '_blank',
 					rel: 'noopener noreferrer',
 					className: 'gutenblock-pro-modal-link',
 					style: {
-						marginLeft: 'auto',
+						marginLeft: gutenblockProModal.isAdmin ? '1rem' : 'auto',
 						fontSize: '13px',
 						textDecoration: 'none',
 						color: '#2271b1',

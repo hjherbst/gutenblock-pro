@@ -26,7 +26,7 @@ class GutenBlock_Pro_Pattern_Loader {
 	public static $groups = array(
 		'header'      => 'Header',
 		'hero'        => 'Hero',
-		'benefits'    => 'Benefits',
+		'benefits'    => 'Benefits/Pain Points',
 		'about'       => 'About',
 		'offer'       => 'Offer',
 		'teaser'      => 'Teaser',
@@ -109,12 +109,14 @@ class GutenBlock_Pro_Pattern_Loader {
 
 		// Localize script with data
 		wp_localize_script( 'gutenblock-pro-pattern-modal', 'gutenblockProModal', array(
-			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
-			'nonce'        => wp_create_nonce( 'gutenblock_pro_modal' ),
-			'groups'       => self::$groups,
-			'hasPremium'   => $license->has_premium_access(),
-			'licenseInfo'  => $license_info,
-			'upgradeUrl'   => 'https://app.gutenblock.com/licenses', // Link zum Lizenzkauf
+			'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+			'nonce'           => wp_create_nonce( 'gutenblock_pro_modal' ),
+			'clearCacheNonce' => wp_create_nonce( 'gbp_clear_preview_cache' ),
+			'isAdmin'         => current_user_can( 'manage_options' ),
+			'groups'          => self::$groups,
+			'hasPremium'      => $license->has_premium_access(),
+			'licenseInfo'     => $license_info,
+			'upgradeUrl'      => 'https://app.gutenblock.com/licenses',
 		) );
 	}
 

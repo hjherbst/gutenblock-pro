@@ -1,0 +1,30 @@
+/* Zweispaltig – Liste */
+ul.is-style-zweispaltig {
+	columns: 2;
+	column-gap: 4rem;
+	list-style-position: outside;
+	padding-left: 1.2em;
+}
+
+ul.is-style-zweispaltig li {
+	break-inside: avoid;
+	margin-bottom: 1.5rem;
+	padding-left: 0.5em;
+}
+
+:root :where(ul.is-style-zweispaltig li) {
+	margin-top: 0;
+}
+
+/* Zweispaltig – Absatz */
+p.is-style-zweispaltig {
+	columns: 2;
+	column-gap: 4rem;
+}
+
+@media (max-width: 768px) {
+	ul.is-style-zweispaltig,
+	p.is-style-zweispaltig {
+		columns: 1;
+	}
+}

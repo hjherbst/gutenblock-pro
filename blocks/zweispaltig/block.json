@@ -1,0 +1,7 @@
+{
+	"block": ["core/list", "core/paragraph"],
+	"name": "zweispaltig",
+	"label": "Zweispaltig",
+	"type": "variant",
+	"description": "Stellt den Inhalt in zwei Spalten dar (auf Mobilgeräten einspaltig)"
+}

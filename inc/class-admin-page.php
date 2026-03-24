@@ -23,6 +23,7 @@ class GutenBlock_Pro_Admin_Page {
 		add_action( 'wp_ajax_gutenblock_pro_preview_pattern', array( $this, 'ajax_preview_pattern' ) );
 		// nopriv nötig, wenn Gutenberg-Canvas-iframe die Session-Cookies nicht weitergibt
 		add_action( 'wp_ajax_nopriv_gutenblock_pro_preview_pattern', array( $this, 'ajax_preview_pattern' ) );
+		add_action( 'wp_ajax_gutenblock_pro_clear_preview_cache', array( $this, 'ajax_clear_preview_cache' ) );
 		add_action( 'wp_ajax_gutenblock_pro_delete_pattern', array( $this, 'ajax_delete_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_reset_block_style', array( $this, 'ajax_reset_block_style' ) );
 		add_action( 'wp_ajax_gutenblock_pro_reset_pattern_file', array( $this, 'ajax_reset_pattern_file' ) );
@@ -837,6 +838,16 @@ class GutenBlock_Pro_Admin_Page {
 			wp_die( 'Pattern not found' );
 		}
 
+		// Transient-Cache: Key aus Slug, Locale und Datei-Änderungszeit → automatische Invalidierung bei Content-Änderung
+		$cache_key = 'gbp_prev_' . substr( md5( $pattern_slug . $locale . filemtime( $content_file ) ), 0, 20 );
+		$cached_html = get_transient( $cache_key );
+		if ( false !== $cached_html ) {
+			echo $cached_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			exit;
+		}
+
+		ob_start();
+
 		// Check if this is a "page" type pattern
 		$is_page_type = false;
 		if ( file_exists( $pattern_file ) ) {
@@ -962,7 +973,30 @@ class GutenBlock_Pro_Admin_Page {
 		</body>
 		</html>
 		<?php
+		$html = ob_get_clean();
+		set_transient( $cache_key, $html, HOUR_IN_SECONDS );
+		echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
+	}
+
+	/**
+	 * AJAX: Clear all pattern preview transients (admin only)
+	 */
+	public function ajax_clear_preview_cache() {
+		check_ajax_referer( 'gbp_clear_preview_cache', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Permission denied' );
+		}
+
+		global $wpdb;
+		$wpdb->query(
+			"DELETE FROM {$wpdb->options}
+			WHERE option_name LIKE '_transient_gbp_prev_%'
+			   OR option_name LIKE '_transient_timeout_gbp_prev_%'"
+		);
+
+		wp_send_json_success();
 	}
 
 	/**

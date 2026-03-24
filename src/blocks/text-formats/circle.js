@@ -18,6 +18,7 @@ const VARIANT_OPTIONS = [
 	{ value: '1', label: 'Oval' },
 	{ value: '2', label: 'Unterstreichung 1' },
 	{ value: '3', label: 'Unterstreichung 2' },
+	{ value: '4', label: 'Unterstreichung 3' },
 ];
 
 // SVG variants – paths and viewBoxes per variant.
@@ -38,6 +39,11 @@ const SVG_VARIANTS = {
 		viewBox: '0 0 216 12',
 		path: 'M2.5 3.6043C182.5 1.6043 212.5 2.77097 205 3.6043L16.5 8.60449H213',
 		style: ( url ) => `background-image: ${ url }; background-repeat: no-repeat; background-size: 100% 0.35em; background-position: 0 100%; padding-bottom: 0.25em;`,
+	},
+	4: {
+		viewBox: '0 0 232 14',
+		path: 'M2 8.78112C46.9432 3.66393 155.664 -3.50014 231 8.78112C231 8.78112 139.4 -0.380308 45.4633 12',
+		style: ( url ) => `background-image: ${ url }; background-repeat: no-repeat; background-size: 100% 0.45em; background-position: 0 100%; padding-bottom: 0.3em;`,
 	},
 };
 
@@ -148,7 +154,7 @@ function CircleFormatEdit( { isActive, value, onChange } ) {
 				viewBox={ v.viewBox }
 				fill="none"
 				xmlns="http://www.w3.org/2000/svg"
-				style={ { width: '100%', height: variantNum === 2 ? '14px' : '40px', display: 'block' } }
+				style={ { width: '100%', height: variantNum === 1 ? '40px' : '14px', display: 'block' } }
 			>
 				<path d={ v.path } stroke={ safeColor } strokeWidth={ safeWidth } strokeLinecap="round" />
 			</svg>
