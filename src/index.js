@@ -31,6 +31,10 @@ import './blocks/heading-text-image';
 // Sticky Feature Block
 import './blocks/sticky-feature';
 
+// Flexible Heading Block (grouped H1/H2 with styled span parts)
+import './blocks/flexible-heading';
+import './blocks/heading-part';
+
 /**
  * Set/remove generating animation on a block
  */

@@ -12,7 +12,7 @@ import { registerFormatType, applyFormat, removeFormat } from '@wordpress/rich-t
 import { ColorPickerPopover, DEFAULT_COLOR, DEFAULT_CIRCLE_WIDTH } from './popover';
 
 const FORMAT_NAME = 'gutenblock-pro/circle';
-const ALLOWED_BLOCKS = [ 'core/heading', 'core/paragraph' ];
+const ALLOWED_BLOCKS = [ 'core/heading', 'core/paragraph', 'gutenblock-pro/heading-part' ];
 
 const VARIANT_OPTIONS = [
 	{ value: '1', label: 'Oval' },

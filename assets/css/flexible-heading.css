@@ -1,0 +1,15 @@
+/**
+ * Flexible Heading Block – Frontend Styles
+ * Die eigentlichen Farb-/Typografie-Stile kommen aus WP-Block-Supports (inline styles + has-*-Klassen).
+ * Hier nur die strukturellen Regeln.
+ */
+
+/* Sicherstellen, dass Spans inline fließen */
+.gbp-flexible-heading .wp-block-gutenblock-pro-heading-part {
+	display: inline;
+}
+
+/* Textalign-Support */
+.gbp-flexible-heading.has-text-align-left   { text-align: left; }
+.gbp-flexible-heading.has-text-align-center { text-align: center; }
+.gbp-flexible-heading.has-text-align-right  { text-align: right; }

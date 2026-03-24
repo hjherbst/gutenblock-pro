@@ -1,0 +1,48 @@
+/**
+ * Flexible Heading – Editor Canvas Styles
+ *
+ * Korrekte Selektoren (aus DOM-Inspektion):
+ * - h1/h2.gbp-flexible-heading hat selbst die Klasse block-editor-block-list__layout
+ * - Heading-Parts sind direkte Kinder als div.block-editor-block-list__block
+ *
+ * Ansatz: display:inline auf den Block-Wrapper-Divs → echtes Inline-Textfluss wie im Frontend.
+ * Flex würde Parts als ganzes umbrechen; inline erlaubt Umbruch mitten im Text.
+ */
+
+/* h1/h2 bleibt Block-Level, schafft Inline-Formatting-Context für Kinder */
+h1.gbp-flexible-heading.block-editor-block-list__layout,
+h2.gbp-flexible-heading.block-editor-block-list__layout {
+	display: block !important;
+}
+
+/* Block-Wrapper-Divs inline – wie die <span>s im Frontend */
+h1.gbp-flexible-heading.block-editor-block-list__layout > .block-editor-block-list__block,
+h2.gbp-flexible-heading.block-editor-block-list__layout > .block-editor-block-list__block {
+	display: inline !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	max-width: none !important;
+	width: auto !important;
+}
+
+/* Appender inline nach dem letzten Part */
+h1.gbp-flexible-heading.block-editor-block-list__layout > .block-list-appender,
+h2.gbp-flexible-heading.block-editor-block-list__layout > .block-list-appender {
+	display: inline-flex !important;
+	vertical-align: middle;
+	margin-inline-start: 0.25em !important;
+	margin-block: 0 !important;
+}
+
+/* RichText-Editable und Heading-Part-Span inline */
+.gbp-flexible-heading .block-editor-rich-text__editable,
+.gbp-flexible-heading .wp-block-gutenblock-pro-heading-part {
+	display: inline !important;
+}
+
+/* Platzhalter */
+.gbp-flexible-heading .wp-block-gutenblock-pro-heading-part:empty::before {
+	content: attr(data-placeholder);
+	opacity: 0.4;
+	pointer-events: none;
+}

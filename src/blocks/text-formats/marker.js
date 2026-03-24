@@ -12,7 +12,7 @@ import { registerFormatType, applyFormat, removeFormat } from '@wordpress/rich-t
 import { ColorPickerPopover, DEFAULT_COLOR } from './popover';
 
 const FORMAT_NAME = 'gutenblock-pro/marker';
-const ALLOWED_BLOCKS = [ 'core/heading', 'core/paragraph' ];
+const ALLOWED_BLOCKS = [ 'core/heading', 'core/paragraph', 'gutenblock-pro/heading-part' ];
 
 function parseStyleColor( styleStr ) {
 	if ( ! styleStr || typeof styleStr !== 'string' ) return DEFAULT_COLOR;
