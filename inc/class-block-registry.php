@@ -285,18 +285,21 @@ p.is-style-step-circle.has-text-align-right {
 				'has_style'   => file_exists( $style_file ),
 			);
 
-			// Nur registrieren/laden wenn Stilvariante aktiviert ist
-			if ( ! GutenBlock_Pro_Features_Page::is_block_variant_enabled( $slug ) ) {
-				continue;
-			}
+		// Nur registrieren/laden wenn Stilvariante aktiviert ist
+		if ( ! GutenBlock_Pro_Features_Page::is_block_variant_enabled( $slug ) ) {
+			continue;
+		}
 
+		$register_block_types = is_array( $config['block'] ) ? $config['block'] : array( $config['block'] );
+		foreach ( $register_block_types as $block_type ) {
 			register_block_style(
-				$config['block'],
+				$block_type,
 				array(
 					'name'  => $config['name'],
 					'label' => $config['label'],
 				)
 			);
+		}
 		}
 	}
 

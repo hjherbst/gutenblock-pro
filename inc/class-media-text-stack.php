@@ -27,6 +27,7 @@ class GutenBlock_Pro_Media_Text_Stack {
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_css' ) );
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_css' ) );
+		add_action( 'wp_footer', array( $this, 'enqueue_linkbox_script' ) );
 	}
 
 	public function register_attribute( $args, $name ) {
@@ -75,18 +76,26 @@ class GutenBlock_Pro_Media_Text_Stack {
 		if ( empty( $block['attrs'][ self::ATTR_LINKBOX ] ) ) {
 			return $content;
 		}
-		$url = $this->extract_first_link_url( $content );
-		if ( '' === $url ) {
+		$link_attrs = $this->extract_first_link_attrs( $content );
+		if ( '' === $link_attrs['url'] ) {
 			return $content;
 		}
 		$inner = $this->strip_inner_links( $content );
-		$url   = esc_url( $url );
+
+		$href       = 'href="' . esc_url( $link_attrs['url'] ) . '"';
+		$extra      = '';
+		if ( ! empty( $link_attrs['target'] ) ) {
+			$extra .= ' target="' . esc_attr( $link_attrs['target'] ) . '"';
+		}
+		if ( ! empty( $link_attrs['rel'] ) ) {
+			$extra .= ' rel="' . esc_attr( $link_attrs['rel'] ) . '"';
+		}
 
 		if ( 'core/media-text' === $block['blockName'] ) {
 			$inner = $this->restore_global_padding( $inner );
 			return preg_replace(
 				'/^(\s*<div[^>]*class="[^"]*wp-block-media-text[^"]*"[^>]*>)([\s\S]+)(<\/div>\s*)$/',
-				'$1<a href="' . $url . '" class="gbp-media-text-linkbox">$2</a>$3',
+				'$1<a ' . $href . $extra . ' class="gbp-media-text-linkbox">$2</a>$3',
 				$inner,
 				1
 			);
@@ -95,7 +104,7 @@ class GutenBlock_Pro_Media_Text_Stack {
 		if ( 'core/group' === $block['blockName'] ) {
 			return preg_replace(
 				'/^(\s*<div[^>]*class="[^"]*wp-block-group[^"]*"[^>]*>)([\s\S]+)(<\/div>\s*)$/',
-				'$1<a href="' . $url . '" class="gbp-linkbox">$2</a>$3',
+				'$1<a ' . $href . $extra . ' class="gbp-linkbox">$2</a>$3',
 				$inner,
 				1
 			);
@@ -104,7 +113,7 @@ class GutenBlock_Pro_Media_Text_Stack {
 		if ( 'core/stack' === $block['blockName'] ) {
 			return preg_replace(
 				'/^(\s*<div[^>]*class="[^"]*wp-block-stack[^"]*"[^>]*>)([\s\S]+)(<\/div>\s*)$/',
-				'$1<a href="' . $url . '" class="gbp-linkbox">$2</a>$3',
+				'$1<a ' . $href . $extra . ' class="gbp-linkbox">$2</a>$3',
 				$inner,
 				1
 			);
@@ -113,11 +122,22 @@ class GutenBlock_Pro_Media_Text_Stack {
 		return $content;
 	}
 
-	private function extract_first_link_url( $html ) {
-		if ( preg_match( '/<a\s+[^>]*href=(["\'])([^"\']+)\1/', $html, $m ) ) {
-			return $m[2];
+	private function extract_first_link_attrs( $html ) {
+		$result = array( 'url' => '', 'target' => '', 'rel' => '' );
+		if ( ! preg_match( '/<a\s+([^>]*)>/i', $html, $tag_m ) ) {
+			return $result;
 		}
-		return '';
+		$attrs_str = $tag_m[1];
+		if ( preg_match( '/href=(["\'])([^"\']+)\1/i', $attrs_str, $m ) ) {
+			$result['url'] = $m[2];
+		}
+		if ( preg_match( '/target=(["\'])([^"\']*)\1/i', $attrs_str, $m ) ) {
+			$result['target'] = $m[2];
+		}
+		if ( preg_match( '/rel=(["\'])([^"\']*)\1/i', $attrs_str, $m ) ) {
+			$result['rel'] = $m[2];
+		}
+		return $result;
 	}
 
 	/**
@@ -192,6 +212,36 @@ class GutenBlock_Pro_Media_Text_Stack {
 		}
 	}
 
+	/**
+	 * Delegierter Click-Handler für Linkbox-Gruppen/Stacks im Frontend.
+	 *
+	 * display:contents auf dem <a> bedeutet: Klicks auf Padding/Leerraum der
+	 * äußeren .wp-block-group landen nie im Bubble-Pfad des <a> → keine Navigation.
+	 * Der Handler fängt den Klick auf dem Container ab und navigiert selbst.
+	 */
+	public function enqueue_linkbox_script() {
+		?>
+		<script>
+		(function () {
+			document.addEventListener('click', function (e) {
+				var container = e.target.closest('.wp-block-group, .wp-block-stack, .wp-block-media-text');
+				if (!container) return;
+				var link = container.querySelector(':scope > .gbp-linkbox, :scope > .gbp-media-text-linkbox');
+				if (!link) return;
+				// Klick auf interaktive Elemente (echte Links, Buttons) ignorieren
+				if (e.target.closest('a, button, input, select, textarea')) return;
+				if (e.defaultPrevented) return;
+				if (link.target === '_blank') {
+					window.open(link.href, '_blank', 'noopener noreferrer');
+				} else {
+					window.location.href = link.href;
+				}
+			});
+		}());
+		</script>
+		<?php
+	}
+
 	public static function get_styles() {
 		$instance = new self();
 		return $instance->get_css();
@@ -260,9 +310,10 @@ class GutenBlock_Pro_Media_Text_Stack {
 					grid-row: 2 !important;
 				}
 			}
-			/* Linkbox für Group/Stack: display:contents, Layout unverändert */
+			/* Linkbox für Group/Stack/Media-Text: display:contents, Layout unverändert */
 			.wp-block-group:has(> .gbp-linkbox),
-			.wp-block-stack:has(> .gbp-linkbox) {
+			.wp-block-stack:has(> .gbp-linkbox),
+			.wp-block-media-text:has(> .gbp-media-text-linkbox) {
 				cursor: pointer;
 				overflow: hidden;
 			}
