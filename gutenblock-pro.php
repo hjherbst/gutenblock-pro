@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.11.4
+ * Version: 1.11.5
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.11.4' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.11.5' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -85,6 +85,7 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-block-registry.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-grid-responsive.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-sticky-feature.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-flexible-heading.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-mobile-align.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-text-formats.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-heading-text-image.php';
 
@@ -199,6 +200,10 @@ function gutenblock_pro_init() {
 	// Initialize Flexible Heading Block (grouped H1/H2 with styled span parts)
 	$flexible_heading = new GutenBlock_Pro_Flexible_Heading();
 	$flexible_heading->init();
+
+	// Initialize Mobile Align (left-align centered content on mobile)
+	$mobile_align = new GutenBlock_Pro_Mobile_Align();
+	$mobile_align->init();
 }
 add_action( 'plugins_loaded', 'gutenblock_pro_init' );
 

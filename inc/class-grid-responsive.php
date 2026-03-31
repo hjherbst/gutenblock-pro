@@ -65,11 +65,10 @@ class GutenBlock_Pro_Grid_Responsive {
 
 		$uid   = 'gbp-rg-' . substr( md5( serialize( $attrs ) . uniqid() ), 0, 8 );
 		$rules = '';
-		// Höhere Spezifität als Theme-Regel .wp-block-group.alignwide.is-layout-grid:has(...)
-		// (6 Spalten auf Tablet), damit unsere Spaltenzahl greift.
-		$sel = ".wp-block-group.alignwide.is-layout-grid.{$uid}";
+		// Selektor nur auf UID + is-layout-grid – kein alignwide, damit der Block
+		// auch innerhalb von Spalten (ohne alignwide-Klasse) greift.
+		$sel = ".wp-block-group.is-layout-grid.{$uid}";
 
-		// Tablet bis 1024px (gleicher Bereich wie Theme-Regel 6 Spalten), damit unsere Einstellung gewinnt
 		if ( $cols_tablet > 0 ) {
 			$rules .= "@media (max-width: 1024px) { {$sel} { grid-template-columns: repeat({$cols_tablet}, minmax(0, 1fr)) !important; } }";
 		}
