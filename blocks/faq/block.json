@@ -1,0 +1,7 @@
+{
+	"block": "core/details",
+	"name": "faq",
+	"label": "FAQ",
+	"type": "variant",
+	"description": "FAQ-Akkordeon: Chevron rechts, Slide-Effekt beim Auf-/Zuklappen, automatische FAQPage-Strukturdaten"
+}

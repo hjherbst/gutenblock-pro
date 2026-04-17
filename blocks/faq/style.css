@@ -1,0 +1,69 @@
+/* === FAQ-Stilvariante für core/details === */
+
+.wp-block-details.is-style-faq {
+	border: none;
+	padding: 0;
+	margin-block: 0;
+}
+
+/* Trennlinie unterhalb jedes Blocks */
+.wp-block-details.is-style-faq {
+	border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.wp-block-details.is-style-faq > summary {
+	list-style: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 1.25rem 0;
+	cursor: pointer;
+	font-weight: 500;
+	user-select: none;
+}
+
+/* Nativen Marker entfernen */
+.wp-block-details.is-style-faq > summary::-webkit-details-marker {
+	display: none;
+}
+.wp-block-details.is-style-faq > summary::marker {
+	display: none;
+	content: '';
+}
+
+/* Chevron-Icon rechts */
+.wp-block-details.is-style-faq > summary::after {
+	content: '';
+	display: block;
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	transition: transform 0.35s ease;
+	opacity: 0.6;
+}
+
+/* Chevron dreht sich beim Öffnen */
+.wp-block-details.is-style-faq[open] > summary::after {
+	transform: rotate(180deg);
+}
+
+
+/* Inhalts-Wrapper für die Slide-Animation (wird per PHP eingefügt) */
+.wp-block-details.is-style-faq .gbp-faq-body {
+	overflow: hidden;
+}
+
+.wp-block-details.is-style-faq .gbp-faq-body > *:first-child {
+	margin-top: 0;
+}
+
+.wp-block-details.is-style-faq .gbp-faq-body > *:last-child {
+	margin-bottom: 1.25rem;
+}
+
+/* Editor: kein Animation-Override nötig, da JS nicht im Editor läuft */
