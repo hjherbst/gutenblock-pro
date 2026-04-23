@@ -1,9 +1,10 @@
 <?php
 /**
- * Mobile Ausrichtung – "Links ausrichten (Mobil)" für Group, Row, Stack.
+ * Ausrichtung – Mobile links & Raster-Zentrierung für Group, Row, Stack.
  *
- * Fügt core/group, core/row und core/stack einen Toggle hinzu, der auf Mobilgeräten
- * (≤ 781 px) die Flex-Ausrichtung und Text-Ausrichtung nach links erzwingt.
+ * Fügt core/group, core/row und core/stack Steuerungen hinzu:
+ * - Auf Mobilgeräten (≤ 781 px) Flex- und Textausrichtung nach links erzwingen.
+ * - Bei Raster-Layout: Kindelemente in der Zelle horizontal und vertikal zentrieren.
  *
  * @package GutenBlockPro
  */
@@ -14,9 +15,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class GutenBlock_Pro_Mobile_Align {
 
-	const ATTR            = 'mobileAlignLeft';
-	const CLASS_NAME      = 'gbp-mobile-left';
-	const SUPPORTED_BLOCKS = array( 'core/group', 'core/row', 'core/stack' );
+	const ATTR                 = 'mobileAlignLeft';
+	const CLASS_NAME           = 'gbp-mobile-left';
+	const ATTR_GRID_CENTER     = 'gridItemsCenter';
+	const CLASS_GRID_CENTER    = 'gbp-grid-items-center';
+	const SUPPORTED_BLOCKS     = array( 'core/group', 'core/row', 'core/stack' );
 
 	public function init() {
 		add_filter( 'register_block_type_args', array( $this, 'register_attribute' ), 10, 2 );
@@ -27,7 +30,7 @@ class GutenBlock_Pro_Mobile_Align {
 	}
 
 	/**
-	 * Attribut mobileAlignLeft an den unterstützten Blocks registrieren.
+	 * Attribute an den unterstützten Blocks registrieren.
 	 */
 	public function register_attribute( $args, $block_name ) {
 		if ( ! in_array( $block_name, self::SUPPORTED_BLOCKS, true ) ) {
@@ -40,23 +43,35 @@ class GutenBlock_Pro_Mobile_Align {
 					'type'    => 'boolean',
 					'default' => false,
 				),
+				self::ATTR_GRID_CENTER => array(
+					'type'    => 'boolean',
+					'default' => false,
+				),
 			)
 		);
 		return $args;
 	}
 
 	/**
-	 * CSS-Klasse gbp-mobile-left auf dem gerenderten Block-HTML setzen.
+	 * CSS-Klassen am gerenderten Block-HTML setzen.
 	 */
 	public function apply_class( $content, $block ) {
 		if ( ! in_array( $block['blockName'], self::SUPPORTED_BLOCKS, true ) ) {
 			return $content;
 		}
-		if ( empty( $block['attrs'][ self::ATTR ] ) ) {
+		$attrs = isset( $block['attrs'] ) ? $block['attrs'] : array();
+		$add   = array();
+		if ( ! empty( $attrs[ self::ATTR ] ) ) {
+			$add[] = self::CLASS_NAME;
+		}
+		if ( ! empty( $attrs[ self::ATTR_GRID_CENTER ] ) ) {
+			$add[] = self::CLASS_GRID_CENTER;
+		}
+		if ( empty( $add ) ) {
 			return $content;
 		}
-		// Klasse zum ersten class="…" im HTML hinzufügen
-		return preg_replace( '/\bclass="/', 'class="' . self::CLASS_NAME . ' ', $content, 1 );
+		$prefix = implode( ' ', $add ) . ' ';
+		return preg_replace( '/\bclass="/', 'class="' . $prefix, $content, 1 );
 	}
 
 	public function enqueue_css() {
@@ -93,6 +108,11 @@ class GutenBlock_Pro_Mobile_Align {
 			.gbp-mobile-left .has-text-align-right {
 				text-align: left !important;
 			}
+		}
+		/* Raster: direkte Kindelemente in der Zelle zentrieren */
+		.gbp-grid-items-center.is-layout-grid {
+			justify-items: center !important;
+			align-items: center !important;
 		}
 		';
 	}
