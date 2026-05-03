@@ -18,6 +18,8 @@
 	var CLASS_NAME      = 'gbp-mobile-left';
 	var ATTR_GRID       = 'gridItemsCenter';
 	var CLASS_GRID      = 'gbp-grid-items-center';
+	var ATTR_GRID_TOP   = 'gbpGridAlignTop';
+	var CLASS_GRID_TOP  = 'gbp-grid-items-top';
 	var SUPPORTED       = [ 'core/group', 'core/row', 'core/stack' ];
 
 	function isGridLayout( attributes ) {
@@ -50,9 +52,10 @@
 					return createElement( BlockEdit, props );
 				}
 
-				var mobileOn = !! props.attributes[ ATTR ];
-				var gridOn   = !! props.attributes[ ATTR_GRID ];
-				var showGrid = isGridLayout( props.attributes );
+				var mobileOn  = !! props.attributes[ ATTR ];
+				var gridOn    = !! props.attributes[ ATTR_GRID ];
+				var gridTop   = !! props.attributes[ ATTR_GRID_TOP ];
+				var showGrid  = isGridLayout( props.attributes );
 
 				var panelChildren = [
 					createElement( ToggleControl, {
@@ -84,6 +87,28 @@
 							onChange: function ( val ) {
 								var patch = {};
 								patch[ ATTR_GRID ] = val;
+								// "oben" deaktivieren wenn "zentrieren" eingeschaltet wird
+								if ( val ) {
+									patch[ ATTR_GRID_TOP ] = false;
+								}
+								props.setAttributes( patch );
+							},
+						} ),
+						createElement( ToggleControl, {
+							key: 'grid-top',
+							label: __( 'Raster-Inhalte oben', 'gutenblock-pro' ),
+							help: __(
+								'Richtet die direkten Kindelemente im Raster vertikal oben aus.',
+								'gutenblock-pro'
+							),
+							checked: gridTop,
+							onChange: function ( val ) {
+								var patch = {};
+								patch[ ATTR_GRID_TOP ] = val;
+								// "zentrieren" deaktivieren wenn "oben" eingeschaltet wird
+								if ( val ) {
+									patch[ ATTR_GRID ] = false;
+								}
 								props.setAttributes( patch );
 							},
 						} )
@@ -124,8 +149,13 @@
 				if ( props.attributes[ ATTR ] ) {
 					extra.push( CLASS_NAME );
 				}
-				if ( props.attributes[ ATTR_GRID ] && isGridLayout( props.attributes ) ) {
-					extra.push( CLASS_GRID );
+				if ( isGridLayout( props.attributes ) ) {
+					if ( props.attributes[ ATTR_GRID ] ) {
+						extra.push( CLASS_GRID );
+					}
+					if ( props.attributes[ ATTR_GRID_TOP ] ) {
+						extra.push( CLASS_GRID_TOP );
+					}
 				}
 				if ( ! extra.length ) {
 					return createElement( BlockListBlock, props );

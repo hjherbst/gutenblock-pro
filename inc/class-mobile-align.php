@@ -19,6 +19,8 @@ class GutenBlock_Pro_Mobile_Align {
 	const CLASS_NAME           = 'gbp-mobile-left';
 	const ATTR_GRID_CENTER     = 'gridItemsCenter';
 	const CLASS_GRID_CENTER    = 'gbp-grid-items-center';
+	const ATTR_GRID_TOP        = 'gbpGridAlignTop';
+	const CLASS_GRID_TOP       = 'gbp-grid-items-top';
 	const SUPPORTED_BLOCKS     = array( 'core/group', 'core/row', 'core/stack' );
 
 	public function init() {
@@ -47,6 +49,10 @@ class GutenBlock_Pro_Mobile_Align {
 					'type'    => 'boolean',
 					'default' => false,
 				),
+				self::ATTR_GRID_TOP => array(
+					'type'    => 'boolean',
+					'default' => false,
+				),
 			)
 		);
 		return $args;
@@ -66,6 +72,9 @@ class GutenBlock_Pro_Mobile_Align {
 		}
 		if ( ! empty( $attrs[ self::ATTR_GRID_CENTER ] ) ) {
 			$add[] = self::CLASS_GRID_CENTER;
+		}
+		if ( ! empty( $attrs[ self::ATTR_GRID_TOP ] ) ) {
+			$add[] = self::CLASS_GRID_TOP;
 		}
 		if ( empty( $add ) ) {
 			return $content;
@@ -113,6 +122,10 @@ class GutenBlock_Pro_Mobile_Align {
 		.gbp-grid-items-center.is-layout-grid {
 			justify-items: center !important;
 			align-items: center !important;
+		}
+		/* Raster: direkte Kindelemente oben ausrichten */
+		.gbp-grid-items-top.is-layout-grid {
+			align-items: start !important;
 		}
 		';
 	}

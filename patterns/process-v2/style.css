@@ -15,7 +15,7 @@
     left: -38px;
     width: 14px;
     height: 14px;
-    background-color: #030303;
+    background-color: currentColor;
     border-radius: 50%;
 }
 .gb-timeline-v1-step:before {

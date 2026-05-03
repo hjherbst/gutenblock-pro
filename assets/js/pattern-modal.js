@@ -24,6 +24,12 @@
 	/**
 	 * Pattern Modal Component
 	 */
+	const TONE_COLORS = {
+		neutral: { fill: '#f6f7f7', border: '#c3c4c7', label: 'Neutral' },
+		dark:    { fill: '#1e1e1e', border: '#1e1e1e', label: 'Dark' },
+		soft:    { fill: '#e8f0fe', border: '#9ab8e8', label: 'Soft' },
+	};
+
 	function PatternModal({ isOpen, onClose, category = null }) {
 		const [patterns, setPatterns] = useState([]);
 		const [loading, setLoading] = useState(true);
@@ -31,6 +37,8 @@
 		const [selectedCategory, setSelectedCategory] = useState(category || 'sections');
 		const [refreshKey, setRefreshKey] = useState(0);
 		const [cacheClearing, setCacheClearing] = useState(false);
+		// Welche Tone-Variante ist pro Pattern aktiv (für Hover-Preview & Click-Insert)
+		const [activeTones, setActiveTones] = useState({});
 		const { insertBlocks: insertBlocksAction } = useDispatch('core/block-editor');
 
 		// Get all registered patterns
@@ -155,36 +163,65 @@
 		}
 
 		const handleInsertPattern = (pattern) => {
-			// Block inserting premium patterns without access
 			const isPremium = pattern.premium === true;
 			const hasAccess = pattern.hasAccess !== false;
-			
+
 			if (isPremium && !hasAccess) {
-				// Show upgrade notice
 				const upgradeUrl = gutenblockProModal.upgradeUrl || 'https://app.gutenblock.com/licenses';
 				if (window.confirm('Dieses Pattern benötigt GutenBlock Pro Plus.\n\nMöchtest du jetzt upgraden?')) {
 					window.open(upgradeUrl, '_blank');
 				}
-				return; // Don't insert
+				return;
 			}
-			
-			// Allow inserting non-premium or premium with access
 			if (!pattern.content) return;
 
-			try {
-				const blocks = wp.blocks.parse(pattern.content);
-				insertBlocksAction(blocks);
-				// Only close modal for pages, keep it open for sections
-				if (pattern.type === 'page') {
-					onClose();
+			const tone = activeTones[pattern.slug] || 'neutral';
+
+			const insertContent = (markup) => {
+				try {
+					const blocks = wp.blocks.parse(markup);
+					insertBlocksAction(blocks);
+					if (pattern.type === 'page') {
+						onClose();
+					}
+				} catch (error) {
+					console.error('Error inserting pattern:', error);
 				}
-			} catch (error) {
-				console.error('Error inserting pattern:', error);
+			};
+
+			// Neutral → Original-Content direkt einfügen
+			if (tone === 'neutral') {
+				insertContent(pattern.content);
+				return;
 			}
+
+			// Tone-Variante via AJAX holen (mit injizierten Farb-Klassen)
+			fetch(gutenblockProModal.ajaxUrl, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: new URLSearchParams({
+					action: 'gutenblock_pro_get_pattern_tone_content',
+					nonce: gutenblockProModal.nonce || '',
+					pattern: pattern.slug,
+					tone: tone,
+				}),
+			})
+				.then((r) => r.json())
+				.then((data) => {
+					if (data && data.success && data.data && data.data.content) {
+						insertContent(data.data.content);
+					} else {
+						console.error('Tone-Variant fetch failed', data);
+						insertContent(pattern.content); // Fallback: neutral
+					}
+				})
+				.catch((err) => {
+					console.error('Tone-Variant fetch error', err);
+					insertContent(pattern.content);
+				});
 		};
 
 		const renderPatternPreview = (pattern) => {
-			// Use slug directly from pattern data
 			const patternSlug = pattern.slug || pattern.name?.replace('gutenblock-pro/', '') || '';
 			
 			if (!patternSlug) {
@@ -201,19 +238,49 @@
 				}, 'Keine Vorschau');
 			}
 
-			// Create preview iframe (nonce für 400-Absicherung)
+			const tone = activeTones[patternSlug] || 'neutral';
 			const previewUrl = gutenblockProModal.ajaxUrl +
 				'?action=gutenblock_pro_preview_pattern&pattern=' +
 				encodeURIComponent(patternSlug) +
+				'&tone=' + encodeURIComponent(tone) +
 				'&_wpnonce=' + encodeURIComponent(gutenblockProModal.nonce || '');
 
 			return el('div', {
 				className: 'gutenblock-pro-modal-pattern-preview'
 			}, el('iframe', {
+				key: tone, // Force re-render bei Tone-Wechsel
 				src: previewUrl,
 				sandbox: 'allow-same-origin allow-scripts',
 				loading: 'lazy',
 				tabIndex: -1
+			}));
+		};
+
+		const renderToneSwatches = (pattern) => {
+			const tones = Array.isArray(pattern.tones) ? pattern.tones : ['neutral'];
+			if (tones.length <= 1) return null;
+			const active = activeTones[pattern.slug] || 'neutral';
+
+			return el('div', {
+				className: 'gutenblock-pro-tone-swatches',
+				onClick: (e) => e.stopPropagation(), // Klick auf Swatch nicht als Insert-Click werten
+			}, tones.map((t) => {
+				const cfg = TONE_COLORS[t] || TONE_COLORS.neutral;
+				return el('button', {
+					key: t,
+					type: 'button',
+					className: 'gutenblock-pro-tone-swatch' + (active === t ? ' is-active' : ''),
+					style: { background: cfg.fill, borderColor: cfg.border },
+					title: cfg.label,
+					'aria-label': cfg.label,
+					onMouseEnter: () => setActiveTones((prev) => ({ ...prev, [pattern.slug]: t })),
+					onFocus: () => setActiveTones((prev) => ({ ...prev, [pattern.slug]: t })),
+					onClick: (e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						setActiveTones((prev) => ({ ...prev, [pattern.slug]: t }));
+					},
+				});
 			}));
 		};
 
@@ -253,7 +320,8 @@
 					]),
 					pattern.description && el('p', {
 						className: 'gutenblock-pro-modal-pattern-description'
-					}, pattern.description)
+					}, pattern.description),
+					renderToneSwatches(pattern)
 				])
 			]);
 		};

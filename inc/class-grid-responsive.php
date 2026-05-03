@@ -38,6 +38,10 @@ class GutenBlock_Pro_Grid_Responsive {
 			'type'    => 'integer',
 			'default' => 0,
 		);
+		$args['attributes']['gbpGridAlignTop'] = array(
+			'type'    => 'boolean',
+			'default' => false,
+		);
 		return $args;
 	}
 

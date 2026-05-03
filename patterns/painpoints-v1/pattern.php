@@ -3,13 +3,24 @@
  * Pattern: Painpoints v1
  */
 
-return array(
-	'title'       => __( 'Painpoints v1', 'gutenblock-pro' ),
-	'description' => __( '', 'gutenblock-pro' ),
-	'type'        => 'pattern', // 'pattern' or 'page'
-	'group'       => 'benefits',
-	'categories'  => array( 'gutenblock-pro' ),
-	'keywords'    => array(),
-	'content'     => '', // Loaded from content.html
-	'premium'     => false, // true = benötigt Pro Plus Lizenz für Bearbeitung
+return array (
+  'title' => 'Painpoints v1',
+  'description' => 'Pain-point section in two-column problem-first format.',
+  'type' => 'pattern',
+  'group' => 'benefits',
+  'categories' => 
+  array (
+    0 => 'gutenblock-pro',
+  ),
+  'keywords' => 
+  array (
+  ),
+  'content' => '',
+  'premium' => false,
+  'ai_hint' => 'Useful when audience pain points are specific and urgent.',
+  'content_fields' => 
+  array (
+    0 => 'h1-home',
+    1 => 'subline-home',
+  ),
 );

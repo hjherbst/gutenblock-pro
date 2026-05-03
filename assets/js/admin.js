@@ -11,6 +11,9 @@
 	 * Initialize CodeMirror editor
 	 */
 	function initCodeEditor() {
+		if (document.getElementById('gutenblock-pro-pattern-meta-panel')) {
+			return;
+		}
 		const textarea = document.getElementById('gutenblock-pro-code-editor');
 		if (!textarea) return;
 
@@ -112,6 +115,82 @@
 						$status.text('');
 					}, 3000);
 					$('.custom-indicator').show();
+				} else {
+					$status.addClass('error').text(gutenblockProAdmin.strings.error);
+				}
+			},
+			error: function () {
+				$button.prop('disabled', false);
+				$status.addClass('error').text(gutenblockProAdmin.strings.error);
+			},
+		});
+	}
+
+	function savePatternMeta() {
+		const panel = document.getElementById('gutenblock-pro-pattern-meta-panel');
+		if (!panel) return;
+
+		const pattern = panel.getAttribute('data-pattern');
+		const $status = $('.gutenblock-pro-meta-actions .save-status');
+		const $button = $('#save-pattern-meta');
+
+		$button.prop('disabled', true);
+		$status.removeClass('error').text('Speichert...');
+
+		$.ajax({
+			url: gutenblockProAdmin.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'gutenblock_pro_save_pattern_meta',
+				nonce: gutenblockProAdmin.nonce,
+				pattern: pattern,
+				title: $('#gbp-meta-title').val(),
+				description: $('#gbp-meta-description').val(),
+				ai_hint: $('#gbp-meta-ai-hint').val(),
+				type: $('#gbp-meta-type').val(),
+				group: $('#gbp-meta-group').val(),
+				keywords: $('#gbp-meta-keywords').val(),
+				premium: $('#gbp-meta-premium').is(':checked') ? '1' : '',
+			},
+			success: function (response) {
+				$button.prop('disabled', false);
+				if (response.success) {
+					$status.text(gutenblockProAdmin.strings.saved + (response.data.size ? ' (' + response.data.size + ')' : ''));
+					$('.gutenblock-pro-meta-custom').show();
+					setTimeout(function () {
+						$status.text('');
+					}, 3000);
+				} else {
+					$status.addClass('error').text(gutenblockProAdmin.strings.error);
+				}
+			},
+			error: function () {
+				$button.prop('disabled', false);
+				$status.addClass('error').text(gutenblockProAdmin.strings.error);
+			},
+		});
+	}
+
+	function resetPatternMeta() {
+		const $button = $('#reset-pattern-meta');
+		const pattern = $button.data('pattern');
+		if (!pattern || !confirm(gutenblockProAdmin.strings.confirmResetMeta)) {
+			return;
+		}
+		$button.prop('disabled', true);
+		const $status = $('.gutenblock-pro-meta-actions .save-status');
+		$.ajax({
+			url: gutenblockProAdmin.ajaxUrl,
+			type: 'POST',
+			data: {
+				action: 'gutenblock_pro_reset_pattern_meta',
+				nonce: gutenblockProAdmin.nonce,
+				pattern: pattern,
+			},
+			success: function (response) {
+				$button.prop('disabled', false);
+				if (response.success) {
+					window.location.reload();
 				} else {
 					$status.addClass('error').text(gutenblockProAdmin.strings.error);
 				}
@@ -328,7 +407,11 @@
 	function handleKeyboardShortcuts(e) {
 		if ((e.ctrlKey || e.metaKey) && e.key === 's') {
 			e.preventDefault();
-			saveFile();
+			if (document.getElementById('gutenblock-pro-pattern-meta-panel')) {
+				savePatternMeta();
+			} else {
+				saveFile();
+			}
 		}
 	}
 
@@ -412,12 +495,48 @@
 	/**
 	 * Initialize
 	 */
-	$(document).ready(function () {
-		// Initialize code editor
-		initCodeEditor();
+	/**
+	 * Tone-Swatches in der Pattern-Übersicht: Hover/Klick wechselt iframe-src.
+	 * Speichert die Original-URL aus data-base-url, fügt &tone=X als Query-Param.
+	 */
+	function bindToneSwatches() {
+		$(document).on('mouseenter focus click', '.gbp-tone-swatch', function (e) {
+			if (e.type === 'click') {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+			const $btn = $(this);
+			const $wrap = $btn.closest('.gbp-tone-swatches');
+			const slug = $wrap.data('pattern');
+			const tone = $btn.data('tone');
+			if (!slug || !tone) return;
 
-		// Save button click
+			// Aktiven Swatch markieren
+			$wrap.find('.gbp-tone-swatch').removeClass('is-active');
+			$btn.addClass('is-active');
+
+			// iframe der zugehörigen Karte finden
+			const $iframe = $wrap.closest('.pattern-card').find('.pattern-card-iframe');
+			if (!$iframe.length) return;
+			const baseUrl = $iframe.data('base-url') || $iframe.attr('src');
+			if (!baseUrl) return;
+			// Tone-Parameter ergänzen oder ersetzen
+			const sep = baseUrl.indexOf('?') === -1 ? '?' : '&';
+			const cleaned = baseUrl.replace(/([?&])tone=[^&]*/g, '');
+			const newUrl = cleaned + sep + 'tone=' + encodeURIComponent(tone);
+			if ($iframe.attr('src') !== newUrl) {
+				$iframe.attr('src', newUrl);
+			}
+		});
+	}
+
+	$(document).ready(function () {
+		initCodeEditor();
+		bindToneSwatches();
+
 		$('#save-file').on('click', saveFile);
+		$('#save-pattern-meta').on('click', savePatternMeta);
+		$('#reset-pattern-meta').on('click', resetPatternMeta);
 
 		// Reset buttons
 		$('#reset-block-style').on('click', resetBlockStyle);

@@ -3,12 +3,21 @@
  * Pattern: Impressum
  */
 
-return array(
-	'title'       => __( 'Impressum', 'gutenblock-pro' ),
-	'description' => __( '', 'gutenblock-pro' ),
-	'type'        => 'page', // 'pattern' or 'page'
-	'group'       => '',
-	'categories'  => array( 'gutenblock-pro' ),
-	'keywords'    => array(),
-	'content'     => '', // Loaded from content.html
+return array (
+  'title' => 'Impressum',
+  'description' => 'Legal page structure (imprint/privacy style content).',
+  'type' => 'page',
+  'group' => '',
+  'categories' => 
+  array (
+    0 => 'gutenblock-pro',
+  ),
+  'keywords' => 
+  array (
+  ),
+  'content' => '',
+  'ai_hint' => 'Do not use for marketing homepages; legal-compliance page only.',
+  'content_fields' => 
+  array (
+  ),
 );

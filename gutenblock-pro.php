@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.11.7
+ * Version: 1.20.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.11.7' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.20.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -65,7 +65,23 @@ function gutenblock_pro_custom_pattern_file( $slug, $file = 'style.css' ) {
 	);
 }
 
+/**
+ * Pfad zu pattern.php: Uploads-Override hat Vorrang (überlebt Plugin-Updates).
+ *
+ * @param string $slug Pattern-Slug.
+ * @return string Absoluter Pfad zu pattern.php.
+ */
+function gutenblock_pro_resolve_pattern_php_path( $slug ) {
+	$slug = sanitize_key( $slug );
+	$custom = gutenblock_pro_custom_pattern_file( $slug, 'pattern.php' );
+	if ( file_exists( $custom['path'] ) ) {
+		return $custom['path'];
+	}
+	return GUTENBLOCK_PRO_PATTERNS_PATH . $slug . '/pattern.php';
+}
+
 // Load classes
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-tone-injector.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-pattern-loader.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-asset-loader.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-admin-page.php';
@@ -140,14 +156,15 @@ function gutenblock_pro_init() {
 	$block_registry = new GutenBlock_Pro_Block_Registry();
 	$block_registry->init();
 
+	// Initialize Pattern Creator — must run outside is_admin() so the
+	// REST endpoint (GET /gutenblock-pro/v1/plugin-images) is registered for /wp-json/ requests.
+	$pattern_creator = new GutenBlock_Pro_Pattern_Creator();
+	$pattern_creator->init();
+
 	// Initialize Admin Page
 	if ( is_admin() ) {
 		$admin_page = new GutenBlock_Pro_Admin_Page();
 		$admin_page->init();
-
-		// Initialize Pattern Creator (Dev Tool - only for allowed users)
-		$pattern_creator = new GutenBlock_Pro_Pattern_Creator();
-		$pattern_creator->init();
 
 		// Initialize AI Settings Page
 		$ai_settings = GutenBlock_Pro_AI_Settings::get_instance();

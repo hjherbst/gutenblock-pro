@@ -3,13 +3,24 @@
  * Pattern: Process v1
  */
 
-return array(
-	'title'       => __( 'Process v1', 'gutenblock-pro' ),
-	'description' => __( '', 'gutenblock-pro' ),
-	'type'        => 'pattern', // 'pattern' or 'page'
-	'group'       => 'process',
-	'categories'  => array( 'gutenblock-pro' ),
-	'keywords'    => array(),
-	'content'     => '', // Loaded from content.html
-	'premium'     => false, // true = benötigt Pro Plus Lizenz für Bearbeitung
+return array (
+  'title' => 'Process v1',
+  'description' => 'Process section with numbered steps.',
+  'type' => 'pattern',
+  'group' => 'process',
+  'categories' => 
+  array (
+    0 => 'gutenblock-pro',
+  ),
+  'keywords' => 
+  array (
+  ),
+  'content' => '',
+  'premium' => false,
+  'ai_hint' => 'Great for onboarding flows, project phases, or service delivery steps.',
+  'content_fields' => 
+  array (
+    0 => 'h1-home',
+    1 => 'subline-home',
+  ),
 );

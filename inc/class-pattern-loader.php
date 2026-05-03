@@ -28,7 +28,7 @@ class GutenBlock_Pro_Pattern_Loader {
 		'hero'        => 'Hero',
 		'benefits'    => 'Benefits/Pain Points',
 		'about'       => 'About',
-		'offer'       => 'Offer',
+		'services'    => 'Services',
 		'teaser'      => 'Teaser',
 		'teaser-grid' => 'Teaser Grid',
 		'post-loop'   => 'Post Loop',
@@ -37,8 +37,8 @@ class GutenBlock_Pro_Pattern_Loader {
 		'team'        => 'Team',
 		'testimonial' => 'Testimonial',
 		'quote'       => 'Quote',
-		'faq'         => 'FAQ',
 		'cta'         => 'CTA',
+		'faq'         => 'FAQ',
 		'contact'     => 'Contact',
 		'footer'      => 'Footer',
 	);
@@ -59,6 +59,7 @@ class GutenBlock_Pro_Pattern_Loader {
 		
 		// AJAX endpoint for modal
 		add_action( 'wp_ajax_gutenblock_pro_get_patterns_for_modal', array( $this, 'ajax_get_patterns_for_modal' ) );
+		add_action( 'wp_ajax_gutenblock_pro_get_pattern_tone_content', array( $this, 'ajax_get_pattern_tone_content' ) );
 	}
 
 	/**
@@ -117,6 +118,34 @@ class GutenBlock_Pro_Pattern_Loader {
 			'hasPremium'      => $license->has_premium_access(),
 			'licenseInfo'     => $license_info,
 			'upgradeUrl'      => 'https://app.gutenblock.com/licenses',
+		) );
+
+		// Tone-Toolbar: Picker in der Block-Toolbar zum Umschalten der Tonalität.
+		wp_enqueue_script(
+			'gutenblock-pro-tone-toolbar',
+			GUTENBLOCK_PRO_URL . 'assets/js/tone-toolbar.js',
+			array( 'wp-element', 'wp-blocks', 'wp-block-editor', 'wp-components', 'wp-data', 'wp-compose', 'wp-hooks' ),
+			GUTENBLOCK_PRO_VERSION,
+			true
+		);
+
+		// Pattern-Slug → unterstützte Tones (für Toolbar-Sichtbarkeit)
+		if ( empty( $this->patterns ) ) {
+			$this->discover_patterns();
+		}
+		$tone_map = array();
+		foreach ( $this->patterns as $slug => $p ) {
+			$tones = isset( $p['tones'] ) && is_array( $p['tones'] ) ? array_values( $p['tones'] ) : array( 'neutral' );
+			if ( count( $tones ) > 1 ) {
+				$tone_map[ $slug ] = array( 'tones' => $tones );
+			}
+		}
+
+		wp_localize_script( 'gutenblock-pro-tone-toolbar', 'gutenblockProToneToolbar', array(
+			'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
+			'nonce'        => wp_create_nonce( 'gutenblock_pro_modal' ),
+			'patterns'     => $tone_map,
+			'toolbarLabel' => __( 'Tonalität', 'gutenblock-pro' ),
 		) );
 	}
 
@@ -194,7 +223,10 @@ class GutenBlock_Pro_Pattern_Loader {
 		$pattern_folders = glob( $patterns_dir . '*', GLOB_ONLYDIR );
 
 		foreach ( $pattern_folders as $folder ) {
-			$pattern_file = $folder . '/pattern.php';
+			$slug         = basename( $folder );
+			$pattern_file = function_exists( 'gutenblock_pro_resolve_pattern_php_path' )
+				? gutenblock_pro_resolve_pattern_php_path( $slug )
+				: $folder . '/pattern.php';
 
 			if ( file_exists( $pattern_file ) ) {
 				$pattern_data = $this->load_pattern_data( $pattern_file, $folder );
@@ -225,24 +257,37 @@ class GutenBlock_Pro_Pattern_Loader {
 
 		$slug = basename( $folder );
 
+		// AI metadata is maintained directly in each pattern.php:
+		// description, ai_hint, content_fields.
+
 		// Default pattern structure
 		$defaults = array(
-			'title'       => '',
-			'description' => '',
-			'content'     => '',
-			'categories'  => array( 'gutenblock-pro' ),
-			'keywords'    => array(),
-			'blockTypes'  => array(),
-			'inserter'    => true,
-			'group'       => '', // Group for categorization
-			'type'        => 'pattern', // pattern or page
-			'premium'     => false, // true = benötigt Pro Plus Lizenz
+			'title'          => '',
+			'description'    => '',
+			'ai_hint'        => '',
+			'content_fields' => array(),
+			'content'        => '',
+			'categories'     => array( 'gutenblock-pro' ),
+			'keywords'       => array(),
+			'blockTypes'     => array(),
+			'inserter'       => true,
+			'group'          => '',
+			'type'           => 'pattern', // pattern or page
+			// Nur für Pages relevant: Sub-Typ, anhand dessen die KI im SaaS
+			// eine Vorlage auswählen kann. Mögliche Werte: '', 'services',
+			// 'about', 'blog', 'legal' (bestehende Impressum-Vorlage).
+			'page_type'      => '',
+			// Optionale Patterns-Liste: Die Page setzt sich aus diesen
+			// Section-Slugs zusammen (für die KI-getriebene Page-Erstellung).
+			'page_patterns'  => array(),
+			'premium'        => false,
+			'tones'          => array( 'neutral' ),
 			// Custom fields for assets
-			'has_style'   => file_exists( $folder . '/style.css' ),
-			'has_editor'  => file_exists( $folder . '/editor.css' ),
-			'has_script'  => file_exists( $folder . '/script.js' ),
-			'folder'      => $folder,
-			'slug'        => $slug,
+			'has_style'      => file_exists( $folder . '/style.css' ),
+			'has_editor'     => file_exists( $folder . '/editor.css' ),
+			'has_script'     => file_exists( $folder . '/script.js' ),
+			'folder'         => $folder,
+			'slug'           => $slug,
 		);
 
 		$parsed = wp_parse_args( $pattern_data, $defaults );
@@ -274,18 +319,26 @@ class GutenBlock_Pro_Pattern_Loader {
 				continue;
 			}
 
-			// Register ALL patterns (including premium) - editing will be blocked in editor
-			$this->register_single_pattern( $slug, $pattern );
+			$tones = isset( $pattern['tones'] ) && is_array( $pattern['tones'] ) ? $pattern['tones'] : array( 'neutral' );
+
+			foreach ( $tones as $tone ) {
+				if ( ! GutenBlock_Pro_Tone_Injector::is_valid_tone( $tone ) ) {
+					continue;
+				}
+				$tone_slug = GutenBlock_Pro_Tone_Injector::tone_slug( $slug, $tone );
+				$this->register_single_pattern( $tone_slug, $pattern, $tone );
+			}
 		}
 	}
 
 	/**
-	 * Register a single pattern
+	 * Register a single pattern, optionally with a tone variant.
 	 *
-	 * @param string $slug    Pattern slug
+	 * @param string $slug    Pattern slug (may include tone suffix, e.g. hero-v1--dark)
 	 * @param array  $pattern Pattern data
+	 * @param string $tone    Tone key ('neutral'|'dark'|'soft')
 	 */
-	private function register_single_pattern( $slug, $pattern ) {
+	private function register_single_pattern( $slug, $pattern, $tone = 'neutral' ) {
 		// Load content from separate file if not inline
 		$content = $pattern['content'];
 
@@ -299,46 +352,57 @@ class GutenBlock_Pro_Pattern_Loader {
 
 		$content = self::normalize_core_image_blocks( $content );
 
+		// Tone-Attribute injizieren (für neutral: no-op)
+		if ( $tone !== 'neutral' ) {
+			$content = GutenBlock_Pro_Tone_Injector::inject( $content, $tone );
+		}
+
 		// Check if pattern is premium
 		$is_premium = isset( $pattern['premium'] ) && $pattern['premium'] === true;
-		$license = GutenBlock_Pro_License::get_instance();
-		$has_premium_access = $license->has_premium_access();
 
-		// CSS class marker for asset detection (premium detection via premiumPatterns config)
-		$css_class = 'gb-pattern-' . $slug;
-		
-		// Simple, robust approach: Add class to first HTML element directly
-		// This works regardless of block type (cover, group, etc.)
-			$content = preg_replace(
+		// CSS class marker for asset detection
+		// Tone variants keep the base slug class so their styles are loaded.
+		$base_slug = $pattern['slug'];
+		$css_class  = 'gb-pattern-' . $base_slug;
+		if ( $tone !== 'neutral' ) {
+			$css_class .= ' gb-tone-' . $tone;
+		}
+
+		$content = preg_replace(
 			'/<(section|div|article|aside|header|footer)\s+class="([^"]*)"/',
 			'<$1 class="$2 ' . esc_attr( $css_class ) . '"',
-				$content,
-				1
-			);
-		
-		// Debug logging
+			$content,
+			1
+		);
+
 		if ( $is_premium ) {
-			error_log( '[GutenBlock Pro] Added premium class to pattern: ' . $slug );
+			error_log( '[GutenBlock Pro] Registered premium pattern: ' . $slug );
 		}
-		
-		// Original class handling for backward compatibility
-		if ( false && preg_match( '/^<!-- wp:(\S+) (\{.*?\}) -->/s', $content, $matches ) ) {
-			// No wp:group found - wrap content in group with class
-			$content = '<!-- wp:group {"className":"' . esc_attr( $css_class ) . '"} -->' . "\n" .
-			           '<div class="wp-block-group ' . esc_attr( $css_class ) . '">' . "\n" .
-			           $content . "\n" .
-			           '</div>' . "\n" .
-			           '<!-- /wp:group -->';
+
+		// Titel um Ton-Label ergänzen
+		$title = $pattern['title'];
+		if ( $tone !== 'neutral' ) {
+			$labels = GutenBlock_Pro_Tone_Injector::tone_labels();
+			$title  = $title . ' (' . $labels[ $tone ] . ')';
+		}
+
+		// Tone-Varianten sollen NICHT im nativen Inserter auftauchen –
+		// sie werden nur via Custom-Modal / SaaS-API verwendet (inserter: false).
+		// So bleibt im FSE pro Pattern nur eine Karte; die Varianten wählst du
+		// dort über Swatches.
+		$inserter_visible = $pattern['inserter'];
+		if ( $tone !== 'neutral' ) {
+			$inserter_visible = false;
 		}
 
 		$pattern_args = array(
-			'title'       => $pattern['title'],
+			'title'       => $title,
 			'description' => $pattern['description'],
 			'content'     => $content,
 			'categories'  => $pattern['categories'],
 			'keywords'    => $pattern['keywords'],
 			'blockTypes'  => $pattern['blockTypes'],
-			'inserter'    => $pattern['inserter'],
+			'inserter'    => $inserter_visible,
 		);
 
 		register_block_pattern( 'gutenblock-pro/' . $slug, $pattern_args );
@@ -535,23 +599,86 @@ class GutenBlock_Pro_Pattern_Loader {
 				$content = $this->load_localized_content( $pattern['folder'] );
 			}
 
+			$tones = isset( $pattern['tones'] ) && is_array( $pattern['tones'] ) ? $pattern['tones'] : array( 'neutral' );
+
 			$patterns_for_modal[] = array(
 				'name'        => 'gutenblock-pro/' . $slug,
 				'title'       => $pattern['title'],
 				'description' => $pattern['description'],
-				'content'     => $content, // Always include content - editing will be blocked in editor
+				'content'     => $content,
 				'type'        => isset( $pattern['type'] ) ? $pattern['type'] : 'pattern',
 				'group'       => isset( $pattern['group'] ) ? $pattern['group'] : '',
 				'keywords'    => isset( $pattern['keywords'] ) ? $pattern['keywords'] : array(),
 				'slug'        => $slug,
 				'premium'     => $is_premium,
-				'hasAccess'   => $has_access, // For display purposes (badge)
+				'hasAccess'   => $has_access,
+				'tones'       => array_values( $tones ),
 			);
 		}
 
 		wp_send_json_success( array(
 			'patterns' => $patterns_for_modal,
 			'groups'   => self::$groups,
+		) );
+	}
+
+	/**
+	 * AJAX: Liefert Pattern-Content mit injizierter Tonalität für den Insert-Vorgang.
+	 *
+	 * Erwartet POST: pattern (slug), tone ('neutral'|'dark'|'soft'), nonce
+	 */
+	public function ajax_get_pattern_tone_content() {
+		check_ajax_referer( 'gutenblock_pro_modal', 'nonce' );
+
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => 'Permission denied' ) );
+		}
+
+		$slug = isset( $_POST['pattern'] ) ? sanitize_key( $_POST['pattern'] ) : '';
+		$tone = isset( $_POST['tone'] ) ? sanitize_key( $_POST['tone'] ) : 'neutral';
+
+		if ( empty( $slug ) ) {
+			wp_send_json_error( array( 'message' => 'No pattern slug' ) );
+		}
+		if ( ! GutenBlock_Pro_Tone_Injector::is_valid_tone( $tone ) ) {
+			$tone = 'neutral';
+		}
+
+		if ( empty( $this->patterns ) ) {
+			$this->discover_patterns();
+		}
+		if ( ! isset( $this->patterns[ $slug ] ) ) {
+			wp_send_json_error( array( 'message' => 'Unknown pattern' ) );
+		}
+
+		$pattern = $this->patterns[ $slug ];
+		$content = ! empty( $pattern['content'] )
+			? $pattern['content']
+			: $this->load_localized_content( $pattern['folder'] );
+
+		if ( empty( $content ) ) {
+			wp_send_json_error( array( 'message' => 'No content' ) );
+		}
+
+		$content = self::normalize_core_image_blocks( $content );
+		$content = GutenBlock_Pro_Tone_Injector::inject( $content, $tone );
+
+		// Marker-Klasse beibehalten (wie in register_single_pattern)
+		$css_class = 'gb-pattern-' . $slug;
+		if ( $tone !== 'neutral' ) {
+			$css_class .= ' gb-tone-' . $tone;
+		}
+		$content = preg_replace(
+			'/<(section|div|article|aside|header|footer)\s+class="([^"]*)"/',
+			'<$1 class="$2 ' . esc_attr( $css_class ) . '"',
+			$content,
+			1
+		);
+
+		wp_send_json_success( array(
+			'slug'    => $slug,
+			'tone'    => $tone,
+			'content' => $content,
 		) );
 	}
 

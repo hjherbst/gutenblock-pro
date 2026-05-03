@@ -797,3 +797,119 @@ input:checked + .slider:before {
 	line-height: 1.5;
 }
 
+/* Meta-Tab: WP-Admin min-height auf Textareas überschreiben → sichtbar ~2 Zeilen */
+.gutenblock-pro-pattern-meta-panel textarea.gbp-meta-textarea-compact {
+	min-height: 0 !important;
+	height: auto;
+	max-height: 5.25em;
+	line-height: 1.45;
+	padding: 6px 10px;
+	resize: vertical;
+	box-sizing: border-box;
+}
+
+/* Meta-Tab: Formular + Pattern-Vorschau */
+.gutenblock-pro-meta-layout {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 24px 32px;
+	align-items: flex-start;
+	margin-top: 8px;
+}
+
+.gutenblock-pro-meta-form-col {
+	flex: 1 1 360px;
+	min-width: 0;
+}
+
+.gutenblock-pro-meta-form-col .form-table {
+	margin-top: 0;
+}
+
+/* Rechte Spalte: gleiche Vorschau wie Pattern-Karte (Breite wie Grid-Zelle min. 240px) */
+.gutenblock-pro-meta-preview-col {
+	flex: 0 0 auto;
+	min-width: 240px;
+	max-width: 320px;
+	width: min(320px, 100%);
+	position: static;
+}
+
+.gutenblock-pro-meta-preview-col .pattern-card-preview-link {
+	width: 100%;
+}
+
+.pattern-card-preview-empty {
+	height: 160px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 12px;
+	text-align: center;
+	background: #f9f9f9;
+	border: 1px dashed #c3c4c7;
+	box-sizing: border-box;
+}
+
+.gbp-detected-content-fields-inline {
+	font-size: 13px;
+	word-break: break-word;
+}
+
+.gbp-detected-content-fields-empty {
+	color: #646970;
+}
+
+/* Tone-Vorschauen im Meta-Tab */
+.gbp-tone-preview-wrap {
+	margin-bottom: 14px;
+}
+
+.gbp-tone-preview-wrap:last-child {
+	margin-bottom: 0;
+}
+
+.gbp-tone-preview-label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #646970;
+	margin-bottom: 4px;
+}
+
+/* Tone-Swatches (interaktiv) – im Custom-Modal & Admin-Pattern-Übersicht */
+.gbp-tone-swatches {
+	display: flex;
+	gap: 6px;
+	margin-top: 6px;
+	align-items: center;
+}
+
+.gbp-tone-swatch {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	border: 1.5px solid #c3c4c7;
+	cursor: pointer;
+	padding: 0;
+	background: #f6f7f7;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gbp-tone-swatch--neutral { background: #f6f7f7; border-color: #c3c4c7; }
+.gbp-tone-swatch--dark    { background: #1e1e1e; border-color: #1e1e1e; }
+.gbp-tone-swatch--soft    { background: #e8f0fe; border-color: #9ab8e8; }
+
+.gbp-tone-swatch:hover,
+.gbp-tone-swatch:focus {
+	transform: scale(1.15);
+	outline: none;
+}
+
+.gbp-tone-swatch.is-active {
+	box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2271b1;
+	transform: scale(1.15);
+}
+

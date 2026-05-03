@@ -3,13 +3,24 @@
  * Pattern: Teaser Grid v2
  */
 
-return array(
-	'title'       => __( 'Teaser Grid v2', 'gutenblock-pro' ),
-	'description' => __( '', 'gutenblock-pro' ),
-	'type'        => 'pattern', // 'pattern' or 'page'
-	'group' => 'teaser-grid',
-	'categories'  => array( 'gutenblock-pro' ),
-	'keywords'    => array(),
-	'content'     => '', // Loaded from content.html
-	'premium'     => false, // true = benötigt Pro Plus Lizenz für Bearbeitung
+return array (
+  'title' => 'Teaser Grid v2',
+  'description' => 'Teaser grid variant 2.',
+  'type' => 'pattern',
+  'group' => 'teaser-grid',
+  'categories' => 
+  array (
+    0 => 'gutenblock-pro',
+  ),
+  'keywords' => 
+  array (
+  ),
+  'content' => '',
+  'premium' => false,
+  'ai_hint' => 'Alternative grid style.',
+  'content_fields' => 
+  array (
+    0 => 'h1-home',
+    1 => 'subline-home',
+  ),
 );

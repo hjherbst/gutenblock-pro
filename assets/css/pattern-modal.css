@@ -270,6 +270,36 @@
 	}
 }
 
+/* Tone-Swatches an der Pattern-Karte */
+.gutenblock-pro-tone-swatches {
+	display: flex;
+	gap: 6px;
+	margin-top: 8px;
+	align-items: center;
+}
+
+.gutenblock-pro-tone-swatch {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	border: 1.5px solid;
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	box-shadow: 0 0 0 0 rgba(34, 113, 177, 0);
+}
+
+.gutenblock-pro-tone-swatch:hover,
+.gutenblock-pro-tone-swatch:focus {
+	transform: scale(1.15);
+	outline: none;
+}
+
+.gutenblock-pro-tone-swatch.is-active {
+	box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2271b1;
+	transform: scale(1.15);
+}
+
 @media (max-width: 782px) {
 	.gutenblock-pro-pattern-modal {
 		width: 95vw !important;

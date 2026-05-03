@@ -31,6 +31,21 @@
 	let currentSelectedBlocks = [];
 
 	/**
+	 * Erkennt, ob der Top-Block keine sinnvollen Tone-Varianten erlaubt.
+	 * Liefert einen Grund-String oder null wenn ok.
+	 */
+	function detectToneIncompatibility(block) {
+		if (!block || !block.name) return null;
+		if (block.name === 'core/cover') return 'cover';
+		const a = block.attributes || {};
+		if (a.url || a.backgroundImage) return 'background-image';
+		if (a.gradient) return 'gradient';
+		if (a.style && a.style.background && a.style.background.backgroundImage) return 'background-image';
+		if (a.style && a.style.color && a.style.color.gradient) return 'gradient';
+		return null;
+	}
+
+	/**
 	 * Generate slug from name
 	 */
 	function generateSlug(name) {
@@ -80,34 +95,66 @@
 	/**
 	 * Pattern Creator Modal Component
 	 */
-	function PatternCreatorModal({ isOpen, onClose, selectedBlocks }) {
+	function PatternCreatorModal({ isOpen, onClose, selectedBlocks, initialName }) {
 		const [name, setName] = useState('');
 		const [slug, setSlug] = useState('');
 		const [description, setDescription] = useState('');
 		const [keywords, setKeywords] = useState('');
-		const [language, setLanguage] = useState('default');
+		const [aiHint, setAiHint] = useState('');
 		const [patternType, setPatternType] = useState('pattern');
 		const [group, setGroup] = useState('');
-		const [replaceImages, setReplaceImages] = useState(true);
+		const [pageType, setPageType] = useState('');
 		const [isPremium, setIsPremium] = useState(false);
+		const [enableTones, setEnableTones] = useState(false);
+		const [toneCapability, setToneCapability] = useState({ supported: true, reason: '' });
 		const [isCreating, setIsCreating] = useState(false);
+		const [isSuggesting, setIsSuggesting] = useState(false);
 		const [notice, setNotice] = useState(null);
 		const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 		const [patternExists, setPatternExists] = useState(false);
 		const [existingPatternInfo, setExistingPatternInfo] = useState(null);
 		const [isChecking, setIsChecking] = useState(false);
 
-		// Load existing values when pattern is found
+		// Pre-fill name from block metadata when modal opens
+		useEffect(() => {
+			if (isOpen && initialName && !name) {
+				setName(initialName);
+				if (!slugManuallyEdited) {
+					setSlug(generateSlug(initialName));
+				}
+			}
+		}, [isOpen, initialName]);
+
+		// Pre-fill ALL fields when an existing pattern is found.
 		useEffect(() => {
 			if (existingPatternInfo) {
-				if (existingPatternInfo.premium !== undefined) {
-					setIsPremium(existingPatternInfo.premium);
-				}
-				if (existingPatternInfo.group !== undefined) {
-					setGroup(existingPatternInfo.group);
+				if (existingPatternInfo.description !== undefined) setDescription(existingPatternInfo.description || '');
+				if (existingPatternInfo.ai_hint !== undefined) setAiHint(existingPatternInfo.ai_hint || '');
+				if (existingPatternInfo.type !== undefined) setPatternType(existingPatternInfo.type || 'pattern');
+				if (existingPatternInfo.keywords !== undefined) setKeywords(existingPatternInfo.keywords || '');
+				if (existingPatternInfo.group !== undefined) setGroup(existingPatternInfo.group || '');
+				if (existingPatternInfo.page_type !== undefined) setPageType(existingPatternInfo.page_type || '');
+				if (existingPatternInfo.premium !== undefined) setIsPremium(!!existingPatternInfo.premium);
+				if (Array.isArray(existingPatternInfo.tones)) {
+					setEnableTones(existingPatternInfo.tones.length > 1);
 				}
 			}
 		}, [existingPatternInfo]);
+
+		// Auto-Detect: ist der Top-Block tone-fähig?
+		useEffect(() => {
+			if (!isOpen || !selectedBlocks || selectedBlocks.length === 0) {
+				return;
+			}
+			const top = selectedBlocks[0];
+			if (!top || !top.name) return;
+			const reason = detectToneIncompatibility(top);
+			setToneCapability({ supported: !reason, reason: reason || '' });
+			if (reason) {
+				// Bei Cover/BG-Image die Checkbox automatisch deaktivieren
+				setEnableTones(false);
+			}
+		}, [isOpen, selectedBlocks]);
 
 		// Check if pattern exists when slug changes
 		useEffect(() => {
@@ -145,11 +192,13 @@
 			setSlug('');
 			setDescription('');
 			setKeywords('');
-			setLanguage('default');
+			setAiHint('');
 			setPatternType('pattern');
 			setGroup('');
-			setReplaceImages(true);
+			setPageType('');
 			setIsPremium(false);
+			setEnableTones(false);
+			setToneCapability({ supported: true, reason: '' });
 			setNotice(null);
 			setSlugManuallyEdited(false);
 			setPatternExists(false);
@@ -159,6 +208,54 @@
 		function handleClose() {
 			resetForm();
 			onClose();
+		}
+
+		function handleAiSuggest() {
+			if (!selectedBlocks || selectedBlocks.length === 0) {
+				setNotice({ type: 'error', message: strings.aiNoBlocks || strings.noBlocks });
+				return;
+			}
+			setIsSuggesting(true);
+			setNotice(null);
+
+			const content = serialize(selectedBlocks);
+			const restUrl = (gutenblockProCreator.restUrl || '').replace(/\/$/, '') + '/ai/pattern-meta';
+
+			fetch(restUrl, {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': gutenblockProCreator.restNonce || '',
+				},
+				body: JSON.stringify({
+					name: name.trim(),
+					slug: slug || generateSlug(name),
+					type: patternType,
+					content: content,
+				}),
+			})
+				.then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+				.then(({ ok, data }) => {
+					setIsSuggesting(false);
+					if (!ok) {
+						setNotice({
+							type: 'error',
+							message: (data && (data.message || data.error)) || strings.aiSuggestError,
+						});
+						return;
+					}
+					if (data && (data.description || data.ai_hint)) {
+						if (data.description) setDescription(data.description);
+						if (data.ai_hint) setAiHint(data.ai_hint);
+					} else {
+						setNotice({ type: 'warning', message: strings.aiSuggestError });
+					}
+				})
+				.catch(() => {
+					setIsSuggesting(false);
+					setNotice({ type: 'error', message: strings.aiSuggestError });
+				});
 		}
 
 		function handleCreate() {
@@ -184,11 +281,12 @@
 			formData.append('slug', slug || generateSlug(name));
 			formData.append('description', description);
 			formData.append('keywords', keywords);
-			formData.append('language', language);
+			formData.append('ai_hint', aiHint);
 			formData.append('type', patternType);
 			formData.append('group', group);
-			formData.append('replace_images', replaceImages ? 'true' : 'false');
+			formData.append('page_type', patternType === 'page' ? pageType : '');
 			formData.append('premium', isPremium ? 'true' : 'false');
+			formData.append('enable_tones', enableTones && toneCapability.supported ? 'true' : 'false');
 			formData.append('update_mode', patternExists ? 'true' : 'false');
 			formData.append('content', content);
 
@@ -281,42 +379,59 @@
 					help: isChecking ? 'Prüfe...' : (isUpdateMode ? '✓ Pattern existiert' : strings.slugHelp),
 					className: isUpdateMode ? 'slug-exists' : '',
 				}),
-				// Only show these fields for new patterns
-				!isUpdateMode && el(TextareaControl, {
-					label: strings.descLabel,
-					value: description,
-					onChange: setDescription,
-					placeholder: strings.descPlaceholder,
-					rows: 2,
-				}),
-				!isUpdateMode && el(TextControl, {
-					label: strings.keywordsLabel,
-					value: keywords,
-					onChange: setKeywords,
-					placeholder: strings.keywordsPlaceholder,
-				}),
-				el(SelectControl, {
-					label: strings.languageLabel,
-					value: language,
-					onChange: setLanguage,
-					options: gutenblockProCreator.languages || [
-						{ value: 'default', label: 'Default' }
-					],
-					help: strings.languageHelp,
-				}),
-				!isUpdateMode && el(SelectControl, {
-					label: strings.typeLabel || 'Typ',
-					value: patternType,
-					onChange: setPatternType,
-					options: [
-						{ value: 'pattern', label: strings.typePattern || 'Pattern' },
-						{ value: 'page', label: strings.typePage || 'Seite' },
-					],
-					help: patternType === 'page' 
-						? 'Alle markierten Blöcke werden als eine zusammenhängende Seite gespeichert.'
-						: 'Einzelnes wiederverwendbares Pattern.',
-				}),
+			el(TextareaControl, {
+				label: strings.descLabel,
+				value: description,
+				onChange: setDescription,
+				placeholder: strings.descPlaceholder,
+				rows: 2,
+			}),
+			el(TextareaControl, {
+				label: strings.aiHintLabel || 'AI Hint',
+				value: aiHint,
+				onChange: setAiHint,
+				placeholder: strings.aiHintPlaceholder || 'Aufbau, Einsatzbereich, Stil, Zielgruppe',
+				rows: 3,
+			}),
+			el('div', { className: 'gutenblock-pro-ai-suggest-row', style: { margin: '4px 0 12px' } },
+				el(Button, {
+					variant: 'secondary',
+					icon: 'admin-generic',
+					onClick: handleAiSuggest,
+					disabled: isSuggesting || isCreating || !selectedBlocks || selectedBlocks.length === 0,
+					isBusy: isSuggesting,
+				}, isSuggesting
+					? el(Fragment, null, el(Spinner), ' ', strings.aiSuggesting || 'KI generiert…')
+					: (strings.aiSuggestButton || 'Beschreibung & AI Hint mit KI generieren (EN)'))
+			),
+			el(TextControl, {
+				label: strings.keywordsLabel,
+				value: keywords,
+				onChange: setKeywords,
+				placeholder: strings.keywordsPlaceholder,
+			}),
 			el(SelectControl, {
+				label: strings.typeLabel || 'Typ',
+				value: patternType,
+				onChange: setPatternType,
+				options: [
+					{ value: 'pattern', label: strings.typePattern || 'Pattern' },
+					{ value: 'page', label: strings.typePage || 'Seite' },
+				],
+				help: patternType === 'page'
+					? 'Alle markierten Blöcke werden als eine zusammenhängende Seite gespeichert.'
+					: 'Einzelnes wiederverwendbares Pattern.',
+			}),
+			patternType === 'page' && el(SelectControl, {
+				label: strings.pageTypeLabel || 'Ziel-Unterseite',
+				value: pageType,
+				onChange: setPageType,
+				options: gutenblockProCreator.pageTypes || [
+					{ value: '', label: '— Keine Zuordnung —' }
+				],
+				help: strings.pageTypeHelp || 'Ordnet diese Seitenvorlage einer SaaS-Unterseite zu (z. B. „Services Page“).',
+			}),
+			patternType === 'pattern' && el(SelectControl, {
 				label: strings.groupLabel || 'Gruppe',
 				value: group,
 				onChange: setGroup,
@@ -324,18 +439,21 @@
 					{ value: '', label: strings.groupNone || '— Keine Gruppe —' }
 				],
 			}),
-				el(CheckboxControl, {
-					label: strings.replaceImagesLabel,
-					checked: replaceImages,
-					onChange: setReplaceImages,
-					help: strings.replaceImagesHelp,
-				}),
-				!isUpdateMode && el(CheckboxControl, {
-					label: 'Premium Pattern (Pro Plus erforderlich)',
-					checked: isPremium,
-					onChange: setIsPremium,
-					help: 'Wenn aktiviert, benötigt dieses Pattern eine Pro Plus Lizenz für die Bearbeitung. Kann aber als Vorschau eingefügt werden.',
-				}),
+			el(CheckboxControl, {
+				label: 'Paid Feature',
+				checked: isPremium,
+				onChange: setIsPremium,
+				help: 'Wenn aktiviert, benötigt dieses Pattern eine Pro Plus Lizenz.',
+			}),
+			el(CheckboxControl, {
+				label: strings.enableTonesLabel || 'Tonalitäts-Varianten anbieten (Dark + Soft)',
+				checked: enableTones && toneCapability.supported,
+				onChange: setEnableTones,
+				disabled: !toneCapability.supported,
+				help: !toneCapability.supported
+					? (strings.tonesUnsupported || 'Nicht möglich: Top-Block hat Bild/Gradient als Hintergrund.')
+					: (strings.enableTonesHelp || 'Erzeugt Dark- und Soft-Varianten dieses Patterns für FSE und SaaS.'),
+			}),
 				el(
 					'div',
 					{ className: 'gutenblock-pro-pattern-creator-actions' },
@@ -367,22 +485,38 @@
 	}
 
 	/**
+	 * Block-Name (metadata.name) des ersten Blocks aus der Gutenberg-Block-Liste auslesen.
+	 * Dies entspricht dem "Name"-Feld in den Listenansicht-Einstellungen.
+	 */
+	function detectBlockName(blocks) {
+		if (!blocks || !blocks.length) return '';
+		// metadata.name ist z. B. "Hero v3" wenn der Block in der Listenansicht umbenannt wurde
+		const first = blocks[0];
+		return (first && first.attributes && first.attributes.metadata && first.attributes.metadata.name)
+			? first.attributes.metadata.name
+			: '';
+	}
+
+	/**
 	 * Global Modal Container (rendered once)
 	 */
 	function GlobalModalContainer() {
 		const [isOpen, setIsOpen] = useState(false);
 		const [blocks, setBlocks] = useState([]);
+		const [initialName, setInitialName] = useState('');
 
 		// Register the callback so toolbar buttons can open the modal
 		openModalCallback = (selectedBlocks) => {
 			setBlocks(selectedBlocks);
+			setInitialName(detectBlockName(selectedBlocks));
 			setIsOpen(true);
 		};
 
 		return el(PatternCreatorModal, {
 			isOpen: isOpen,
-			onClose: () => setIsOpen(false),
+			onClose: () => { setIsOpen(false); setInitialName(''); },
 			selectedBlocks: blocks,
+			initialName: initialName,
 		});
 	}
 
@@ -586,181 +720,56 @@
 	);
 
 	/**
-	 * Add randomize image button to Image block toolbar for picsum.photos images
+	 * Plugin Image Picker — toolbar button on core/image blocks.
+	 * Opens a modal with all images from the plugin's assets/images/ folder.
 	 */
-	const withImageRandomizer = createHigherOrderComponent((BlockEdit) => {
+	const withPluginImagePicker = createHigherOrderComponent((BlockEdit) => {
 		return (props) => {
 			const { name, attributes, clientId } = props;
 			const { updateBlockAttributes } = useDispatch('core/block-editor');
-			const [isModalOpen, setIsModalOpen] = useState(false);
-			const [searchInput, setSearchInput] = useState('');
+			const [isOpen, setIsOpen] = useState(false);
+			const [images, setImages] = useState(null); // null = not loaded yet
+			const [loadError, setLoadError] = useState(false);
 
-			// Only for image blocks
-			if (name !== 'core/image') {
-				return el(BlockEdit, props);
-			}
+			const isCover = name === 'core/cover';
+			const isImage = name === 'core/image';
+			if (!isImage && !isCover) return el(BlockEdit, props);
+			if (!gutenblockProCreator.isAllowedUser) return el(BlockEdit, props);
 
-			// Only show for allowed user (hjherbst)
-			if (!gutenblockProCreator.isAllowedUser) {
-				return el(BlockEdit, props);
-			}
-
-			const imageUrl = attributes?.url || '';
-			const isPlaceholderImage = imageUrl && (
-				imageUrl.includes('picsum.photos') || 
-				imageUrl.includes('pexels.com') ||
-				imageUrl.includes('unsplash.com')
-			);
-
-			if (!isPlaceholderImage) {
-				return el(BlockEdit, props);
-			}
-
-			const openModal = () => {
-				// Extract current search query from URL
-				let currentQuery = '';
-				const picsumMatch = imageUrl.match(/picsum\.photos\/seed\/([^\/]+)\/(\d+)\/(\d+)/);
-				if (picsumMatch) {
-					const seed = picsumMatch[1];
-					if (seed.includes('query-')) {
-						const queryPart = seed.split('query-')[1];
-						if (queryPart) {
-							try {
-								currentQuery = decodeURIComponent(queryPart.split('-')[0]);
-							} catch (e) {
-								// Invalid encoding, ignore
-							}
-						}
-					}
+			const openPicker = () => {
+				setIsOpen(true);
+				if (images === null) {
+					fetch(gutenblockProCreator.restUrl + 'plugin-images', {
+						headers: { 'X-WP-Nonce': gutenblockProCreator.restNonce },
+					})
+						.then((r) => {
+							if (!r.ok) throw new Error('HTTP ' + r.status);
+							return r.json();
+						})
+						.then((data) => setImages(data))
+						.catch(() => {
+							setLoadError(true);
+							setImages([]);
+						});
 				}
-
-				// Load last used keyword from localStorage
-				const lastKeyword = localStorage.getItem('gutenblock_pro_last_image_keyword') || '';
-				// Use current query from URL if available, otherwise use last keyword
-				const defaultQuery = currentQuery || lastKeyword;
-				
-				setSearchInput(defaultQuery);
-				setIsModalOpen(true);
 			};
 
-			const handleRandomize = () => {
-				// Extract dimensions and search query from current URL
-				let width = 800;
-				let height = 600;
-				let searchQuery = '';
-				let isPexelsImage = false;
-
-				// Try to extract from picsum.photos URL (with optional query in seed)
-				const picsumMatch = imageUrl.match(/picsum\.photos\/seed\/([^\/]+)\/(\d+)\/(\d+)/);
-				if (picsumMatch) {
-					const seed = picsumMatch[1];
-					width = picsumMatch[2];
-					height = picsumMatch[3];
-					
-					// Check if seed contains encoded search query (format: query-encoded-...)
-					if (seed.includes('query-')) {
-						const queryPart = seed.split('query-')[1];
-						if (queryPart) {
-							try {
-								searchQuery = decodeURIComponent(queryPart.split('-')[0]);
-							} catch (e) {
-								// Invalid encoding, ignore
-							}
-						}
-					}
-				}
-
-				// Check if it's a Pexels or Unsplash image
-				if (imageUrl.includes('pexels.com') || imageUrl.includes('unsplash.com')) {
-					isPexelsImage = true;
-					// Try to extract dimensions from URL or use defaults
-					const dimensionMatch = imageUrl.match(/(\d+)x(\d+)/);
-					if (dimensionMatch) {
-						width = parseInt(dimensionMatch[1]);
-						height = parseInt(dimensionMatch[2]);
-					}
-				}
-
-				// Use the input value from modal
-				const query = searchInput.trim();
-				
-				if (query) {
-					// New query entered
-					searchQuery = query;
-					// Save to localStorage
-					localStorage.setItem('gutenblock_pro_last_image_keyword', searchQuery);
-				} else {
-					// Empty input - clear search query
-					searchQuery = '';
-					// Clear from localStorage
-					localStorage.removeItem('gutenblock_pro_last_image_keyword');
-				}
-				
-				setIsModalOpen(false);
-
-				// If search query provided, use image API (if available)
-				const provider = gutenblockProCreator.imageApiProvider || 'pexels';
-				const hasPexelsKey = gutenblockProCreator.pexelsApiKey && provider === 'pexels';
-				const hasUnsplashKey = gutenblockProCreator.unsplashApiKey && provider === 'unsplash';
-				
-				if (searchQuery && (hasPexelsKey || hasUnsplashKey)) {
-					// Determine which API to use
-					const apiAction = provider === 'unsplash' 
-						? 'gutenblock_pro_search_unsplash_image'
-						: 'gutenblock_pro_search_pexels_image';
-					
-					// Search image API
-					fetch(gutenblockProCreator.ajaxUrl, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded',
-						},
-						body: new URLSearchParams({
-							action: apiAction,
-							nonce: gutenblockProCreator.adminNonce,
-							query: searchQuery,
-							width: width,
-							height: height,
-						})
-					})
-					.then(response => response.json())
-					.then(data => {
-						if (data.success && data.data && data.data.url) {
-							// Use image URL directly (these are direct image URLs, no API requests)
-							updateBlockAttributes(clientId, { url: data.data.url });
-						} else {
-							// Fallback to picsum.photos with query encoded
-							alert(data.data?.message || 'Fehler bei Bildsuche. Verwende picsum.photos als Fallback.');
-							const encodedQuery = encodeURIComponent(searchQuery).replace(/%/g, '-');
-							const seed = 'query-' + encodedQuery + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-							const newUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
-							updateBlockAttributes(clientId, { url: newUrl });
-						}
-					})
-					.catch(error => {
-						console.error('Image API error:', error);
-						alert('Fehler bei Bild-API. Verwende picsum.photos als Fallback.');
-						// Fallback to picsum.photos
-						const encodedQuery = encodeURIComponent(searchQuery).replace(/%/g, '-');
-						const seed = 'query-' + encodedQuery + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-						const newUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
-						updateBlockAttributes(clientId, { url: newUrl });
+			const selectImage = (img) => {
+				if (isCover) {
+					// core/cover uses url + id must be cleared, useFeaturedImage off
+					updateBlockAttributes(clientId, {
+						url: img.url,
+						id: undefined,
+						useFeaturedImage: false,
 					});
 				} else {
-					// No search query or no API key - use picsum.photos
-					let seed;
-					if (searchQuery) {
-						// Encode search query in seed: query-{encoded}-{random}
-						const encodedQuery = encodeURIComponent(searchQuery).replace(/%/g, '-');
-						seed = 'query-' + encodedQuery + '-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-					} else {
-						// Random seed without query
-						seed = 'random-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-					}
-
-					const newUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
-					updateBlockAttributes(clientId, { url: newUrl });
+					// core/image
+					const attrs = { url: img.url, id: undefined };
+					if (img.width)  attrs.width  = img.width;
+					if (img.height) attrs.height = img.height;
+					updateBlockAttributes(clientId, attrs);
 				}
+				setIsOpen(false);
 			};
 
 			return el(
@@ -774,60 +783,91 @@
 						ToolbarGroup,
 						null,
 						el(ToolbarButton, {
-							icon: 'update',
-							label: 'Neues zufälliges Bild',
-							onClick: openModal,
-							className: 'gutenblock-pro-randomize-image',
+							icon: 'format-image',
+							label: 'Plugin-Bild einfügen',
+							onClick: openPicker,
 						})
 					)
 				),
-				isModalOpen && el(
+				isOpen && el(
 					Modal,
 					{
-						title: 'Bild-Suchbegriff',
-						onRequestClose: () => setIsModalOpen(false),
-						className: 'gutenblock-pro-image-search-modal',
+						title: 'Plugin-Bilder',
+						onRequestClose: () => setIsOpen(false),
+						style: { maxWidth: '640px', width: '100%' },
 					},
-					el('div', { style: { marginBottom: '16px' } },
-						el(TextControl, {
-							label: 'Suchbegriff (optional)',
-							value: searchInput,
-							onChange: (value) => setSearchInput(value),
-							placeholder: 'z.B. Natur, Stadt, Business...',
-							help: 'Leer lassen für ein zufälliges Bild. Das Keyword wird gespeichert und beim nächsten Mal automatisch verwendet.',
-						}),
-						searchInput && el(
-							Button,
+					images === null
+						? el('div', { style: { textAlign: 'center', padding: '32px' } },
+							el(Spinner),
+							el('p', { style: { marginTop: 8, color: '#666' } }, 'Bilder werden geladen…')
+						  )
+						: loadError
+						? el('p', { style: { color: '#c00', padding: 16 } }, 'Fehler beim Laden der Bilder.')
+						: images.length === 0
+						? el('div', { style: { textAlign: 'center', padding: '32px', color: '#666' } },
+							el('p', null, 'Keine Bilder in assets/images/ gefunden.'),
+							el('p', { style: { fontSize: 12, marginTop: 4 } }, 'Lege Bilder im Ordner gutenblock-pro/assets/images/ ab.')
+						  )
+						: el(
+							'div',
 							{
-								isDestructive: true,
-								isSmall: true,
-								onClick: () => setSearchInput(''),
-								style: { marginTop: '8px' },
-								icon: 'dismiss',
+								style: {
+									display: 'grid',
+									gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+									gap: '10px',
+									maxHeight: '60vh',
+									overflowY: 'auto',
+									paddingRight: 4,
+								},
 							},
-							' Leeren'
-						)
-					),
-					el('div', { style: { display: 'flex', justifyContent: 'flex-end', gap: '8px' } },
-						el(Button, {
-							isSecondary: true,
-							onClick: () => setIsModalOpen(false),
-						}, 'Abbrechen'),
-						el(Button, {
-							isPrimary: true,
-							onClick: handleRandomize,
-						}, 'Bild generieren')
-					)
+							images.map((img) =>
+								el(
+									'button',
+									{
+										key: img.url,
+										title: img.name,
+										onClick: () => selectImage(img),
+										style: {
+											padding: 0,
+											border: '2px solid transparent',
+											borderRadius: 6,
+											cursor: 'pointer',
+											background: '#f0f0f0',
+											overflow: 'hidden',
+											display: 'flex',
+											flexDirection: 'column',
+											alignItems: 'stretch',
+										},
+										onMouseEnter: (e) => { e.currentTarget.style.borderColor = '#7c3aed'; },
+										onMouseLeave: (e) => { e.currentTarget.style.borderColor = 'transparent'; },
+									},
+									el('img', {
+										src: img.url,
+										alt: img.name,
+										style: { width: '100%', aspectRatio: '4/3', objectFit: 'cover', display: 'block' },
+									}),
+									el('span', {
+										style: {
+											fontSize: 11,
+											padding: '4px 6px',
+											color: '#444',
+											overflow: 'hidden',
+											textOverflow: 'ellipsis',
+											whiteSpace: 'nowrap',
+										},
+									}, img.name)
+								)
+							)
+						  )
 				)
 			);
 		};
-	}, 'withImageRandomizer');
+	}, 'withPluginImagePicker');
 
-	// Add filter to inject image randomizer button
 	addFilter(
 		'editor.BlockEdit',
-		'gutenblock-pro/image-randomizer',
-		withImageRandomizer,
+		'gutenblock-pro/plugin-image-picker',
+		withPluginImagePicker,
 		20
 	);
 

@@ -111,21 +111,6 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.',
 			'sanitize_callback' => array( $this, 'sanitize_ai_context' ),
 			'default'           => '',
 		) );
-		register_setting( 'gutenblock_pro_ai_settings', 'gutenblock_pro_pexels_api_key', array(
-			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-			'default'           => '',
-		) );
-		register_setting( 'gutenblock_pro_ai_settings', 'gutenblock_pro_unsplash_api_key', array(
-			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-			'default'           => '',
-		) );
-		register_setting( 'gutenblock_pro_ai_settings', 'gutenblock_pro_image_api_provider', array(
-			'type'              => 'string',
-			'sanitize_callback' => 'sanitize_text_field',
-			'default'           => 'pexels',
-		) );
 	}
 
 	/**
@@ -265,76 +250,6 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 								</p>
 							</td>
 						</tr>
-						<?php
-						// Only show image API settings for user "hjherbst"
-						$current_user = wp_get_current_user();
-						if ( $current_user->user_login === 'hjherbst' ) :
-						?>
-						<tr>
-							<th scope="row">
-								<label for="gutenblock_pro_image_api_provider"><?php esc_html_e( 'Bild-API Anbieter', 'gutenblock-pro' ); ?></label>
-							</th>
-							<td>
-								<select name="gutenblock_pro_image_api_provider" id="gutenblock_pro_image_api_provider">
-									<option value="pexels" <?php selected( get_option( 'gutenblock_pro_image_api_provider', 'pexels' ), 'pexels' ); ?>>
-										<?php esc_html_e( 'Pexels', 'gutenblock-pro' ); ?>
-									</option>
-									<option value="unsplash" <?php selected( get_option( 'gutenblock_pro_image_api_provider', 'pexels' ), 'unsplash' ); ?>>
-										<?php esc_html_e( 'Unsplash', 'gutenblock-pro' ); ?>
-									</option>
-								</select>
-								<p class="description">
-									<?php esc_html_e( 'Wähle den API-Anbieter für die Bildsuche. Ohne API Key wird picsum.photos verwendet.', 'gutenblock-pro' ); ?>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row">
-								<label for="gutenblock_pro_pexels_api_key"><?php esc_html_e( 'Pexels API Key', 'gutenblock-pro' ); ?></label>
-							</th>
-							<td>
-								<input type="text" 
-								       name="gutenblock_pro_pexels_api_key" 
-								       id="gutenblock_pro_pexels_api_key" 
-								       value="<?php echo esc_attr( get_option( 'gutenblock_pro_pexels_api_key', '' ) ); ?>"
-								       class="regular-text"
-								       placeholder="Pexels API Key (optional)">
-								<p class="description">
-									<?php 
-									printf(
-										/* translators: %1$s: link to pexels.com/api, %2$s: link to pexels license */
-										esc_html__( 'Optional: API Key von %1$s. Alle über die API bezogenen Bilder sind unter der Pexels-Lizenz frei verwendbar (kommerziell erlaubt, keine Attribution erforderlich). Siehe %2$s für Details.', 'gutenblock-pro' ),
-										'<a href="https://www.pexels.com/api/" target="_blank">pexels.com/api</a>',
-										'<a href="https://www.pexels.com/license/" target="_blank">Pexels-Lizenz</a>'
-									); 
-									?>
-								</p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row">
-								<label for="gutenblock_pro_unsplash_api_key"><?php esc_html_e( 'Unsplash API Key', 'gutenblock-pro' ); ?></label>
-							</th>
-							<td>
-								<input type="text" 
-								       name="gutenblock_pro_unsplash_api_key" 
-								       id="gutenblock_pro_unsplash_api_key" 
-								       value="<?php echo esc_attr( get_option( 'gutenblock_pro_unsplash_api_key', '' ) ); ?>"
-								       class="regular-text"
-								       placeholder="Unsplash Access Key (optional)">
-								<p class="description">
-									<?php 
-									printf(
-										/* translators: %1$s: link to unsplash.com/developers, %2$s: link to unsplash license */
-										esc_html__( 'Optional: Access Key von %1$s. Alle über die API bezogenen Bilder sind unter der Unsplash-Lizenz frei verwendbar. Siehe %2$s für Details.', 'gutenblock-pro' ),
-										'<a href="https://unsplash.com/developers" target="_blank">unsplash.com/developers</a>',
-										'<a href="https://unsplash.com/license" target="_blank">Unsplash-Lizenz</a>'
-									); 
-									?>
-								</p>
-							</td>
-						</tr>
-						<?php endif; ?>
 					</table>
 				</div>
 

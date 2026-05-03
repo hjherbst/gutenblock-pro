@@ -20,6 +20,9 @@ class GutenBlock_Pro_Pattern_Creator {
 	 * Initialize the pattern creator
 	 */
 	public function init() {
+		// REST endpoint for plugin images is available to all editors (not only allowed users)
+		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
+
 		// Only load for allowed users
 		if ( ! $this->is_allowed_user() ) {
 			return;
@@ -28,6 +31,72 @@ class GutenBlock_Pro_Pattern_Creator {
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_assets' ) );
 		add_action( 'wp_ajax_gutenblock_pro_create_pattern', array( $this, 'ajax_create_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_check_pattern', array( $this, 'ajax_check_pattern' ) );
+	}
+
+	/**
+	 * Register REST API routes
+	 */
+	public function register_rest_routes() {
+		register_rest_route(
+			'gutenblock-pro/v1',
+			'/plugin-images',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'rest_plugin_images' ),
+				'permission_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+	}
+
+	/**
+	 * REST: Return list of images from assets/images/
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function rest_plugin_images() {
+		$dir        = GUTENBLOCK_PRO_PATH . 'assets/images/';
+		$url_base   = GUTENBLOCK_PRO_URL  . 'assets/images/';
+		$extensions = array( 'jpg', 'jpeg', 'png', 'webp', 'svg' );
+		$images     = array();
+
+		if ( ! is_dir( $dir ) ) {
+			return rest_ensure_response( $images );
+		}
+
+		foreach ( glob( $dir . '*' ) as $file ) {
+			if ( ! is_file( $file ) ) {
+				continue;
+			}
+			$ext = strtolower( pathinfo( $file, PATHINFO_EXTENSION ) );
+			if ( ! in_array( $ext, $extensions, true ) ) {
+				continue;
+			}
+
+			$basename = basename( $file );
+			$name     = pathinfo( $file, PATHINFO_FILENAME );
+			$width    = 0;
+			$height   = 0;
+
+			// Read dimensions from filename convention: name-WIDTHxHEIGHT.ext
+			if ( preg_match( '/-(\d+)x(\d+)$/', $name, $m ) ) {
+				$width  = (int) $m[1];
+				$height = (int) $m[2];
+			}
+
+			$images[] = array(
+				'url'    => $url_base . $basename,
+				'name'   => $name,
+				'width'  => $width,
+				'height' => $height,
+			);
+		}
+
+		// Sort alphabetically by name
+		usort( $images, fn( $a, $b ) => strcmp( $a['name'], $b['name'] ) );
+
+		return rest_ensure_response( $images );
 	}
 
 	/**
@@ -80,22 +149,30 @@ class GutenBlock_Pro_Pattern_Creator {
 			$groups[] = array( 'value' => $slug, 'label' => $label );
 		}
 
-		$pexels_api_key = get_option( 'gutenblock_pro_pexels_api_key', '' );
-		$unsplash_api_key = get_option( 'gutenblock_pro_unsplash_api_key', '' );
-		$image_api_provider = get_option( 'gutenblock_pro_image_api_provider', 'pexels' );
+		// Page-Types: Ziel-Unterseite, der eine Page-Vorlage zugeordnet wird.
+		// Werte korrespondieren mit dem `page_type`-Feld in pattern.php und
+		// werden vom SaaS in /api/canvas/page/create gefiltert.
+		$page_types = array(
+			array( 'value' => '',         'label' => __( '— Keine Zuordnung (Standalone) —', 'gutenblock-pro' ) ),
+			array( 'value' => 'services', 'label' => __( 'Services Page', 'gutenblock-pro' ) ),
+			array( 'value' => 'about',    'label' => __( 'About Page', 'gutenblock-pro' ) ),
+			array( 'value' => 'blog',     'label' => __( 'Blog Post', 'gutenblock-pro' ) ),
+			array( 'value' => 'legal',    'label' => __( 'Legal / Impressum', 'gutenblock-pro' ) ),
+		);
+
 		$current_user = wp_get_current_user();
 		$is_allowed_user = ( $current_user->user_login === 'hjherbst' );
-		
+
 		wp_localize_script( 'gutenblock-pro-pattern-creator', 'gutenblockProCreator', array(
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'restUrl' => rest_url( 'gutenblock-pro/v1/' ),
+			'restNonce' => wp_create_nonce( 'wp_rest' ),
 			'nonce'   => wp_create_nonce( 'gutenblock_pro_create_pattern' ),
 			'adminNonce' => wp_create_nonce( 'gutenblock_pro_admin' ),
-			'pexelsApiKey' => $pexels_api_key,
-			'unsplashApiKey' => $unsplash_api_key,
-			'imageApiProvider' => $image_api_provider,
 			'isAllowedUser' => $is_allowed_user,
 			'currentLocale' => get_locale(),
 			'groups'  => $groups,
+			'pageTypes' => $page_types,
 			'strings' => array(
 				'menuLabel'        => __( 'Als GB Pro Pattern speichern', 'gutenblock-pro' ),
 				'modalTitle'       => __( 'GutenBlock Pro Pattern erstellen', 'gutenblock-pro' ),
@@ -107,16 +184,13 @@ class GutenBlock_Pro_Pattern_Creator {
 				'descPlaceholder'  => __( 'Kurze Beschreibung des Patterns', 'gutenblock-pro' ),
 				'keywordsLabel'    => __( 'Keywords', 'gutenblock-pro' ),
 				'keywordsPlaceholder' => __( 'hero, cta, button (kommagetrennt)', 'gutenblock-pro' ),
-				'languageLabel'    => __( 'Sprache', 'gutenblock-pro' ),
-				'languageHelp'     => __( 'Für welche Sprache ist dieser Content?', 'gutenblock-pro' ),
-				'languageDefault'  => __( 'Default (Fallback)', 'gutenblock-pro' ),
 				'typeLabel'        => __( 'Typ', 'gutenblock-pro' ),
 				'typePattern'      => __( 'Section', 'gutenblock-pro' ),
 				'typePage'         => __( 'Seite', 'gutenblock-pro' ),
 				'groupLabel'       => __( 'Gruppe', 'gutenblock-pro' ),
 				'groupNone'        => __( '— Keine Gruppe —', 'gutenblock-pro' ),
-				'replaceImagesLabel' => __( 'Lokale Bilder ersetzen', 'gutenblock-pro' ),
-				'replaceImagesHelp'  => __( 'Ersetzt Bilder aus dem Uploads-Ordner durch Placeholder (picsum.photos)', 'gutenblock-pro' ),
+				'pageTypeLabel'    => __( 'Ziel-Unterseite', 'gutenblock-pro' ),
+				'pageTypeHelp'     => __( 'Ordnet diese Seitenvorlage einer SaaS-Unterseite zu (z. B. „Services Page“). Nur sichtbar bei Typ = Seite.', 'gutenblock-pro' ),
 				'createButton'     => __( 'Pattern erstellen', 'gutenblock-pro' ),
 				'updateButton'     => __( 'Content aktualisieren', 'gutenblock-pro' ),
 				'updateMode'       => __( 'Bestehendes Pattern aktualisieren', 'gutenblock-pro' ),
@@ -128,16 +202,15 @@ class GutenBlock_Pro_Pattern_Creator {
 				'error'            => __( 'Fehler beim Erstellen des Patterns', 'gutenblock-pro' ),
 				'noBlocks'         => __( 'Bitte wähle mindestens einen Block aus.', 'gutenblock-pro' ),
 				'nameRequired'     => __( 'Bitte gib einen Namen ein.', 'gutenblock-pro' ),
-			),
-			'languages' => array(
-				array( 'value' => 'default', 'label' => __( 'Default (Fallback)', 'gutenblock-pro' ) ),
-				array( 'value' => 'de_DE', 'label' => 'Deutsch (DE)' ),
-				array( 'value' => 'en_US', 'label' => 'English (US)' ),
-				array( 'value' => 'en_GB', 'label' => 'English (UK)' ),
-				array( 'value' => 'fr_FR', 'label' => 'Français' ),
-				array( 'value' => 'es_ES', 'label' => 'Español' ),
-				array( 'value' => 'it_IT', 'label' => 'Italiano' ),
-				array( 'value' => 'nl_NL', 'label' => 'Nederlands' ),
+				'aiHintLabel'      => __( 'AI Hint', 'gutenblock-pro' ),
+				'aiHintPlaceholder' => __( 'Strukturelle Analyse (Layout, Hintergrundtyp, CTA-Variante, Medien)', 'gutenblock-pro' ),
+				'aiSuggestButton'  => __( 'Beschreibung & AI Hint mit KI generieren (EN)', 'gutenblock-pro' ),
+				'aiSuggesting'     => __( 'KI generiert…', 'gutenblock-pro' ),
+				'aiSuggestError'   => __( 'KI-Vorschlag fehlgeschlagen.', 'gutenblock-pro' ),
+				'aiNoBlocks'       => __( 'Bitte zuerst Blöcke auswählen.', 'gutenblock-pro' ),
+				'enableTonesLabel' => __( 'Tonalitäts-Varianten anbieten (Dark + Soft)', 'gutenblock-pro' ),
+				'enableTonesHelp'  => __( 'Erzeugt Dark- und Soft-Varianten dieses Patterns für FSE und SaaS.', 'gutenblock-pro' ),
+				'tonesUnsupported' => __( 'Nicht möglich: Top-Block hat Bild/Gradient als Hintergrund.', 'gutenblock-pro' ),
 			),
 		) );
 	}
@@ -152,15 +225,25 @@ class GutenBlock_Pro_Pattern_Creator {
 			wp_send_json_error( array( 'message' => 'Permission denied' ) );
 		}
 
-		$name = sanitize_text_field( $_POST['name'] );
-		$slug = sanitize_title( $_POST['slug'] );
-		$description = sanitize_text_field( $_POST['description'] );
-		$keywords = sanitize_text_field( $_POST['keywords'] );
-		$language = sanitize_text_field( $_POST['language'] );
-		$type = isset( $_POST['type'] ) ? sanitize_text_field( $_POST['type'] ) : 'pattern';
-		$group = isset( $_POST['group'] ) ? sanitize_key( $_POST['group'] ) : '';
-		$premium = isset( $_POST['premium'] ) && $_POST['premium'] === 'true';
-		$content = wp_unslash( $_POST['content'] );
+		$name        = sanitize_text_field( $_POST['name'] );
+		$slug        = sanitize_title( $_POST['slug'] );
+		$description = sanitize_textarea_field( wp_unslash( isset( $_POST['description'] ) ? $_POST['description'] : '' ) );
+		$keywords    = sanitize_text_field( isset( $_POST['keywords'] ) ? $_POST['keywords'] : '' );
+		$ai_hint     = sanitize_textarea_field( wp_unslash( isset( $_POST['ai_hint'] ) ? $_POST['ai_hint'] : '' ) );
+		$type        = isset( $_POST['type'] ) && in_array( $_POST['type'], array( 'pattern', 'page' ), true ) ? $_POST['type'] : 'pattern';
+		$group       = isset( $_POST['group'] ) ? sanitize_key( $_POST['group'] ) : '';
+		$page_type   = isset( $_POST['page_type'] ) ? sanitize_key( $_POST['page_type'] ) : '';
+		$valid_page_types = array( '', 'services', 'about', 'blog', 'legal' );
+		if ( ! in_array( $page_type, $valid_page_types, true ) ) {
+			$page_type = '';
+		}
+		// page_type ergibt nur Sinn für Pages
+		if ( $type !== 'page' ) {
+			$page_type = '';
+		}
+		$premium     = isset( $_POST['premium'] ) && $_POST['premium'] === 'true';
+		$enable_tones = isset( $_POST['enable_tones'] ) && $_POST['enable_tones'] === 'true';
+		$content     = wp_unslash( $_POST['content'] );
 
 		if ( empty( $name ) || empty( $slug ) ) {
 			wp_send_json_error( array( 'message' => 'Name and slug are required' ) );
@@ -178,12 +261,6 @@ class GutenBlock_Pro_Pattern_Creator {
 			}
 		}
 
-		// Replace local images with placeholders
-		$replace_images = isset( $_POST['replace_images'] ) && $_POST['replace_images'] === 'true';
-		if ( $replace_images ) {
-			$content = $this->replace_local_images( $content, $slug );
-		}
-
 		// Remove invalid empty-array style values that break block validation
 		$content = preg_replace( '/,"color":\[\]/', '', $content );
 		$content = preg_replace( '/"color":\[\],?/', '', $content );
@@ -199,15 +276,17 @@ class GutenBlock_Pro_Pattern_Creator {
 		// Normalize core/image blocks so they pass validation when pattern is inserted
 		$content = GutenBlock_Pro_Pattern_Loader::normalize_core_image_blocks( $content );
 
-		// Determine content filename based on language
 		$content_filename = 'content.html';
-		if ( ! empty( $language ) && $language !== 'default' ) {
-			$content_filename = 'content-' . $language . '.html';
-		}
+
+		// Auto-Detect: bei Cover/BG-Image/Gradient kann der User keine Varianten erzwingen
+		$tone_capability = GutenBlock_Pro_Tone_Injector::detect_tone_capability( $content );
+		$tones_for_pattern = ( $enable_tones && $tone_capability['supported'] )
+			? array( 'neutral', 'dark', 'soft' )
+			: array( 'neutral' );
 
 		if ( $is_new_pattern ) {
 			// Create pattern.php and asset files for NEW patterns
-			$pattern_php = $this->generate_pattern_php( $name, $description, $keywords, $type, $group, $premium );
+			$pattern_php = $this->generate_pattern_php( $name, $description, $keywords, $type, $group, $premium, $ai_hint, $tones_for_pattern, $page_type );
 			file_put_contents( $pattern_dir . '/pattern.php', $pattern_php );
 
 			$style_css = $this->generate_style_css( $name, $slug );
@@ -219,15 +298,25 @@ class GutenBlock_Pro_Pattern_Creator {
 			$script_js = $this->generate_script_js( $name, $slug );
 			file_put_contents( $pattern_dir . '/script.js', $script_js );
 		} else {
-			// Update group in existing pattern.php if provided
+			// Update all meta fields in existing pattern.php
 			$pattern_file = $pattern_dir . '/pattern.php';
 			if ( file_exists( $pattern_file ) ) {
-				$this->update_pattern_php_field( $pattern_file, 'group', $group );
+				$keywords_arr = array_values( array_filter( array_map( 'trim', explode( ',', $keywords ) ) ) );
+				$this->update_all_pattern_php_fields( $pattern_file, array(
+					'title'       => $name,
+					'description' => $description,
+					'ai_hint'     => $ai_hint,
+					'type'        => $type,
+					'group'       => $group,
+					'page_type'   => $page_type,
+					'keywords'    => $keywords_arr,
+					'premium'     => $premium,
+					'tones'       => $tones_for_pattern,
+				) );
 			}
 		}
 
-		// Create/update content file (language-specific or default)
-		// CSS and JS are preserved for existing patterns
+		// Create/update content.html — CSS und JS bleiben bei bestehenden Patterns erhalten
 		file_put_contents( $pattern_dir . '/' . $content_filename, $content );
 
 		// Determine success message
@@ -236,14 +325,13 @@ class GutenBlock_Pro_Pattern_Creator {
 		} elseif ( $is_update_mode ) {
 			$message = 'Pattern content updated. CSS/JS preserved.';
 		} else {
-			$message = 'Language version added: ' . ( $language === 'default' ? 'Default' : $language );
+			$message = 'Pattern saved';
 		}
 
 		wp_send_json_success( array(
 			'message'    => $message,
 			'slug'       => $slug,
 			'path'       => $pattern_dir,
-			'language'   => $language,
 			'file'       => $content_filename,
 			'is_update'  => ! $is_new_pattern,
 		) );
@@ -274,14 +362,25 @@ class GutenBlock_Pro_Pattern_Creator {
 		);
 
 		if ( $exists ) {
-			$pattern_file = $pattern_dir . '/pattern.php';
+			$pattern_file = function_exists( 'gutenblock_pro_resolve_pattern_php_path' )
+				? gutenblock_pro_resolve_pattern_php_path( $slug )
+				: $pattern_dir . '/pattern.php';
 			if ( file_exists( $pattern_file ) ) {
 				$pattern_data = require $pattern_file;
-				$pattern_info['title'] = isset( $pattern_data['title'] ) ? $pattern_data['title'] : $slug;
-				$pattern_info['premium'] = isset( $pattern_data['premium'] ) ? $pattern_data['premium'] : false;
-				$pattern_info['group'] = isset( $pattern_data['group'] ) ? $pattern_data['group'] : '';
+				$kw = isset( $pattern_data['keywords'] ) && is_array( $pattern_data['keywords'] )
+					? implode( ', ', $pattern_data['keywords'] )
+					: '';
+				$pattern_info['title']       = isset( $pattern_data['title'] ) ? $pattern_data['title'] : $slug;
+				$pattern_info['description'] = isset( $pattern_data['description'] ) ? $pattern_data['description'] : '';
+				$pattern_info['ai_hint']     = isset( $pattern_data['ai_hint'] ) ? $pattern_data['ai_hint'] : '';
+				$pattern_info['type']        = isset( $pattern_data['type'] ) ? $pattern_data['type'] : 'pattern';
+				$pattern_info['group']       = isset( $pattern_data['group'] ) ? $pattern_data['group'] : '';
+				$pattern_info['page_type']   = isset( $pattern_data['page_type'] ) ? $pattern_data['page_type'] : '';
+				$pattern_info['keywords']    = $kw;
+				$pattern_info['premium']     = isset( $pattern_data['premium'] ) ? (bool) $pattern_data['premium'] : false;
+				$pattern_info['tones']       = isset( $pattern_data['tones'] ) && is_array( $pattern_data['tones'] ) ? $pattern_data['tones'] : array( 'neutral' );
 			}
-			$pattern_info['has_style'] = file_exists( $pattern_dir . '/style.css' );
+			$pattern_info['has_style']  = file_exists( $pattern_dir . '/style.css' );
 			$pattern_info['has_script'] = file_exists( $pattern_dir . '/script.js' );
 		}
 
@@ -332,29 +431,67 @@ class GutenBlock_Pro_Pattern_Creator {
 	/**
 	 * Generate pattern.php content
 	 */
-	private function generate_pattern_php( $name, $description, $keywords, $type = 'pattern', $group = '', $premium = false ) {
+	/**
+	 * Liest vorhandene pattern.php, merged neue Felder hinein und schreibt sie zurück.
+	 *
+	 * @param string $file   Pfad zur pattern.php.
+	 * @param array  $fields Felder, die überschrieben werden sollen.
+	 * @return bool
+	 */
+	private function update_all_pattern_php_fields( $file, array $fields ) {
+		$data = require $file;
+		if ( ! is_array( $data ) ) {
+			$data = array();
+		}
+		$data = array_merge( $data, $fields );
+
+		$title_safe = str_replace( array( "\r", "\n", '*' ), '', (string) ( isset( $data['title'] ) ? $data['title'] : basename( dirname( $file ) ) ) );
+		$export     = var_export( $data, true );
+		$php        = "<?php\n/**\n * Pattern: {$title_safe}\n */\n\nreturn {$export};\n";
+
+		return file_put_contents( $file, $php ) !== false;
+	}
+
+	private function generate_pattern_php( $name, $description, $keywords, $type = 'pattern', $group = '', $premium = false, $ai_hint = '', $tones = array( 'neutral' ), $page_type = '' ) {
 		$keywords_array = array_map( 'trim', explode( ',', $keywords ) );
-		$keywords_php = "array( '" . implode( "', '", array_filter( $keywords_array ) ) . "' )";
-		
-		if ( empty( array_filter( $keywords_array ) ) ) {
+		$keywords_array = array_values( array_filter( $keywords_array ) );
+		$keywords_safe  = array_map( 'addslashes', $keywords_array );
+		$keywords_php   = "array( '" . implode( "', '", $keywords_safe ) . "' )";
+
+		if ( empty( $keywords_array ) ) {
 			$keywords_php = 'array()';
 		}
 
-		$group_line = $group ? "\n\t'group'       => '{$group}'," : "\n\t'group'       => '',";
-		$premium_line = $premium ? "\n\t'premium'     => true, // true = benötigt Pro Plus Lizenz für Bearbeitung" : "\n\t'premium'     => false, // true = benötigt Pro Plus Lizenz für Bearbeitung";
+		$tones_safe = array_map( 'addslashes', (array) $tones );
+		$tones_php  = "array( '" . implode( "', '", $tones_safe ) . "' )";
+
+		$name_esc    = addslashes( $name );
+		$desc_esc    = addslashes( $description );
+		$ai_hint_esc = addslashes( $ai_hint );
+		$group_line = $group ? "\n\t'group'          => '{$group}'," : "\n\t'group'          => '',";
+		$premium_line = $premium ? "\n\t'premium'        => true," : "\n\t'premium'        => false,";
+
+		// Nur für Pages (type=page) sinnvoll. Bei type=pattern wird das
+		// Feld weggelassen, damit pattern.php-Dateien sauber bleiben.
+		$page_type_line = ( $type === 'page' )
+			? "\n\t'page_type'      => '" . addslashes( (string) $page_type ) . "',"
+			: '';
 
 		return "<?php
 /**
- * Pattern: {$name}
+ * Pattern: {$name_esc}
  */
 
 return array(
-	'title'       => __( '{$name}', 'gutenblock-pro' ),
-	'description' => __( '{$description}', 'gutenblock-pro' ),
-	'type'        => '{$type}', // 'pattern' or 'page'{$group_line}
-	'categories'  => array( 'gutenblock-pro' ),
-	'keywords'    => {$keywords_php},
-	'content'     => '', // Loaded from content.html{$premium_line}
+	'title'          => '{$name_esc}',
+	'description'    => '{$desc_esc}',
+	'type'           => '{$type}',{$page_type_line}{$group_line}
+	'categories'     => array( 'gutenblock-pro' ),
+	'keywords'       => {$keywords_php},
+	'content'        => '',
+	'ai_hint'        => '{$ai_hint_esc}',
+	'tones'          => {$tones_php},
+	'content_fields' => array(),{$premium_line}
 );
 ";
 	}
@@ -447,113 +584,5 @@ return array(
 		return str_replace( ' ', '', ucwords( str_replace( '-', ' ', $slug ) ) );
 	}
 
-	/**
-	 * Replace local images with placeholder images
-	 *
-	 * @param string $content Block content
-	 * @param string $slug    Pattern slug for consistent placeholders
-	 * @return string Modified content
-	 */
-	private function replace_local_images( $content, $slug ) {
-		$site_url   = site_url();
-		$upload_dir = wp_upload_dir();
-		$upload_url = $upload_dir['baseurl'];
-
-		$url_map       = array();
-		$image_counter = 0;
-		$self          = $this;
-
-		$get_placeholder = function( $original_url ) use ( $site_url, $upload_url, $slug, $self, &$url_map, &$image_counter ) {
-			if ( strpos( $original_url, $site_url ) === false && strpos( $original_url, $upload_url ) === false ) {
-				return null;
-			}
-			if ( isset( $url_map[ $original_url ] ) ) {
-				return $url_map[ $original_url ];
-			}
-			$dimensions  = $self->extract_image_dimensions( $original_url );
-			$width       = $dimensions['width'] ?: 800;
-			$height      = $dimensions['height'] ?: 600;
-			$seed        = $slug . '-' . $image_counter;
-			$placeholder = "https://picsum.photos/seed/{$seed}/{$width}/{$height}";
-			$image_counter++;
-			$url_map[ $original_url ] = $placeholder;
-			return $placeholder;
-		};
-
-		// Replace img src attributes
-		$content = preg_replace_callback(
-			'/(<img[^>]+src=["\'])([^"\']+)(["\'][^>]*>)/i',
-			function( $matches ) use ( $get_placeholder ) {
-				$replacement = $get_placeholder( $matches[2] );
-				return $replacement ? $matches[1] . $replacement . $matches[3] : $matches[0];
-			},
-			$content
-		);
-
-		// Replace "url" in block JSON attributes (same URL gets same placeholder)
-		$content = preg_replace_callback(
-			'/"url":"([^"]+)"/',
-			function( $matches ) use ( $get_placeholder ) {
-				$replacement = $get_placeholder( $matches[1] );
-				return $replacement ? '"url":"' . $replacement . '"' : $matches[0];
-			},
-			$content
-		);
-
-		// wp-image-{n} Klasse aus <img> entfernen (wird zum führenden Leerzeichen → bereinigen)
-		$content = preg_replace( '/\bwp-image-\d+\b/', '', $content );
-		// Verbleibende Leerzeichen in class-Attributen normalisieren
-		$content = preg_replace( '/class="\s+/', 'class="', $content );
-		// size-full nicht entfernen – core/image erwartet size-{sizeSlug} am figure für Validierung
-		$content = preg_replace( '/class="\s*"/', '', $content );
-
-		// "id":{n} aus Block-JSON (z.B. core/image)
-		$content = preg_replace( '/"id":\d+,?/', '', $content );
-		// "mediaId":{n} aus core/media-text Block-JSON – löst Block-Validierungsfehler aus
-		$content = preg_replace( '/"mediaId":\d+,?/', '', $content );
-		// "mediaLink":"..." – enthält lokale Upload-/Attachment-URLs
-		$content = preg_replace( '/"mediaLink":"[^"]*",?/', '', $content );
-
-		return $content;
-	}
-
-	/**
-	 * Extract image dimensions from URL or filename
-	 *
-	 * @param string $url Image URL
-	 * @return array ['width' => int, 'height' => int]
-	 */
-	public function extract_image_dimensions( $url ) {
-		$width = 0;
-		$height = 0;
-
-		// Try to extract from WordPress-style filename (image-800x600.jpg)
-		if ( preg_match( '/-(\d+)x(\d+)\.[a-z]+$/i', $url, $matches ) ) {
-			$width = (int) $matches[1];
-			$height = (int) $matches[2];
-		}
-
-		// If no dimensions found, try to get from attachment metadata
-		$attachment_id = attachment_url_to_postid( $url );
-		if ( $attachment_id ) {
-			$metadata = wp_get_attachment_metadata( $attachment_id );
-			if ( $metadata && isset( $metadata['width'] ) && isset( $metadata['height'] ) ) {
-				$width = $metadata['width'];
-				$height = $metadata['height'];
-			}
-		}
-
-		// Limit dimensions for reasonable placeholder sizes
-		if ( $width > 1920 ) {
-			$ratio = $height / $width;
-			$width = 1920;
-			$height = round( $width * $ratio );
-		}
-
-		return array(
-			'width'  => $width,
-			'height' => $height,
-		);
-	}
 }
 

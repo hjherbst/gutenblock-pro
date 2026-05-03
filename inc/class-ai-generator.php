@@ -210,6 +210,99 @@ class GutenBlock_Pro_AI_Generator {
 				return current_user_can( 'edit_posts' );
 			},
 		) );
+
+		// Suggest pattern meta (description + ai_hint, English)
+		register_rest_route( 'gutenblock-pro/v1', '/ai/pattern-meta', array(
+			'methods'             => 'POST',
+			'callback'            => array( $this, 'api_suggest_pattern_meta' ),
+			'permission_callback' => function () {
+				return current_user_can( 'edit_posts' );
+			},
+		) );
+	}
+
+	/**
+	 * REST: Generate description + ai_hint (English) for a pattern from its block content.
+	 *
+	 * @param WP_REST_Request $request
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function api_suggest_pattern_meta( $request ) {
+		$name    = sanitize_text_field( (string) $request->get_param( 'name' ) );
+		$slug    = sanitize_title( (string) $request->get_param( 'slug' ) );
+		$type    = (string) $request->get_param( 'type' );
+		$type    = in_array( $type, array( 'pattern', 'page' ), true ) ? $type : 'pattern';
+		$content = (string) $request->get_param( 'content' );
+
+		$system = 'You analyse a WordPress block pattern by reading its block markup and produce two short English texts about its STRUCTURE ONLY.'
+			. ' NEVER describe the actual copy, niche, target audience, tone, brand or use case.'
+			. ' NEVER mention WordPress, plugins, page builders, themes or marketing claims.'
+			. ' NEVER name specific colors.'
+			. ' Always answer with strict JSON: {"description":"...","ai_hint":"..."} — no markdown, no preamble, no trailing text.'
+			. "\n\n"
+			. 'How to read the markup:'
+			. ' - <!-- wp:columns --> with several <!-- wp:column --> children = MULTI-COLUMN layout;'
+			. ' read each column\'s "width" attribute and report the ratio (e.g. 50/50, 60/40, 40/60).'
+			. ' If "width" is missing or empty on all columns, treat as equal columns (e.g. 50/50 for two columns).'
+			. ' - The column ORDER in the markup represents left-to-right placement.'
+			. ' For each column, mention what it contains (e.g. "image left, heading + paragraph + CTA right").'
+			. ' - <!-- wp:image --> placed inside the content is a CONTENT image, NOT a background.'
+			. ' Background EXISTS only when:'
+			. ' (a) the block is <!-- wp:cover --> (image / video / gradient overlay), OR'
+			. ' (b) the top-level group has "backgroundColor", "gradient" or "style.background" / "style.backgroundImage" attributes.'
+			. ' If none of these are present, write "no container background".'
+			. ' - <!-- wp:heading --> level comes from the "level" attribute (default 2).'
+			. ' - <!-- wp:buttons --> can contain multiple <!-- wp:button --> children. List EACH button separately and report its variant:'
+			. ' "filled" (default), "outline" (className contains "is-style-outline"), or "custom" (any other className).'
+			. ' - <!-- wp:gutenblock-pro/material-icon --> is an icon element. Mention "icon" if present.'
+			. ' - Other media: gallery, list, quote, accordion, table — mention if present.'
+			. "\n\n"
+			. 'Field rules:'
+			. ' "description": ≤140 chars, user-facing summary listing the visible structure (layout + main elements + button variants). Plain English, single sentence preferred.'
+			. ' "ai_hint": ≤260 chars, structural analysis. Always include in this order: (1) layout (single column / two columns 50/50 / two columns 60/40 / grid Nxcols / hero with overlay / stacked image+content), (2) container background type or "no container background", (3) per-column or per-area contents, (4) heading level(s), (5) every CTA button with its variant, (6) any extra media or icon.';
+
+		$shots = "Examples (input → JSON output):\n\n"
+			. "INPUT 1: A wp:group containing wp:columns with two wp:column. Left column has H1. Right column (width 40%) has a paragraph and one wp:button (no className).\n"
+			. "OUTPUT 1: {\"description\":\"Two-column hero (60/40) — H1 left, paragraph and filled CTA right.\",\"ai_hint\":\"Two columns 60/40 with vertical-bottom alignment; no container background; left column: H1 only; right column: paragraph and one filled CTA; no further media.\"}\n\n"
+			. "INPUT 2: A wp:group with backgroundColor=base wrapping wp:columns with two equal wp:column. Left column has wp:image (square). Right column has icon block + paragraph (eyebrow), H1, paragraph, wp:buttons with two wp:button (second has is-style-outline).\n"
+			. "OUTPUT 2: {\"description\":\"Two-column hero (50/50) — image left, eyebrow with icon, H1, paragraph and two CTAs (filled, outline) right.\",\"ai_hint\":\"Two columns 50/50 with vertical-center alignment; container background is a solid color; left column: square image; right column: icon, eyebrow paragraph, H1, paragraph, two CTAs (filled and outline); no further media.\"}\n\n"
+			. "INPUT 3: A wp:group with wp:columns 50/50 inside, then below the columns a wp:image (full width).\n"
+			. "OUTPUT 3: {\"description\":\"Stacked: two-column row (50/50) on top, full-width image below.\",\"ai_hint\":\"Stacked layout; no container background; row of two columns 50/50 (left H1, right paragraph and filled CTA), full-width content image below the columns.\"}";
+
+		$user = "Pattern name: {$name}\n"
+			. "Slug: {$slug}\n"
+			. "Type: {$type}\n\n"
+			. $shots
+			. "\n\nNOW ANALYSE THIS PATTERN. Block markup (HTML + block comments — analyse the BLOCK STRUCTURE, ignore copy):\n"
+			. ( strlen( $content ) > 8000 ? substr( $content, 0, 8000 ) : $content );
+
+		$result = $this->call_openai( $user, $system );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		$text = isset( $result['text'] ) ? trim( (string) $result['text'] ) : '';
+		// Try to extract JSON object even if model added extra text
+		if ( preg_match( '/\{[\s\S]*\}/', $text, $m ) ) {
+			$text = $m[0];
+		}
+		$decoded = json_decode( $text, true );
+		if ( ! is_array( $decoded ) ) {
+			return new WP_Error( 'ai_parse_error', __( 'AI-Antwort konnte nicht geparst werden.', 'gutenblock-pro' ), array( 'status' => 502 ) );
+		}
+
+		$description = isset( $decoded['description'] ) ? sanitize_textarea_field( (string) $decoded['description'] ) : '';
+		$ai_hint     = isset( $decoded['ai_hint'] ) ? sanitize_textarea_field( (string) $decoded['ai_hint'] ) : '';
+
+		if ( $description === '' && $ai_hint === '' ) {
+			return new WP_Error( 'ai_empty', __( 'AI-Antwort war leer.', 'gutenblock-pro' ), array( 'status' => 502 ) );
+		}
+
+		return rest_ensure_response( array(
+			'description' => $description,
+			'ai_hint'     => $ai_hint,
+			'usage'       => isset( $result['usage'] ) ? $result['usage'] : array(),
+		) );
 	}
 
 	/**
