@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.20.0
+ * Version: 1.22.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.20.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.22.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -96,7 +96,9 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-horizontal-scroll.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-media-text-stack.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-material-icons.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-translation-settings.php';
-require_once GUTENBLOCK_PRO_PATH . 'inc/class-bridge-installer.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-provisioning-wizard.php';
+/** REST: Pattern-Builder (assemble-page, Section-Ops) — MU-Bridge lädt diese Datei nicht mehr doppelt. */
+require_once GUTENBLOCK_PRO_PATH . 'includes/bridge/includes/gutenblock-pattern-builder.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-block-registry.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-grid-responsive.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-sticky-feature.php';
@@ -135,9 +137,6 @@ function gutenblock_pro_init() {
 	// Load plugin text domain
 	load_plugin_textdomain( 'gutenblock-pro', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
-	// Initialize Bridge Installer (mu-plugin)
-	GutenBlock_Pro_Bridge_Installer::get_instance();
-
 	// Initialize License System
 	GutenBlock_Pro_License::get_instance();
 
@@ -147,6 +146,9 @@ function gutenblock_pro_init() {
 	// Initialize Pattern Loader
 	$pattern_loader = new GutenBlock_Pro_Pattern_Loader();
 	$pattern_loader->init();
+
+	// Provisioning-Wizard (Tools → GutenBlock einrichten)
+	GutenBlock_Pro_Provisioning_Wizard::instance()->init();
 
 	// Initialize Asset Loader
 	$asset_loader = new GutenBlock_Pro_Asset_Loader();

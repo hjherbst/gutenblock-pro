@@ -689,7 +689,9 @@ function gutenblock_bridge_customizer_listener() {
 				metaKey: !!e.metaKey,
 				deltaX: e.deltaX,
 				deltaY: e.deltaY,
-				deltaMode: e.deltaMode
+				deltaMode: e.deltaMode,
+				clientX: e.clientX,
+				clientY: e.clientY
 			}, '*');
 		} catch (err) {}
 		// Nativen Scroll/Zoom des iframes verhindern.
@@ -1975,7 +1977,4 @@ function gutenblock_bridge_create_template_zip($timestamp, $nonce, $backup_set) 
     return true;
 }
 
-// Pattern-Registry + Page-Assembly (KI-Builder)
-if ( file_exists( __DIR__ . '/includes/gutenblock-pattern-builder.php' ) ) {
-	require_once __DIR__ . '/includes/gutenblock-pattern-builder.php';
-}
+// Pattern-Builder wird vom Haupt-Plugin (gutenblock-pro.php) geladen — vermeidet doppelte REST-Registrierung.

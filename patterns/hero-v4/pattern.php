@@ -21,8 +21,8 @@ return array (
   'content_fields' => 
   array (
     0 => 'services-1-title',
-    1 => 'h1-home',
-    2 => 'subline-home',
+    1 => 'hero-headline',
+    2 => 'hero-subline',
     3 => 'hero-cta-services',
   ),
   'tones' => 

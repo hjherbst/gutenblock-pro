@@ -720,7 +720,7 @@
 	);
 
 	/**
-	 * Plugin Image Picker — toolbar button on core/image blocks.
+	 * Plugin Image Picker — toolbar button on core/image, core/cover and core/media-text blocks.
 	 * Opens a modal with all images from the plugin's assets/images/ folder.
 	 */
 	const withPluginImagePicker = createHigherOrderComponent((BlockEdit) => {
@@ -733,7 +733,8 @@
 
 			const isCover = name === 'core/cover';
 			const isImage = name === 'core/image';
-			if (!isImage && !isCover) return el(BlockEdit, props);
+			const isMediaText = name === 'core/media-text';
+			if (!isImage && !isCover && !isMediaText) return el(BlockEdit, props);
 			if (!gutenblockProCreator.isAllowedUser) return el(BlockEdit, props);
 
 			const openPicker = () => {
@@ -761,6 +762,13 @@
 						url: img.url,
 						id: undefined,
 						useFeaturedImage: false,
+					});
+				} else if (isMediaText) {
+					// core/media-text stores external/plugin images on mediaUrl without a media library ID.
+					updateBlockAttributes(clientId, {
+						mediaUrl: img.url,
+						mediaId: undefined,
+						mediaType: 'image',
 					});
 				} else {
 					// core/image

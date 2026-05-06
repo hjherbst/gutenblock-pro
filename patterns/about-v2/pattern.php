@@ -20,9 +20,10 @@ return array (
   'ai_hint' => 'Two columns 36/64 with vertical-top alignment; container background is a solid color; left column: full-size image and small paragraph; right column: paragraph, H2, and one filled CTA; no further media.',
   'content_fields' => 
   array (
-    0 => 'about-home-headline',
-    1 => 'about-home-text-1',
-    2 => 'about-home-text-2',
+    0 => 'about-eyebrow',
+    1 => 'about-home-headline',
+    2 => 'about-home-text-1',
+    3 => 'about-home-text-2',
   ),
   'tones' => 
   array (

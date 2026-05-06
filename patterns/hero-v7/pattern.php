@@ -25,6 +25,8 @@ return array (
   ),
   'content_fields' => 
   array (
+    0 => 'hero-headline',
+    1 => 'hero-subline-short',
   ),
   'premium' => false,
 );

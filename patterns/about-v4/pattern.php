@@ -3,16 +3,31 @@
  * Pattern: About v4
  */
 
-return array(
-	'title'          => 'About v4',
-	'description'    => 'Two-column layout (50/50) — heading + paragraph + filled CTA left, image right.',
-	'type'           => 'pattern',
-	'group'          => 'about',
-	'categories'     => array( 'gutenblock-pro' ),
-	'keywords'       => array(),
-	'content'        => '',
-	'ai_hint'        => 'Two columns 50/50 with vertical-center alignment; container background is a solid color; left column: H2 heading, paragraph, and one filled CTA; right column: square image; no further media.',
-	'tones'          => array( 'neutral', 'dark', 'soft' ),
-	'content_fields' => array(),
-	'premium'        => false,
+return array (
+  'title' => 'About v4',
+  'description' => 'Full-width media-text with image left, H2, paragraph and filled CTA right.',
+  'type' => 'pattern',
+  'group' => 'about',
+  'categories' => 
+  array (
+    0 => 'gutenblock-pro',
+  ),
+  'keywords' => 
+  array (
+  ),
+  'content' => '',
+  'ai_hint' => 'Media-text layout; no container background; left area: image; right area: H2, paragraph, filled CTA; no extra media.',
+  'tones' => 
+  array (
+    0 => 'neutral',
+    1 => 'dark',
+    2 => 'soft',
+  ),
+  'content_fields' => 
+  array (
+    0 => 'about-home-headline',
+    1 => 'about-home-text-1',
+  ),
+  'premium' => false,
+  'page_type' => '',
 );

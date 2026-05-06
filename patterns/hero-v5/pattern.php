@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Hero v5',
-  'description' => 'Two-column hero (60/40) — H1 left, paragraph and filled CTA right, with a full-width image below.',
+  'description' => 'Stacked: two-column row (60/40) on top, full-width image below.',
   'type' => 'pattern',
   'group' => 'hero',
   'categories' => 
@@ -17,11 +17,11 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Stacked layout; no container background; two columns 60/40 with left column containing an H1 and right column containing a paragraph with a filled CTA; full-width image below the columns.',
+  'ai_hint' => 'Stacked layout; no container background; row of two columns 60/40 (left H1, right paragraph and outline CTA), full-width image below the columns.',
   'content_fields' => 
   array (
-    0 => 'h1-home',
-    1 => 'subline-home',
+    0 => 'hero-headline-short',
+    1 => 'hero-subline',
     2 => 'hero-cta-services',
   ),
   'tones' => 
@@ -30,4 +30,5 @@ return array (
     1 => 'dark',
     2 => 'soft',
   ),
+  'page_type' => '',
 );

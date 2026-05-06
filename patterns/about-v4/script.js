@@ -6,7 +6,7 @@
 	'use strict';
 
 	function initAboutV4() {
-		const elements = document.querySelectorAll('.gb-pattern-about-v4');
+		const elements = document.querySelectorAll('.gb-section-about-v4');
 		
 		if (!elements.length) return;
 

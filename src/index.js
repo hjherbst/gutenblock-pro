@@ -84,7 +84,7 @@ const TokenUsage = ({ usage }) => {
 };
 
 /**
- * Recursively get all blocks with content fields from a group/wrapper block
+	 * Recursively get all blocks with text field types from a group/wrapper block
  * IMPORTANT: Only processes blocks that are passed in - does NOT search the entire page
  */
 function getAllContentFields(blocks, prompts) {
@@ -104,7 +104,7 @@ function getAllContentFields(blocks, prompts) {
 			
 			const metadataName = block.attributes?.metadata?.name;
 			if (metadataName && prompts[metadataName]) {
-				// Add ALL blocks with content fields, even if they have the same fieldName
+				// Add ALL blocks with text field types, even if they have the same fieldName
 				// (because the same fieldName can appear multiple times in a group)
 				const blockText = getBlockText(block.name, block.attributes);
 				contentFields.push({
@@ -192,7 +192,7 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 	}, [prompts]);
 
 	/**
-	 * Handle content field selection
+	 * Handle text field type selection
 	 */
 	const handleFieldSelect = (fieldId) => {
 		if (!fieldId) {
@@ -324,11 +324,11 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 				<TokenUsage usage={usage} />
 			</PanelRow>
 
-			{/* Content Field Selector */}
+			{/* Text Field Type Selector */}
 			<PanelRow>
 				<div className="gb-ai-field-selector">
 					<ComboboxControl
-						label={__('Content-Feld', 'gutenblock-pro')}
+						label={__('Textfeld-Typ', 'gutenblock-pro')}
 						value={metadataName}
 						onChange={handleFieldSelect}
 						options={contentFieldOptions}
@@ -348,12 +348,12 @@ const AIPanel = ({ clientId, blockName, attributes }) => {
 			{/* Prompt Display/Edit */}
 			<PanelRow>
 				<TextareaControl
-					label={metadataName ? __('Prompt (aus Content-Feld)', 'gutenblock-pro') : __('Eigener Prompt', 'gutenblock-pro')}
+					label={metadataName ? __('Prompt (aus Textfeld-Typ)', 'gutenblock-pro') : __('Eigener Prompt', 'gutenblock-pro')}
 					value={tempPrompt}
 					onChange={setTempPrompt}
-					placeholder={__('Wähle ein Content-Feld oder schreibe einen eigenen Prompt...', 'gutenblock-pro')}
+					placeholder={__('Wähle einen Textfeld-Typ oder schreibe einen eigenen Prompt...', 'gutenblock-pro')}
 					rows={3}
-					help={metadataName ? __('Der Prompt wird aus dem Content-Feld geladen. Du kannst ihn hier temporär anpassen.', 'gutenblock-pro') : null}
+					help={metadataName ? __('Der Prompt wird aus dem Textfeld-Typ geladen. Du kannst ihn hier temporär anpassen.', 'gutenblock-pro') : null}
 					__nextHasNoMarginBottom={true}
 				/>
 			</PanelRow>
@@ -677,7 +677,7 @@ const GroupAIPanel = ({ clientId, blockName, attributes }) => {
 	useEffect(() => {
 		if (contentFields.length > 0 && !groupPrompt) {
 			const fieldNames = [...new Set(contentFields.map(f => f.fieldName))].join(', ');
-			setGroupPrompt(`Generiere passende Inhalte für alle folgenden Content-Felder: ${fieldNames}`);
+			setGroupPrompt(`Generiere passende Inhalte für alle folgenden Textfeld-Typen: ${fieldNames}`);
 		}
 	}, [contentFields, groupPrompt]);
 	
@@ -686,7 +686,7 @@ const GroupAIPanel = ({ clientId, blockName, attributes }) => {
 	 */
 	const generateGroupContent = async (feedback = null) => {
 		if (contentFields.length === 0) {
-			setError(__('Keine Content-Felder in dieser Gruppe gefunden.', 'gutenblock-pro'));
+			setError(__('Keine Textfeld-Typen in dieser Gruppe gefunden.', 'gutenblock-pro'));
 			return;
 		}
 		
@@ -753,10 +753,10 @@ const GroupAIPanel = ({ clientId, blockName, attributes }) => {
 			{/* Content Fields Overview */}
 			<PanelRow>
 				<div className="gb-ai-group-fields">
-					<strong>{__('Gefundene Content-Felder:', 'gutenblock-pro')}</strong>
+					<strong>{__('Gefundene Textfeld-Typen:', 'gutenblock-pro')}</strong>
 					{contentFields.length === 0 ? (
 						<p style={{ color: '#757575', fontSize: '12px', marginTop: '8px' }}>
-							{__('Keine Content-Felder mit metadata.name in dieser Gruppe gefunden.', 'gutenblock-pro')}
+							{__('Keine Textfeld-Typen mit metadata.name in dieser Gruppe gefunden.', 'gutenblock-pro')}
 						</p>
 					) : (
 						<ul style={{ marginTop: '8px', marginBottom: '16px', paddingLeft: '20px' }}>
@@ -776,9 +776,9 @@ const GroupAIPanel = ({ clientId, blockName, attributes }) => {
 					label={__('Gruppen-Prompt', 'gutenblock-pro')}
 					value={groupPrompt}
 					onChange={setGroupPrompt}
-					placeholder={__('Beschreibe, was für alle Content-Felder generiert werden soll...', 'gutenblock-pro')}
+					placeholder={__('Beschreibe, was für alle Textfeld-Typen generiert werden soll...', 'gutenblock-pro')}
 					rows={3}
-					help={__('Dieser Prompt wird für alle Content-Felder in der Gruppe verwendet.', 'gutenblock-pro')}
+					help={__('Dieser Prompt wird für alle Textfeld-Typen in der Gruppe verwendet.', 'gutenblock-pro')}
 					__nextHasNoMarginBottom={true}
 				/>
 			</PanelRow>
@@ -791,11 +791,11 @@ const GroupAIPanel = ({ clientId, blockName, attributes }) => {
 					disabled={isLoading || contentFields.length === 0 || !groupPrompt.trim()}
 					className="gb-ai-btn-generate"
 				>
-					{isLoading ? <Spinner /> : __('Alle Felder generieren', 'gutenblock-pro')}
+					{isLoading ? <Spinner /> : __('Alle Textfelder generieren', 'gutenblock-pro')}
 				</Button>
 				{contentFields.length === 0 && (
 					<p style={{ color: '#757575', fontSize: '12px', marginTop: '8px' }}>
-						{__('Hinweis: Füge Blöcke mit metadata.name in diese Gruppe ein, um sie hier zu sehen.', 'gutenblock-pro')}
+						{__('Hinweis: Weise Textblöcken einen Textfeld-Typ zu, um sie hier zu sehen.', 'gutenblock-pro')}
 					</p>
 				)}
 			</PanelRow>

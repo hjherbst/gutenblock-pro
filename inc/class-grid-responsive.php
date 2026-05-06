@@ -60,10 +60,11 @@ class GutenBlock_Pro_Grid_Responsive {
 			return $content;
 		}
 
-		$cols_tablet = isset( $attrs['gbpGridColsTablet'] ) ? (int) $attrs['gbpGridColsTablet'] : 0;
-		$cols_mobile = isset( $attrs['gbpGridColsMobile'] ) ? (int) $attrs['gbpGridColsMobile'] : 0;
+		$cols_desktop = isset( $layout['columnCount'] ) ? (int) $layout['columnCount'] : 0;
+		$cols_tablet  = isset( $attrs['gbpGridColsTablet'] ) ? (int) $attrs['gbpGridColsTablet'] : 0;
+		$cols_mobile  = isset( $attrs['gbpGridColsMobile'] ) ? (int) $attrs['gbpGridColsMobile'] : 0;
 
-		if ( 0 === $cols_tablet && 0 === $cols_mobile ) {
+		if ( 0 === $cols_desktop && 0 === $cols_tablet && 0 === $cols_mobile ) {
 			return $content;
 		}
 
@@ -73,6 +74,9 @@ class GutenBlock_Pro_Grid_Responsive {
 		// auch innerhalb von Spalten (ohne alignwide-Klasse) greift.
 		$sel = ".wp-block-group.is-layout-grid.{$uid}";
 
+		if ( $cols_desktop > 0 ) {
+			$rules .= "{$sel} { grid-template-columns: repeat({$cols_desktop}, minmax(0, 1fr)) !important; }";
+		}
 		if ( $cols_tablet > 0 ) {
 			$rules .= "@media (max-width: 1024px) { {$sel} { grid-template-columns: repeat({$cols_tablet}, minmax(0, 1fr)) !important; } }";
 		}

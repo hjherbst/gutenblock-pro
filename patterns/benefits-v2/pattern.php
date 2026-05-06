@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Benefits v2',
-  'description' => 'Single-column section with centered H2 heading above four vertical groups, each containing an icon, H3 heading, and paragraph.',
+  'description' => 'Full-width section with a heading and paragraph on top, followed by a four-column layout with icons, headings, and paragraphs.',
   'type' => 'pattern',
   'group' => 'benefits',
   'categories' => 
@@ -17,7 +17,7 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Single column layout; no container background; one H2 heading centered above four vertical groups; each group contains an icon, H3 heading, and paragraph; all H3 headings are level 3; no CTA buttons or additional media.',
+  'ai_hint' => 'Section layout with no container background; top area has an H2 and paragraph; four columns below (each with an icon, H3, and paragraph); all headings are level 3; no CTA buttons or extra media.',
   'content_fields' => 
   array (
     0 => 'h1-home',
@@ -29,4 +29,5 @@ return array (
     1 => 'dark',
     2 => 'soft',
   ),
+  'page_type' => '',
 );

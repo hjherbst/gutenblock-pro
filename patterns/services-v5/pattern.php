@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Services v5',
-  'description' => 'Two-column layout (32/66.66) — H2 + paragraph left, three sections with icons, headings, paragraphs, and filled CTAs right.',
+  'description' => 'Two-column layout (33/66) — image left, heading, paragraph and button right.',
   'type' => 'pattern',
   'group' => 'services',
   'categories' => 
@@ -17,7 +17,7 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Two columns 32/66.66 with vertical alignment; container background is a solid color; left column: H2 and paragraph; right column: three sections each with an icon, H3, paragraph, and filled CTA; no further media.',
+  'ai_hint' => 'Two Services. Two columns 33/66 with vertical alignment at the top; no container background; left column: image; right column: group containing heading (H2), paragraph, and one filled CTA button; includes icons in sub-groups.',
   'content_fields' => 
   array (
     0 => 'h1-home',
@@ -30,4 +30,5 @@ return array (
     1 => 'dark',
     2 => 'soft',
   ),
+  'page_type' => '',
 );

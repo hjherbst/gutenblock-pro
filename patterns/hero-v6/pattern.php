@@ -20,8 +20,8 @@ return array (
   'ai_hint' => 'Strong fit for visual brands, makers, outdoor, and event services.',
   'content_fields' => 
   array (
-    0 => 'h1-home',
-    1 => 'subline-home',
+    0 => 'hero-headline',
+    1 => 'hero-subline',
     2 => 'hero-cta-services',
   ),
 );

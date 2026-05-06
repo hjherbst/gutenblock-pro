@@ -20,8 +20,8 @@ return array (
   'ai_hint' => 'Hero layout with overlay; container background is a cover image; inner group contains a spacer, H1, paragraph, and one centered outline CTA; heading level 1; no further media.',
   'content_fields' => 
   array (
-    0 => 'h1-home-short',
-    1 => 'subline-home',
+    0 => 'hero-headline-short',
+    1 => 'hero-subline',
     2 => 'hero-cta-services',
   ),
   'tones' => 
