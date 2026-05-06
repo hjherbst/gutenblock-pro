@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GutenBlock Pro
  * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
- * Version: 1.22.0
+ * Version: 1.22.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.22.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.22.1' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -129,6 +129,41 @@ $gutenblockProUpdateChecker->setBranch( 'main' );
 $gutenblockProUpdateChecker->getVcsApi()->enableReleaseAssets();
 }
 add_action( 'plugins_loaded', 'gutenblock_pro_init_update_checker', 5 );
+
+/**
+ * Entfernt veraltete GutenBlock-MU-Bridge-Dateien, die bis 1.20.x von
+ * Canvas-/Bridge-Installationen genutzt wurden. Seit 1.22 lädt GutenBlock Pro
+ * die Pattern-Builder-REST-Routen selbst; alte MU-Dateien können sonst doppelte
+ * Routen, veraltete Preview-Scripts oder Konflikte verursachen.
+ */
+function gutenblock_pro_cleanup_legacy_mu_bridge() {
+	$done_version = (string) get_option( 'gutenblock_pro_mu_bridge_cleanup_version', '' );
+	if ( version_compare( $done_version, GUTENBLOCK_PRO_VERSION, '>=' ) ) {
+		return;
+	}
+
+	if ( ! defined( 'WPMU_PLUGIN_DIR' ) || ! is_dir( WPMU_PLUGIN_DIR ) ) {
+		update_option( 'gutenblock_pro_mu_bridge_cleanup_version', GUTENBLOCK_PRO_VERSION, false );
+		return;
+	}
+
+	$legacy_files = array(
+		'gutenblock-bridge.php',
+		'gutenblock-pattern-builder.php',
+		'gutenblock-pattern-builder.php.bak',
+		'gutenblock-opcache-reset.php',
+	);
+
+	foreach ( $legacy_files as $file ) {
+		$path = trailingslashit( WPMU_PLUGIN_DIR ) . $file;
+		if ( is_file( $path ) && is_writable( $path ) ) {
+			@unlink( $path );
+		}
+	}
+
+	update_option( 'gutenblock_pro_mu_bridge_cleanup_version', GUTENBLOCK_PRO_VERSION, false );
+}
+add_action( 'plugins_loaded', 'gutenblock_pro_cleanup_legacy_mu_bridge', 20 );
 
 /**
  * Initialize the plugin
