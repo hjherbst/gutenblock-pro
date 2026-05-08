@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Process v1',
-  'description' => 'Section with H2 title, four two-column rows (10/90) for steps, and a centered filled CTA button.',
+  'description' => 'Section with heading, four two-column rows (10/90) of numbered steps, and a centered CTA button.',
   'type' => 'pattern',
   'group' => 'process',
   'categories' => 
@@ -17,7 +17,7 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Single section layout; no container background; H2 title at the top, followed by four rows of two columns 10/90 each containing step numbers and corresponding paragraphs, and a centered filled CTA button at the bottom; no further media.',
+  'ai_hint' => 'Single section layout; no container background; contains a heading and four rows of two columns (10/90 each) with centered headings and paragraphs; heading level: H2; one centered CTA button (filled); no further media.',
   'content_fields' => 
   array (
     0 => 'h1-home',

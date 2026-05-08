@@ -1368,20 +1368,6 @@ function gutenblock_bridge_register_api() {
         )
     ));
     
-    register_rest_route('gutenblock/v1', '/version', array(
-        'methods' => 'GET',
-        'callback' => 'gutenblock_bridge_get_version',
-        'permission_callback' => '__return_true'
-    ));
-    
-    register_rest_route('gutenblock/v1', '/bridge-version', array(
-        'methods' => 'GET',
-        'callback' => function() {
-            return array('version' => '2.0.7');
-        },
-        'permission_callback' => '__return_true'
-    ));
-    
     register_rest_route('gutenblock/v1', '/clear-cache', array(
         'methods' => 'POST',
         'callback' => 'gutenblock_bridge_clear_cache',
@@ -1592,32 +1578,6 @@ function gutenblock_bridge_get_sections($request) {
     }
     
     return new WP_REST_Response($sections, 200);
-}
-
-function gutenblock_bridge_get_version() {
-    // Prüfe ob GutenBlock Pro installiert ist
-    $gutenblock_pro_version = defined('GUTENBLOCK_PRO_VERSION') ? GUTENBLOCK_PRO_VERSION : null;
-    
-    if ($gutenblock_pro_version) {
-        // GutenBlock Pro ist installiert - zeige dessen Version
-        return new WP_REST_Response(array(
-            'version' => $gutenblock_pro_version,
-            'bridge_version' => '2.0.7',
-            'php_version' => PHP_VERSION,
-            'wp_version' => get_bloginfo('version'),
-            'site_url' => get_site_url(),
-            'plugin' => 'gutenblock-pro'
-        ), 200);
-    } else {
-        // Fallback: Nur Bridge-Version (für alte Installationen)
-        return new WP_REST_Response(array(
-            'version' => '2.0.7',
-            'php_version' => PHP_VERSION,
-            'wp_version' => get_bloginfo('version'),
-            'site_url' => get_site_url(),
-            'plugin' => 'bridge-only'
-        ), 200);
-    }
 }
 
 /**
