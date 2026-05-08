@@ -2341,6 +2341,24 @@ function gutenblock_bridge_prime_frontend_styles(): void {
 		wp_common_block_scripts_and_styles();
 	}
 
+	// WICHTIG: In REST-API-Requests (z.B. Pattern Bundle Build) ist
+	// wp_is_json_request() true. WP überspringt dann in wp_render_layout_support_flag
+	// oft das Erzeugen der wp-container-* Layout-Klassen für Block-Gaps!
+	// Dies erzwingt, dass die Layout-Klassen dennoch generiert werden.
+	add_filter( 'should_load_separate_core_block_assets', '__return_true' );
+
+	// Hack für WP < 6.6: Manchmal reicht der Filter nicht, da wp_is_json_request() hart prüft.
+	// Wir maskieren kurzzeitig die JSON-Header, damit wp_is_json_request() false liefert
+	// während die Blöcke gerendert werden. Wir können das am Ende des Requests wiederherstellen,
+	// oder einfach für den Rest der PHP-Ausführung maskiert lassen, da WP-REST den Request
+	// schon fertig geparst hat.
+	if ( isset( $_SERVER['HTTP_ACCEPT'] ) && strpos( $_SERVER['HTTP_ACCEPT'], 'application/json' ) !== false ) {
+		$_SERVER['HTTP_ACCEPT'] = '*/*';
+	}
+	if ( isset( $_SERVER['CONTENT_TYPE'] ) && strpos( $_SERVER['CONTENT_TYPE'], 'application/json' ) !== false ) {
+		$_SERVER['CONTENT_TYPE'] = 'text/html';
+	}
+
 	// Lazy-Loading abschalten: Beim 2-Finger-Scroll im pan/zoom-Canvas
 	// triggert die Browser-Heuristik "Bild kommt jetzt in den Viewport" →
 	// Bild lädt nach → Section wächst um die echte Bildhöhe → Page-Layout
