@@ -14,7 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class GutenBlock_Pro_Provisioning_Wizard {
 
-	const OPTION_SAAS_BASE = 'gutenblock_pro_saas_base_url';
+	const OPTION_SAAS_BASE        = 'gutenblock_pro_saas_base_url';
+	const OPTION_IMPORT_STYLES    = 'gutenblock_pro_import_styles';
+	const OPTION_CUSTOMIZER_FONTS = 'gutenblock_pro_customizer_fonts_url';
 
 	/**
 	 * Singleton.
@@ -33,16 +35,29 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	 * Hooks.
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', array( $this, 'register_menu' ) );
+		// Späte Priorität, damit das Top-Level-Menü `gutenblock-pro` (aus
+		// class-admin-page.php) bereits registriert ist und wir als Submenu
+		// einhängen können.
+		add_action( 'admin_menu', array( $this, 'register_menu' ), 99 );
 		add_action( 'admin_init', array( $this, 'handle_submit' ) );
 		add_action( 'admin_notices', array( $this, 'maybe_notice' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_customizer_css' ), 20 );
 	}
 
 	/**
-	 * Lädt die generierte user-customizer.css aus dem Upload-Ordner.
+	 * Lädt die generierte user-customizer.css + (optional) Google-Fonts.
 	 */
 	public function enqueue_customizer_css(): void {
+		$fonts_url = get_option( self::OPTION_CUSTOMIZER_FONTS, '' );
+		if ( $fonts_url && is_string( $fonts_url ) ) {
+			wp_enqueue_style(
+				'gutenblock-provision-fonts',
+				esc_url( $fonts_url ),
+				array(),
+				null
+			);
+		}
+
 		$url = get_option( 'gutenblock_pro_customizer_css_url', '' );
 		if ( ! $url || ! is_string( $url ) ) {
 			return;
@@ -50,7 +65,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		wp_enqueue_style(
 			'gutenblock-provision-customizer',
 			esc_url( $url ),
-			array(),
+			array( 'gutenblock-provision-fonts' ),
 			(string) get_option( 'gutenblock_pro_customizer_css_ver', GUTENBLOCK_PRO_VERSION )
 		);
 	}
@@ -66,12 +81,13 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	}
 
 	/**
-	 * Menü unter Werkzeuge.
+	 * Submenu „Import" unter dem Plugin-Top-Level-Menü `gutenblock-pro`.
 	 */
 	public function register_menu(): void {
-		add_management_page(
-			'GutenBlock einrichten',
-			'GutenBlock einrichten',
+		add_submenu_page(
+			'gutenblock-pro',
+			__( 'Import', 'gutenblock-pro' ),
+			__( 'Import', 'gutenblock-pro' ),
 			'manage_options',
 			'gutenblock-provisioning',
 			array( $this, 'render_page' )
@@ -88,59 +104,128 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	}
 
 	/**
-	 * Formular & Status.
+	 * Import-Dashboard mit Karten.
 	 */
 	public function render_page(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
-		$base = get_option( self::OPTION_SAAS_BASE, self::default_saas_base() );
-		$last  = get_option( 'gutenblock_pro_last_manifest_sync', '' );
+		$base               = (string) get_option( self::OPTION_SAAS_BASE, self::default_saas_base() );
+		$last               = (string) get_option( 'gutenblock_pro_last_manifest_sync', '' );
+		$last_pages         = (int) get_option( 'gutenblock_pro_last_manifest_pages_count', 0 );
+		$styles_active      = (bool) get_option( 'gutenblock_pro_customizer_css_url', '' );
 		$can_rebuild_bundle = $this->current_user_can_rebuild_pattern_bundle();
 
-		echo '<div class="wrap"><h1>GutenBlock einrichten</h1>';
-		echo '<p>Verbinde diese WordPress-Installation mit deiner Site im GutenBlock-SaaS. Du benötigst einen Provisioning-Token aus dem Dashboard (Site → Ausliefern).</p>';
+		$this->render_admin_styles();
 
-		if ( $last ) {
-			echo '<div class="notice notice-success"><p>Letzter Sync: ' . esc_html( $last ) . '</p></div>';
-		}
+		echo '<div class="wrap gbp-import-wrap">';
+		echo '<h1 class="wp-heading-inline">' . esc_html__( 'Import aus GutenBlock-SaaS', 'gutenblock-pro' ) . '</h1>';
+		echo '<p class="description gbp-lead">' . esc_html__( 'Übernimm deine im SaaS-Editor gestaltete Site in diese WordPress-Installation: Seiten, Header/Footer, Menü und Medien.', 'gutenblock-pro' ) . '</p>';
 
-		echo '<form method="post" action="">';
-		wp_nonce_field( 'gutenblock_provision', 'gutenblock_provision_nonce' );
-		echo '<table class="form-table"><tbody>';
-
-		echo '<tr><th><label for="gutenblock_saas_base">SaaS-Basis-URL</label></th><td>';
-		echo '<input type="url" class="regular-text" id="gutenblock_saas_base" name="gutenblock_saas_base" value="' . esc_attr( $base ) . '" placeholder="https://app.gutenblock.com" />';
-		echo '<p class="description">Normalerweise nicht ändern.</p></td></tr>';
-
-		echo '<tr><th><label for="gutenblock_token">Provisioning-Token</label></th><td>';
-		echo '<input type="text" class="large-text code" id="gutenblock_token" name="gutenblock_token" value="" autocomplete="off" placeholder="64 Zeichen Hex-Token" />';
-		echo '<p class="description">Aus dem GutenBlock-Dashboard kopieren (Endpoint erzeugt auch die Manifest-URL).</p></td></tr>';
-
-		echo '</tbody></table>';
-		submit_button( 'Site importieren / aktualisieren', 'primary', 'gutenblock_provision_submit' );
-		echo '</form>';
-
-		if ( $can_rebuild_bundle ) {
-			$bundle = get_option( 'gutenblock_bridge_pattern_bundle' );
-			$built_at = is_array( $bundle ) && ! empty( $bundle['builtAt'] ) ? (string) $bundle['builtAt'] : '';
-			$count = is_array( $bundle ) && ! empty( $bundle['patterns'] ) && is_array( $bundle['patterns'] ) ? count( $bundle['patterns'] ) : 0;
-
-			echo '<hr />';
-			echo '<h2>Pattern-Bundle</h2>';
-			echo '<p>Erzeugt das statische Pattern-Bundle für den SaaS-native Canvas. Nur für den internen Admin sichtbar.</p>';
-			if ( $built_at ) {
-				echo '<p><strong>Letzter Build:</strong> ' . esc_html( $built_at ) . ' · <strong>Patterns:</strong> ' . (int) $count . '</p>';
-			} else {
-				echo '<p><strong>Status:</strong> Noch kein Bundle gebaut.</p>';
-			}
-			echo '<form method="post" action="">';
-			wp_nonce_field( 'gutenblock_rebuild_pattern_bundle', 'gutenblock_rebuild_pattern_bundle_nonce' );
-			submit_button( 'Pattern-Bundle neu bauen', 'secondary', 'gutenblock_rebuild_pattern_bundle_submit' );
-			echo '</form>';
-		}
+		// ── Karte: Status ────────────────────────────────────────────────
+		echo '<div class="gbp-card gbp-card-status">';
+		echo '<div class="gbp-card-head"><h2>' . esc_html__( 'Status', 'gutenblock-pro' ) . '</h2></div>';
+		echo '<div class="gbp-status-grid">';
+		echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Letzter Import', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $last ? esc_html( $last ) : '<em>—</em>' ) . '</span></div>';
+		echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Seiten zuletzt', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $last_pages ? (int) $last_pages : '<em>—</em>' ) . '</span></div>';
+		echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'SaaS-Styles aktiv', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $styles_active ? '<span class="gbp-pill gbp-pill-on">' . esc_html__( 'Aktiv', 'gutenblock-pro' ) . '</span>' : '<span class="gbp-pill gbp-pill-off">' . esc_html__( 'Aus', 'gutenblock-pro' ) . '</span>' ) . '</span></div>';
 		echo '</div>';
+		echo '</div>';
+
+		// ── Karte: Import-Formular ───────────────────────────────────────
+		echo '<div class="gbp-card">';
+		echo '<div class="gbp-card-head"><h2>' . esc_html__( 'Import starten', 'gutenblock-pro' ) . '</h2></div>';
+		echo '<p class="gbp-card-intro">' . esc_html__( 'Trage deinen Provisioning-Token aus dem GutenBlock-Dashboard (Site → Ausliefern) ein.', 'gutenblock-pro' ) . '</p>';
+
+		echo '<form method="post" action="" class="gbp-form">';
+		wp_nonce_field( 'gutenblock_provision', 'gutenblock_provision_nonce' );
+
+		echo '<div class="gbp-field">';
+		echo '<label for="gutenblock_token">' . esc_html__( 'Provisioning-Token', 'gutenblock-pro' ) . '</label>';
+		echo '<input type="text" class="large-text code" id="gutenblock_token" name="gutenblock_token" value="" autocomplete="off" placeholder="' . esc_attr__( '64-stelliger Hex-Token aus dem Dashboard', 'gutenblock-pro' ) . '" />';
+		echo '</div>';
+
+		echo '<div class="gbp-field">';
+		echo '<label for="gutenblock_saas_base">' . esc_html__( 'SaaS-Basis-URL', 'gutenblock-pro' ) . '</label>';
+		echo '<input type="url" class="regular-text" id="gutenblock_saas_base" name="gutenblock_saas_base" value="' . esc_attr( $base ) . '" placeholder="https://app.gutenblock.com" />';
+		echo '<p class="gbp-help">' . esc_html__( 'Normalerweise nicht ändern.', 'gutenblock-pro' ) . '</p>';
+		echo '</div>';
+
+		// Optionaler Styles-Override
+		echo '<div class="gbp-option gbp-styles-toggle">';
+		echo '<label class="gbp-checkbox">';
+		echo '<input type="checkbox" name="gutenblock_import_styles" value="1" />';
+		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Styles aus dem SaaS übernehmen', 'gutenblock-pro' ) . '</span>';
+		echo '</label>';
+		echo '<div class="gbp-warn">';
+		echo '<strong>' . esc_html__( 'Hinweis:', 'gutenblock-pro' ) . '</strong> ';
+		echo esc_html__( 'Aktiviert ersetzt diese Option Farben, Schriften (inkl. Heading-Weight) und semantische Schriftgrößen (H1–H4, Absatz) deiner Site durch die im SaaS festgelegten Werte. Diese werden als zusätzliches Stylesheet eingehängt und überschreiben Theme-Defaults via `!important`. Bestehende Block-individuelle Overrides bleiben erhalten.', 'gutenblock-pro' );
+		echo '</div>';
+		echo '</div>';
+
+		echo '<div class="gbp-actions">';
+		submit_button( __( 'Import starten', 'gutenblock-pro' ), 'primary', 'gutenblock_provision_submit', false );
+		echo '</div>';
+		echo '</form>';
+		echo '</div>';
+
+		// ── Karte: Pattern-Bundle (Admin only) ───────────────────────────
+		if ( $can_rebuild_bundle ) {
+			$bundle    = get_option( 'gutenblock_bridge_pattern_bundle' );
+			$built_at  = is_array( $bundle ) && ! empty( $bundle['builtAt'] ) ? (string) $bundle['builtAt'] : '';
+			$count     = is_array( $bundle ) && ! empty( $bundle['patterns'] ) && is_array( $bundle['patterns'] ) ? count( $bundle['patterns'] ) : 0;
+
+			echo '<div class="gbp-card gbp-card-internal">';
+			echo '<div class="gbp-card-head"><h2>' . esc_html__( 'Pattern-Bundle (intern)', 'gutenblock-pro' ) . '</h2><span class="gbp-pill gbp-pill-admin">' . esc_html__( 'Admin', 'gutenblock-pro' ) . '</span></div>';
+			echo '<p class="gbp-card-intro">' . esc_html__( 'Statisches Pattern-Bundle für den SaaS-Canvas neu bauen.', 'gutenblock-pro' ) . '</p>';
+			echo '<div class="gbp-status-grid">';
+			echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Letzter Build', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $built_at ? esc_html( $built_at ) : '<em>—</em>' ) . '</span></div>';
+			echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Patterns', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . (int) $count . '</span></div>';
+			echo '</div>';
+			echo '<form method="post" action="" class="gbp-actions">';
+			wp_nonce_field( 'gutenblock_rebuild_pattern_bundle', 'gutenblock_rebuild_pattern_bundle_nonce' );
+			submit_button( __( 'Pattern-Bundle neu bauen', 'gutenblock-pro' ), 'secondary', 'gutenblock_rebuild_pattern_bundle_submit', false );
+			echo '</form>';
+			echo '</div>';
+		}
+
+		echo '</div>';
+	}
+
+	/**
+	 * Inline-CSS für das Import-Dashboard. Klein gehalten, scoped auf
+	 * `.gbp-import-wrap`, damit es im Admin nichts anderes beeinflusst.
+	 */
+	private function render_admin_styles(): void {
+		echo '<style>'
+			. '.gbp-import-wrap{max-width:920px;}'
+			. '.gbp-import-wrap .gbp-lead{font-size:13px;color:#50575e;margin:6px 0 18px;}'
+			. '.gbp-card{background:#fff;border:1px solid #e3e5e8;border-radius:8px;padding:18px 20px;margin:0 0 16px;box-shadow:0 1px 0 rgba(0,0,0,.02);}' 
+			. '.gbp-card-head{display:flex;align-items:center;gap:10px;margin:0 0 10px;}'
+			. '.gbp-card-head h2{font-size:14px;margin:0;color:#1d2327;font-weight:600;}'
+			. '.gbp-card-intro{margin:0 0 14px;color:#50575e;font-size:13px;}'
+			. '.gbp-form .gbp-field{margin:0 0 14px;}'
+			. '.gbp-form label{display:block;font-size:12px;font-weight:600;color:#1d2327;margin-bottom:4px;}'
+			. '.gbp-form input[type=text].large-text,.gbp-form input[type=url].regular-text{width:100%;max-width:680px;}'
+			. '.gbp-help{margin:4px 0 0;font-size:12px;color:#646970;}'
+			. '.gbp-status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}'
+			. '.gbp-stat{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:#f6f7f7;border:1px solid #ebedee;border-radius:6px;}'
+			. '.gbp-stat-label{font-size:11px;color:#646970;text-transform:uppercase;letter-spacing:.04em;}'
+			. '.gbp-stat-value{font-size:13px;color:#1d2327;font-weight:600;}'
+			. '.gbp-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;}'
+			. '.gbp-pill-on{background:#dff4e3;color:#0a5d2a;}'
+			. '.gbp-pill-off{background:#f0f0f1;color:#646970;}'
+			. '.gbp-pill-admin{background:#fff3cd;color:#7a5b00;margin-left:auto;}'
+			. '.gbp-option{padding:12px 14px;border:1px dashed #d4d7da;border-radius:6px;background:#fafbfc;margin:8px 0 16px;}'
+			. '.gbp-checkbox{display:flex;align-items:center;gap:8px;cursor:pointer;}'
+			. '.gbp-checkbox-text{font-weight:600;color:#1d2327;}'
+			. '.gbp-warn{margin-top:8px;font-size:12px;color:#50575e;line-height:1.55;}'
+			. '.gbp-warn strong{color:#7a5b00;}'
+			. '.gbp-actions{margin-top:4px;}'
+			. '.gbp-card-internal{border-color:#f0d99c;background:#fffdf5;}'
+			. '.gbp-card-internal .gbp-card-head h2{color:#7a5b00;}'
+			. '</style>';
 	}
 
 	/**
@@ -222,21 +307,47 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			return;
 		}
 
+		$import_styles = ! empty( $_POST['gutenblock_import_styles'] );
+		update_option( self::OPTION_IMPORT_STYLES, $import_styles ? 1 : 0 );
+
 		$url_map = $this->import_assets( $data );
 
 		$this->apply_pages( $data, $url_map );
 		$this->apply_menu( $data );
-		$this->apply_customizer_css( $data );
+		if ( $import_styles ) {
+			$this->apply_customizer_css( $data );
+		} else {
+			$this->clear_customizer_css();
+		}
 		$this->apply_header_footer_options( $data );
 
+		$pages_count = isset( $data['pages'] ) && is_array( $data['pages'] ) ? count( $data['pages'] ) : 0;
 		update_option( 'gutenblock_pro_last_manifest_sync', current_time( 'mysql' ) );
+		update_option( 'gutenblock_pro_last_manifest_pages_count', $pages_count );
 
 		add_action(
 			'admin_notices',
-			function () {
-				echo '<div class="notice notice-success"><p>Site erfolgreich aus dem SaaS übernommen.</p></div>';
+			function () use ( $pages_count, $import_styles ) {
+				$msg = sprintf(
+					/* translators: 1: pages count, 2: styles state */
+					esc_html__( 'Import erfolgreich. Seiten: %1$d · Styles: %2$s', 'gutenblock-pro' ),
+					(int) $pages_count,
+					$import_styles ? esc_html__( 'aus SaaS übernommen', 'gutenblock-pro' ) : esc_html__( 'unverändert', 'gutenblock-pro' )
+				);
+				echo '<div class="notice notice-success"><p>' . $msg . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 		);
+	}
+
+	/**
+	 * Entfernt die generierte Customizer-CSS-Verknüpfung, damit der Theme-
+	 * Default wieder greift. Die Datei selbst wird nicht gelöscht (idempotent),
+	 * lediglich nicht mehr enqueued.
+	 */
+	private function clear_customizer_css(): void {
+		delete_option( 'gutenblock_pro_customizer_css_url' );
+		delete_option( 'gutenblock_pro_customizer_css_ver' );
+		delete_option( self::OPTION_CUSTOMIZER_FONTS );
 	}
 
 	/**
@@ -587,7 +698,9 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	}
 
 	/**
-	 * Customizer als CSS-Datei in uploads (einfache Variablen).
+	 * Customizer als CSS-Datei in uploads (Farben, Schriften, Gewicht,
+	 * semantische Schriftgrößen). Google-Fonts-URL wird separat als Option
+	 * gespeichert und beim Frontend-Enqueue zuerst geladen.
 	 *
 	 * @param array $manifest Manifest.
 	 */
@@ -595,22 +708,70 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		if ( empty( $manifest['customizer'] ) || ! is_array( $manifest['customizer'] ) ) {
 			return;
 		}
-		$c = $manifest['customizer'];
-		$colors = isset( $c['colors'] ) && is_array( $c['colors'] ) ? $c['colors'] : array();
+		$c        = $manifest['customizer'];
+		$colors   = isset( $c['colors'] ) && is_array( $c['colors'] ) ? $c['colors'] : array();
+		$fonts    = isset( $c['fonts'] ) && is_array( $c['fonts'] ) ? $c['fonts'] : array();
+		$semantic = isset( $c['semanticFontSizes'] ) && is_array( $c['semanticFontSizes'] ) ? $c['semanticFontSizes'] : array();
 
-		$css  = "/* GutenBlock SaaS Customizer */\n:root {\n";
+		$lines = array();
+		$lines[] = '/* GutenBlock SaaS Customizer – generated ' . gmdate( 'c' ) . ' */';
+
+		// Farben
 		$mapc = array(
 			'base'     => '--wp--preset--color--base',
 			'contrast' => '--wp--preset--color--contrast',
 			'primary'  => '--wp--preset--color--primary',
 			'tertiary' => '--wp--preset--color--tertiary',
 		);
+		$color_rules = array();
 		foreach ( $mapc as $k => $var ) {
 			if ( ! empty( $colors[ $k ] ) ) {
-				$css .= '  ' . $var . ': ' . esc_attr( (string) $colors[ $k ] ) . ";\n";
+				$color_rules[] = '  ' . $var . ': ' . esc_attr( (string) $colors[ $k ] ) . ';';
 			}
 		}
-		$css .= "}\n";
+		if ( $color_rules ) {
+			$lines[] = ':root {';
+			$lines   = array_merge( $lines, $color_rules );
+			$lines[] = '}';
+		}
+
+		// Schriften
+		$heading_family = isset( $fonts['heading'] ) ? trim( (string) $fonts['heading'] ) : '';
+		$body_family    = isset( $fonts['body'] ) ? trim( (string) $fonts['body'] ) : '';
+		$heading_weight = isset( $fonts['headingWeight'] ) ? (int) $fonts['headingWeight'] : 0;
+
+		$heading_sel = 'h1, h2, h3, h4, h5, h6, .wp-block-heading, .wp-block-post-title';
+		$body_sel    = 'body, p, li, blockquote, .wp-block-paragraph, .wp-block-list';
+
+		if ( $body_family ) {
+			$lines[] = $body_sel . ' { font-family: ' . $this->safe_font_family( $body_family ) . ' !important; }';
+		}
+		if ( $heading_family ) {
+			$lines[] = $heading_sel . ' { font-family: ' . $this->safe_font_family( $heading_family ) . ' !important; }';
+		}
+		if ( $heading_weight >= 100 && $heading_weight <= 900 ) {
+			$lines[] = $heading_sel . ' { font-weight: ' . $heading_weight . ' !important; }';
+		}
+
+		// Semantische Schriftgrößen (CSS-Werte, üblicherweise `var(--wp--preset--font-size--*)` oder `clamp(...)`)
+		$size_map = array(
+			'h1' => 'h1, h1.wp-block-heading',
+			'h2' => 'h2, h2.wp-block-heading',
+			'h3' => 'h3, h3.wp-block-heading',
+			'h4' => 'h4, h4.wp-block-heading',
+			'p'  => 'p, .wp-block-paragraph',
+		);
+		foreach ( $size_map as $key => $sel ) {
+			if ( ! empty( $semantic[ $key ] ) ) {
+				$value = (string) $semantic[ $key ];
+				// Nur ungefährliche Zeichen erlauben.
+				if ( preg_match( '/^[A-Za-z0-9\\.\\(\\)\\-\\,\\s%#_\\*\\/]+$/', $value ) ) {
+					$lines[] = $sel . ' { font-size: ' . $value . ' !important; }';
+				}
+			}
+		}
+
+		$css = implode( "\n", $lines ) . "\n";
 
 		$upload = wp_upload_dir();
 		if ( ! empty( $upload['error'] ) ) {
@@ -627,6 +788,25 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		$url = trailingslashit( $upload['baseurl'] ) . 'gutenblock-pro/user-customizer.css';
 		update_option( 'gutenblock_pro_customizer_css_url', $url );
 		update_option( 'gutenblock_pro_customizer_css_ver', (string) time() );
+
+		// Google-Fonts separat enqueuen (besser als @import).
+		$gf_url = isset( $fonts['googleFontsUrl'] ) ? trim( (string) $fonts['googleFontsUrl'] ) : '';
+		if ( $gf_url && preg_match( '#^https?://fonts\\.googleapis\\.com/#i', $gf_url ) ) {
+			update_option( self::OPTION_CUSTOMIZER_FONTS, $gf_url );
+		} else {
+			delete_option( self::OPTION_CUSTOMIZER_FONTS );
+		}
+	}
+
+	/**
+	 * Sanitisiert einen `font-family`-Wert für CSS-Output.
+	 *
+	 * @param string $family Familie ggf. mit Fallback (Comma-Liste).
+	 * @return string
+	 */
+	private function safe_font_family( string $family ): string {
+		$clean = preg_replace( '/[<>{};]+/', '', $family );
+		return is_string( $clean ) ? $clean : '';
 	}
 
 	/**

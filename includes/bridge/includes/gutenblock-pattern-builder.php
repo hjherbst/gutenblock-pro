@@ -1856,6 +1856,48 @@ function gutenblock_bridge_rest_patterns_bundle_rebuild( WP_REST_Request $reques
 }
 
 /**
+ * Liest aus dem gemergten theme.json (Global Styles) die fontSize-Vorgaben
+ * für H1–H3 sowie die Root-Fließtextgröße (für Absatz / Body in der Sidebar).
+ *
+ * @return array{h1: ?string, h2: ?string, h3: ?string, p: ?string}
+ */
+function gutenblock_bridge_get_semantic_font_sizes_from_theme() {
+	$out = array(
+		'h1' => null,
+		'h2' => null,
+		'h3' => null,
+		'p'  => null,
+	);
+	if ( ! class_exists( 'WP_Theme_JSON_Resolver' ) ) {
+		return $out;
+	}
+	$merged = WP_Theme_JSON_Resolver::get_merged_data();
+	if ( ! $merged || ! is_callable( array( $merged, 'get_raw_data' ) ) ) {
+		return $out;
+	}
+	$data = $merged->get_raw_data();
+	if ( ! is_array( $data ) || empty( $data['styles'] ) || ! is_array( $data['styles'] ) ) {
+		return $out;
+	}
+	$styles   = $data['styles'];
+	$elements = ( isset( $styles['elements'] ) && is_array( $styles['elements'] ) ) ? $styles['elements'] : array();
+	$pick_fs  = static function ( $elements, $el ) {
+		if ( empty( $elements[ $el ]['typography']['fontSize'] ) ) {
+			return null;
+		}
+		$fs = $elements[ $el ]['typography']['fontSize'];
+		return is_string( $fs ) && $fs !== '' ? $fs : null;
+	};
+	foreach ( array( 'h1', 'h2', 'h3' ) as $tag ) {
+		$out[ $tag ] = $pick_fs( $elements, $tag );
+	}
+	if ( ! empty( $styles['typography']['fontSize'] ) && is_string( $styles['typography']['fontSize'] ) ) {
+		$out['p'] = $styles['typography']['fontSize'];
+	}
+	return $out;
+}
+
+/**
  * Baut ein statisches Bundle aus Pattern-Metadaten und gerendertem Pattern-HTML.
  * Dynamische Patterns werden in diesem MVP nicht speziell behandelt.
  *
@@ -1949,15 +1991,16 @@ function gutenblock_bridge_build_patterns_bundle() {
 	$globals['inline'] .= "\n" . gutenblock_bridge_collect_inline_styles_after_render();
 
 	return array(
-		'schemaVersion'   => 'pattern-bundle-v1',
-		'pluginVersion'   => (string) $ver,
-		'builtAt'         => gmdate( 'c' ),
-		'baseUrl'         => home_url(),
-		'pluginUrl'       => $plugin_url,
-		'globalCssHrefs'  => $globals['hrefs'],
-		'globalInlineCss' => $globals['inline'],
-		'groupOrder'      => gutenblock_bridge_rest_get_group_order()->get_data(),
-		'patterns'        => $patterns,
+		'schemaVersion'     => 'pattern-bundle-v1',
+		'pluginVersion'     => (string) $ver,
+		'builtAt'           => gmdate( 'c' ),
+		'baseUrl'           => home_url(),
+		'pluginUrl'         => $plugin_url,
+		'globalCssHrefs'    => $globals['hrefs'],
+		'globalInlineCss'   => $globals['inline'],
+		'semanticFontSizes' => gutenblock_bridge_get_semantic_font_sizes_from_theme(),
+		'groupOrder'        => gutenblock_bridge_rest_get_group_order()->get_data(),
+		'patterns'          => $patterns,
 	);
 }
 

@@ -461,28 +461,6 @@ function gutenblock_bridge_customizer_listener() {
 		strong: '30px'
 	};
 
-	// Heading-Größen-Skala: small / medium / standard (=null, theme bleibt).
-	// Werte sind clamp() für responsive Skalierung.
-	var HEADING_SIZES = {
-		small: {
-			h1: 'clamp(1.6rem, 4vw + 0.4rem, 2.4rem)',
-			h2: 'clamp(1.35rem, 3.2vw + 0.3rem, 1.9rem)',
-			h3: 'clamp(1.15rem, 2.6vw + 0.25rem, 1.55rem)',
-			h4: 'clamp(1.05rem, 2.2vw + 0.2rem, 1.3rem)',
-			h5: 'clamp(1rem, 1.8vw + 0.15rem, 1.15rem)',
-			h6: '0.9rem'
-		},
-		medium: {
-			h1: 'clamp(2rem, 4.5vw + 0.5rem, 3.2rem)',
-			h2: 'clamp(1.6rem, 3.5vw + 0.4rem, 2.4rem)',
-			h3: 'clamp(1.35rem, 2.8vw + 0.3rem, 1.9rem)',
-			h4: 'clamp(1.2rem, 2.4vw + 0.25rem, 1.6rem)',
-			h5: 'clamp(1.05rem, 1.9vw + 0.18rem, 1.3rem)',
-			h6: '1rem'
-		},
-		standard: null
-	};
-
 	function ensureEl(tag, id) {
 		var el = document.getElementById(id);
 		if (!el) {
@@ -515,30 +493,31 @@ function gutenblock_bridge_customizer_listener() {
 			}
 			if (payload.fonts.heading) {
 				var headingDecl = 'font-family: ' + payload.fonts.heading + ' !important;';
-				if (payload.fonts.headingWeight) {
-					headingDecl += ' font-weight: ' + parseInt(payload.fonts.headingWeight, 10) + ' !important;';
-				}
 				lines.push('h1, h2, h3, h4, h5, h6, .wp-block-heading, .wp-block-post-title, .wp-block-site-title, .wp-block-query-title { ' + headingDecl + ' }');
 			}
+			// Globale Schriftstärke (font-weight) für alle Headings.
+			if (typeof payload.fonts.headingWeight === 'number' && isFinite(payload.fonts.headingWeight)) {
+				var w = Math.round(payload.fonts.headingWeight);
+				if (w >= 100 && w <= 1000) {
+					lines.push('h1, h2, h3, h4, h5, h6, .wp-block-heading, .wp-block-post-title, .wp-block-site-title, .wp-block-query-title { font-weight: ' + w + ' !important; }');
+				}
+			}
+		}
 
-			// Heading-Größen-Skala: skaliert h1–h6 proportional. 'default' = kein Override.
-			var scale = payload.fonts.headingScale;
-			var sizes = scale && HEADING_SIZES[scale];
-			if (sizes) {
-				['h1','h2','h3','h4','h5','h6'].forEach(function(tag) {
-					var size = sizes[tag];
-					if (!size) return;
-					// Auch core-Heading-Block + WP-Heading-Klassen abdecken.
-					lines.push(
-						tag + ', ' +
-						'.wp-block-heading.wp-block-heading-' + tag + ', ' +
-						tag + '.wp-block-heading, ' +
-						tag + '.wp-block-post-title, ' +
-						tag + '.wp-block-site-title, ' +
-						tag + '.wp-block-query-title ' +
-						'{ font-size: ' + size + ' !important; }'
-					);
-				});
+		// 2b) Semantische Schriftgrößen (H1–H3, Absatz) — Overrides aus dem SaaS-Customizer.
+		if (payload.semanticFontSizes && typeof payload.semanticFontSizes === 'object') {
+			var sem = payload.semanticFontSizes;
+			function headingSizeSel(tag) {
+				return tag + ', .wp-block-heading.wp-block-heading-' + tag + ', ' + tag + '.wp-block-heading, ' + tag + '.wp-block-post-title, ' + tag + '.wp-block-site-title, ' + tag + '.wp-block-query-title';
+			}
+			['h1','h2','h3','h4'].forEach(function(tag) {
+				var v = sem[tag];
+				if (typeof v === 'string' && v.trim()) {
+					lines.push(headingSizeSel(tag) + ' { font-size: ' + v.trim() + ' !important; }');
+				}
+			});
+			if (typeof sem.p === 'string' && sem.p.trim()) {
+				lines.push('p, .wp-block-paragraph { font-size: ' + sem.p.trim() + ' !important; }');
 			}
 		}
 
