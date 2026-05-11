@@ -409,6 +409,52 @@ class GutenBlock_Pro_Pattern_Loader {
 	}
 
 	/**
+	 * Re-hostet alle absoluten URLs auf Plugin-Assets (`/wp-content/plugins/gutenblock-pro/...`)
+	 * auf die aktuelle Plugin-Installation.
+	 *
+	 * Hintergrund: `content.html`-Dateien werden häufig via Copy-Paste aus dem FSE einer
+	 * konkreten WP-Instanz (z. B. `patterns.gutenblock.com`) ins Repo übernommen. Damit
+	 * würde jeder User des Plugins die Demo-Bilder dauerhaft vom Ursprungsserver laden.
+	 * Dieser Helper sorgt dafür, dass beim Pattern-Register / Bundle-Build der jeweilige
+	 * Plugin-Pfad der lokalen WP-Installation eingesetzt wird – egal, welche Host-Domain
+	 * im Quelldokument steht.
+	 *
+	 * Erkennt auch den Platzhalter `__PLUGIN_URL__` (für künftige host-agnostische
+	 * Pattern-Files).
+	 *
+	 * Idempotent: Auf der Ursprungs-Instanz selbst ist der Replace ein No-op.
+	 *
+	 * @param string $content
+	 * @return string
+	 */
+	public static function normalize_plugin_asset_urls( $content ) {
+		if ( ! is_string( $content ) || $content === '' ) {
+			return $content;
+		}
+		if ( ! defined( 'GUTENBLOCK_PRO_FILE' ) ) {
+			return $content;
+		}
+
+		$base = rtrim( plugins_url( '', GUTENBLOCK_PRO_FILE ), '/' );
+
+		if ( strpos( $content, '__PLUGIN_URL__' ) !== false ) {
+			$content = str_replace( '__PLUGIN_URL__', $base, $content );
+		}
+
+		if ( strpos( $content, '/wp-content/plugins/gutenblock-pro/' ) === false ) {
+			return $content;
+		}
+
+		return preg_replace_callback(
+			'#https?://[^\s"\'<>]+?/wp-content/plugins/gutenblock-pro/([^\s"\'<>]+)#i',
+			function ( $m ) use ( $base ) {
+				return $base . '/' . $m[1];
+			},
+			$content
+		);
+	}
+
+	/**
 	 * Normalize core/image blocks so they pass block validation when inserted.
 	 * Ensures: url/alt in block comment, figure has wp-block-image and size-{sizeSlug} class.
 	 *
@@ -416,6 +462,7 @@ class GutenBlock_Pro_Pattern_Loader {
 	 * @return string Normalized content
 	 */
 	public static function normalize_core_image_blocks( $content ) {
+		$content = self::normalize_plugin_asset_urls( $content );
 		if ( strpos( $content, 'wp:image' ) === false ) {
 			return $content;
 		}

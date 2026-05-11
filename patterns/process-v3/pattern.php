@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Process v3',
-  'description' => 'Process section variant 3.',
+  'description' => 'Single section with centered H2, followed by four two-column rows (6/66.66) for steps.',
   'type' => 'pattern',
   'group' => 'process',
   'categories' => 
@@ -17,10 +17,17 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Good for longer journeys and multi-step funnels.',
+  'ai_hint' => 'Single section layout; no container background; centered H2; four rows of two columns (6/66.66) each containing a step number (paragraph) and a step title (H3) with a description (paragraph); no buttons or extra media.',
   'content_fields' => 
   array (
     0 => 'h1-home',
     1 => 'subline-home',
+  ),
+  'page_type' => '',
+  'tones' => 
+  array (
+    0 => 'neutral',
+    1 => 'dark',
+    2 => 'soft',
   ),
 );

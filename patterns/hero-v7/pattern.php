@@ -29,4 +29,5 @@ return array (
     1 => 'hero-subline-short',
   ),
   'premium' => false,
+  'page_type' => '',
 );

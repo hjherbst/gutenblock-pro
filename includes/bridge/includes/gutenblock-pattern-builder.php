@@ -235,6 +235,9 @@ function gutenblock_bridge_rest_assemble_page( WP_REST_Request $request ) {
 		}
 
 		$chunk = file_get_contents( $html_file );
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$chunk = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $chunk );
+		}
 
 		// Ton injizieren
 		if ( $tone !== 'neutral' && class_exists( 'GutenBlock_Pro_Tone_Injector' ) ) {
@@ -656,6 +659,9 @@ function gutenblock_bridge_load_pattern_html( $base_slug, $tone = 'neutral' ) {
 	}
 
 	$chunk = file_get_contents( $html_file );
+	if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+		$chunk = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $chunk );
+	}
 	if ( $tone !== 'neutral' && class_exists( 'GutenBlock_Pro_Tone_Injector' ) ) {
 		$chunk = GutenBlock_Pro_Tone_Injector::inject( $chunk, $tone );
 	}
@@ -958,6 +964,9 @@ function gutenblock_bridge_build_page_content( $slug, $pattern_data ) {
 				return new WP_Error( 'unknown_pattern', 'Unbekanntes Sub-Pattern: ' . $base_slug, array( 'status' => 400 ) );
 			}
 			$chunk = file_get_contents( $html_file );
+			if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+				$chunk = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $chunk );
+			}
 			if ( $tone !== 'neutral' && class_exists( 'GutenBlock_Pro_Tone_Injector' ) ) {
 				$chunk = GutenBlock_Pro_Tone_Injector::inject( $chunk, $tone );
 			}
@@ -969,7 +978,11 @@ function gutenblock_bridge_build_page_content( $slug, $pattern_data ) {
 	// Variante 2: content.html der Vorlage selbst
 	$html_file = $plugin_dir . 'patterns/' . $slug . '/content.html';
 	if ( is_readable( $html_file ) ) {
-		return trim( file_get_contents( $html_file ) );
+		$html = (string) file_get_contents( $html_file );
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$html = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $html );
+		}
+		return trim( $html );
 	}
 	return new WP_Error( 'no_content', 'Vorlage hat weder page_patterns noch content.html: ' . $slug, array( 'status' => 500 ) );
 }
@@ -1770,6 +1783,9 @@ function gutenblock_bridge_rest_pattern_template( WP_REST_Request $request ) {
 		return new WP_Error( 'unknown_pattern', 'Pattern nicht gefunden: ' . $base_slug, array( 'status' => 404 ) );
 	}
 	$markup = file_get_contents( $html_file );
+	if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+		$markup = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $markup );
+	}
 	if ( $tone !== 'neutral' && class_exists( 'GutenBlock_Pro_Tone_Injector' ) ) {
 		$markup = GutenBlock_Pro_Tone_Injector::inject( $markup, $tone );
 	}
@@ -1933,6 +1949,9 @@ function gutenblock_bridge_build_patterns_bundle() {
 		}
 
 		$markup = (string) file_get_contents( $html_file );
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$markup = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $markup );
+		}
 		$blocks = parse_blocks( $markup );
 		$slots = array();
 		gutenblock_bridge_walk_inject_text_slot_markers( $blocks, $slots );

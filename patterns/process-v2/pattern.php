@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Process v2',
-  'description' => 'Single-column layout — centered H2 heading, four vertical groups, each with H2, separator, H3 and paragraph, plus a centered button.',
+  'description' => 'Single-column layout with a centered heading, four process steps, and a centered CTA button.',
   'type' => 'pattern',
   'group' => 'process',
   'categories' => 
@@ -16,7 +16,7 @@ return array (
   array (
   ),
   'content' => '',
-  'ai_hint' => 'Single column layout; no container background; top section: centered H2; four vertical groups each containing H2, a separator, H3, and a centered paragraph; one centered button (filled); no extra media or icons.',
+  'ai_hint' => 'Single column layout; no container background; contains a centered heading (H2), four groups each with a number (H2), separator, centered H3 heading, and centered paragraph; contains one centered button (filled) at the bottom.',
   'tones' => 
   array (
     0 => 'neutral',

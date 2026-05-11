@@ -28,4 +28,5 @@ return array (
   array (
     0 => 'neutral',
   ),
+  'page_type' => '',
 );
