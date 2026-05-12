@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Hero v5',
-  'description' => 'Stacked: two-column row (60/40) on top, full-width image below.',
+  'description' => 'Two-column hero (60/40) — H1 left, paragraph and filled CTA right, with a full-width image below.',
   'type' => 'pattern',
   'group' => 'hero',
   'categories' => 
@@ -17,7 +17,7 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Stacked layout; no container background; row of two columns 60/40 (left H1, right paragraph and outline CTA), full-width image below the columns.',
+  'ai_hint' => 'Two columns 60/40 with vertical-bottom alignment; no container background; left column: H1 only; right column: paragraph and one filled CTA; below the columns, a full-width content image.',
   'content_fields' => 
   array (
     0 => 'hero-headline-short',

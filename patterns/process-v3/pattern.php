@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Process v3',
-  'description' => 'Single section with centered H2, followed by four two-column rows (6/66.66) for steps.',
+  'description' => 'Four-column layout (6/66.66) — numbered steps with headings and paragraphs.',
   'type' => 'pattern',
   'group' => 'process',
   'categories' => 
@@ -17,7 +17,7 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Single section layout; no container background; centered H2; four rows of two columns (6/66.66) each containing a step number (paragraph) and a step title (H3) with a description (paragraph); no buttons or extra media.',
+  'ai_hint' => 'Grid layout with four columns (6% for number and 66.66% for heading + paragraph) in alternating rows; no container background; each column contains a paragraph for the number and a heading (level 3) with a paragraph; no buttons or extra media.',
   'content_fields' => 
   array (
     0 => 'h1-home',
