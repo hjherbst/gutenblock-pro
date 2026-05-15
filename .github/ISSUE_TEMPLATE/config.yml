@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GutenBlock SaaS support
+    url: https://gutenblock.com
+    about: For SaaS questions (account, billing, hosting export) please use the GutenBlock support channels.
+  - name: Security disclosure
+    url: https://github.com/hjherbst/gutenblock-pro/security/advisories/new
+    about: Report a vulnerability privately via GitHub security advisories.

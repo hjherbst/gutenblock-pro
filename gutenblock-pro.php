@@ -1,11 +1,15 @@
 <?php
 /**
  * Plugin Name: GutenBlock Pro
- * Description: Professional block patterns with conditional CSS/JS loading for the Full Site Editor.
+ * Plugin URI: https://github.com/hjherbst/gutenblock-pro
+ * Description: Professional block patterns and Full Site Editor building blocks – also acts as the import bridge for the GutenBlock SaaS website builder.
  * Version: 1.24.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
+ * Author URI: https://gutenblock.com
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: gutenblock-pro
  * Domain Path: /languages
  *

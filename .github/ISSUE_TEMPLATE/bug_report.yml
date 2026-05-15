@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a problem with GutenBlock Pro
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+      placeholder: When I click ... I expected ... but got ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps that consistently trigger the bug.
+      placeholder: |
+        1. Activate the plugin
+        2. Open page X
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: GutenBlock Pro version
+      placeholder: "1.24.0"
+    validations:
+      required: true
+  - type: input
+    id: wp-version
+    attributes:
+      label: WordPress version
+      placeholder: "6.6.2"
+    validations:
+      required: true
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP version
+      placeholder: "8.2"
+  - type: input
+    id: theme
+    attributes:
+      label: Active theme
+      placeholder: "Twenty Twenty-Four"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console / PHP error log
+      render: shell
