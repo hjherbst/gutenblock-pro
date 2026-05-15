@@ -30,4 +30,5 @@ return array (
     1 => 'dark',
     2 => 'soft',
   ),
+  'page_type' => '',
 );

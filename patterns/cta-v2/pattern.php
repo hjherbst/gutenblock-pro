@@ -27,4 +27,5 @@ return array (
   array (
   ),
   'premium' => false,
+  'page_type' => '',
 );
