@@ -1,21 +1,15 @@
 /**
  * GutenBlock Pro - Button Arrow Circle (Pill with circle arrow icon)
  */
-
-/* `!important` shields the variant from the theme.json compiled
-   :root :where(.wp-element-button, .wp-block-button__link) defaults
-   that WordPress re-emits after our plugin styles. Without it the
-   Default-pill-background bleeds through in headless renderers
-   (GutenBlock SaaS canvas) where the cascade order is uncertain. */
 .wp-block-button.is-style-button-arrow-circle .wp-block-button__link {
 	position: relative;
-	display: inline-block !important;
-	background-color: transparent !important;
-	background-image: none !important;
-	color: black !important;
-	padding: 0.75em 5em 0.75em 1.25em !important;
-	border: 1px solid #333 !important;
-	border-radius: 999px !important;
+	display: inline-block;
+	background-color: transparent;
+	background-image: none;
+	color: black;
+	padding: 0.75em 5em 0.75em 1.25em;
+	border: 1px solid #333;
+	border-radius: 999px;
 	text-decoration: none;
 	transition: all 0.3s ease;
 	overflow: hidden;
