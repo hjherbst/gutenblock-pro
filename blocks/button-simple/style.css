@@ -2,18 +2,24 @@
  * GutenBlock Pro - Button Simple (Text + Arrow)
  */
 
+/* `!important` shields the variant from the theme.json compiled
+   :root :where(.wp-element-button, .wp-block-button__link) defaults
+   that WordPress re-emits after our plugin styles. Without it the
+   Default-pill-background bleeds through in headless renderers
+   (GutenBlock SaaS canvas) where the cascade order is uncertain. */
 .wp-block-button.is-style-button-simple .wp-block-button__link {
 	position: relative;
-	display: inline-flex;
+	display: inline-flex !important;
 	align-items: center;
 	gap: 0.5em;
-	background-color: transparent;
-	border: none;
-	padding: 0 1.5em 0 0;
+	background-color: transparent !important;
+	background-image: none !important;
+	border: none !important;
+	padding: 0 1.5em 0 0 !important;
 	text-decoration: none;
 	overflow: hidden;
 	transition: color 0.3s ease;
-	color: var(--wp--preset--color--contrast, inherit);
+	color: var(--wp--preset--color--contrast, inherit) !important;
 }
 
 .wp-block-button.is-style-button-simple .wp-block-button__link::after {

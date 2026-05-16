@@ -31,14 +31,20 @@ class GutenBlock_Pro_Block_Registry {
 				'type'        => 'variant',
 				'description' => 'Pill-förmiger Button mit eingebettetem Kreis-Pfeil rechts und Hover-Animation',
 			),
-			'css' => '.wp-block-button.is-style-button-arrow-circle .wp-block-button__link {
+			'css' => '/* `!important` shields the variant from the theme.json compiled
+   :root :where(.wp-element-button, .wp-block-button__link) defaults
+   that WordPress re-emits after our plugin styles. Without it the
+   Default-pill-background bleeds through in headless renderers
+   (GutenBlock SaaS canvas) where the cascade order is uncertain. */
+.wp-block-button.is-style-button-arrow-circle .wp-block-button__link {
 	position: relative;
-	display: inline-block;
-	background-color: transparent;
-	color: black;
-	padding: 0.75em 5em 0.75em 1.25em;
-	border: 1px solid #333;
-	border-radius: 999px;
+	display: inline-block !important;
+	background-color: transparent !important;
+	background-image: none !important;
+	color: black !important;
+	padding: 0.75em 5em 0.75em 1.25em !important;
+	border: 1px solid #333 !important;
+	border-radius: 999px !important;
 	text-decoration: none;
 	transition: all 0.3s ease;
 	overflow: hidden;
@@ -71,18 +77,24 @@ class GutenBlock_Pro_Block_Registry {
 				'type'        => 'variant',
 				'description' => 'Transparenter Button ohne Hintergrund – nur Text mit Pfeil-Icon und Hover-Animation',
 			),
-			'css' => '.wp-block-button.is-style-button-simple .wp-block-button__link {
+			'css' => '/* `!important` shields the variant from the theme.json compiled
+   :root :where(.wp-element-button, .wp-block-button__link) defaults
+   that WordPress re-emits after our plugin styles. Without it the
+   Default-pill-background bleeds through in headless renderers
+   (GutenBlock SaaS canvas) where the cascade order is uncertain. */
+.wp-block-button.is-style-button-simple .wp-block-button__link {
 	position: relative;
-	display: inline-flex;
+	display: inline-flex !important;
 	align-items: center;
 	gap: 0.5em;
-	background-color: transparent;
-	border: none;
-	padding: 0 1.5em 0 0;
+	background-color: transparent !important;
+	background-image: none !important;
+	border: none !important;
+	padding: 0 1.5em 0 0 !important;
 	text-decoration: none;
 	overflow: hidden;
 	transition: color 0.3s ease;
-	color: var(--wp--preset--color--contrast, inherit);
+	color: var(--wp--preset--color--contrast, inherit) !important;
 }
 .wp-block-button.is-style-button-simple .wp-block-button__link::after {
 	content: \'\';
