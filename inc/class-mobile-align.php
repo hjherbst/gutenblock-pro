@@ -117,6 +117,13 @@ class GutenBlock_Pro_Mobile_Align {
 			.gbp-mobile-left .has-text-align-right {
 				text-align: left !important;
 			}
+			/* Mit margin:auto zentrierte Blöcke (z.B. Material-Icons mit
+			   align="center") nach links holen. */
+			.gbp-mobile-left .aligncenter,
+			.gbp-mobile-left .alignright {
+				margin-left: 0 !important;
+				margin-right: auto !important;
+			}
 		}
 		/* Raster: direkte Kindelemente in der Zelle zentrieren */
 		.gbp-grid-items-center.is-layout-grid {
