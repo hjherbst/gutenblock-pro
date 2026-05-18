@@ -164,6 +164,18 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		echo '</div>';
 		echo '</div>';
 
+		// Opt-in: aktuelle Startseite durch SaaS-Home ersetzen (sonst beibehalten).
+		echo '<div class="gbp-option gbp-replace-home-toggle">';
+		echo '<label class="gbp-checkbox">';
+		echo '<input type="checkbox" name="gutenblock_replace_home" value="1" />';
+		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Startseite ersetzen', 'gutenblock-pro' ) . '</span>';
+		echo '</label>';
+		echo '<div class="gbp-warn">';
+		echo '<strong>' . esc_html__( 'Hinweis:', 'gutenblock-pro' ) . '</strong> ';
+		echo esc_html__( 'Aktiviert ersetzt diese Option deine aktuelle WordPress-Startseite durch die im SaaS gestaltete Startseite. Lasse die Option deaktiviert, wenn deine bestehende Startseite erhalten bleiben soll – alle weiteren Seiten werden in beiden Fällen importiert.', 'gutenblock-pro' );
+		echo '</div>';
+		echo '</div>';
+
 		echo '<div class="gbp-actions">';
 		submit_button( __( 'Import starten', 'gutenblock-pro' ), 'primary', 'gutenblock_provision_submit', false );
 		echo '</div>';
@@ -252,7 +264,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			add_action(
 				'admin_notices',
 				function () {
-					echo '<div class="notice notice-error"><p>Bitte gültigen Token einfügen.</p></div>';
+					echo '<div class="notice notice-error"><p>' . esc_html__( 'Bitte gültigen Token einfügen.', 'gutenblock-pro' ) . '</p></div>';
 				}
 			);
 			return;
@@ -278,7 +290,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			add_action(
 				'admin_notices',
 				function () use ( $response ) {
-					echo '<div class="notice notice-error"><p>' . esc_html( $response->get_error_message() ) . '</p></div>';
+					echo '<div class="notice notice-error"><p>' . esc_html( $response->get_error_message() ) . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				}
 			);
 			return;
@@ -290,7 +302,13 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			add_action(
 				'admin_notices',
 				function () use ( $code, $body ) {
-					echo '<div class="notice notice-error"><p>Manifest HTTP ' . (int) $code . ': ' . esc_html( wp_strip_all_tags( $body ) ) . '</p></div>';
+					$msg = sprintf(
+						/* translators: 1: HTTP status code, 2: response body */
+						esc_html__( 'Manifest HTTP %1$d: %2$s', 'gutenblock-pro' ),
+						(int) $code,
+						esc_html( wp_strip_all_tags( $body ) )
+					);
+					echo '<div class="notice notice-error"><p>' . $msg . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				}
 			);
 			return;
@@ -301,18 +319,19 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			add_action(
 				'admin_notices',
 				function () {
-					echo '<div class="notice notice-error"><p>Ungültiges Manifest.</p></div>';
+					echo '<div class="notice notice-error"><p>' . esc_html__( 'Ungültiges Manifest.', 'gutenblock-pro' ) . '</p></div>';
 				}
 			);
 			return;
 		}
 
 		$import_styles = ! empty( $_POST['gutenblock_import_styles'] );
+		$replace_home  = ! empty( $_POST['gutenblock_replace_home'] );
 		update_option( self::OPTION_IMPORT_STYLES, $import_styles ? 1 : 0 );
 
 		$url_map = $this->import_assets( $data );
 
-		$this->apply_pages( $data, $url_map );
+		$this->apply_pages( $data, $url_map, $replace_home );
 		$this->apply_menu( $data );
 		if ( $import_styles ) {
 			$this->apply_customizer_css( $data );
@@ -327,12 +346,13 @@ class GutenBlock_Pro_Provisioning_Wizard {
 
 		add_action(
 			'admin_notices',
-			function () use ( $pages_count, $import_styles ) {
+			function () use ( $pages_count, $import_styles, $replace_home ) {
 				$msg = sprintf(
-					/* translators: 1: pages count, 2: styles state */
-					esc_html__( 'Import erfolgreich. Seiten: %1$d · Styles: %2$s', 'gutenblock-pro' ),
+					/* translators: 1: pages count, 2: styles state, 3: home state */
+					esc_html__( 'Import erfolgreich. Seiten: %1$d · Styles: %2$s · Startseite: %3$s', 'gutenblock-pro' ),
 					(int) $pages_count,
-					$import_styles ? esc_html__( 'aus SaaS übernommen', 'gutenblock-pro' ) : esc_html__( 'unverändert', 'gutenblock-pro' )
+					$import_styles ? esc_html__( 'aus SaaS übernommen', 'gutenblock-pro' ) : esc_html__( 'unverändert', 'gutenblock-pro' ),
+					$replace_home ? esc_html__( 'ersetzt', 'gutenblock-pro' ) : esc_html__( 'beibehalten', 'gutenblock-pro' )
 				);
 				echo '<div class="notice notice-success"><p>' . $msg . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
@@ -374,7 +394,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			add_action(
 				'admin_notices',
 				function () {
-					echo '<div class="notice notice-error"><p>Pattern-Bundle-Builder ist nicht verfügbar.</p></div>';
+					echo '<div class="notice notice-error"><p>' . esc_html__( 'Pattern-Bundle-Builder ist nicht verfügbar.', 'gutenblock-pro' ) . '</p></div>';
 				}
 			);
 			return;
@@ -385,7 +405,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			add_action(
 				'admin_notices',
 				function () use ( $bundle ) {
-					echo '<div class="notice notice-error"><p>' . esc_html( $bundle->get_error_message() ) . '</p></div>';
+					echo '<div class="notice notice-error"><p>' . esc_html( $bundle->get_error_message() ) . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				}
 			);
 			return;
@@ -396,7 +416,12 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			'admin_notices',
 			function () use ( $bundle ) {
 				$count = isset( $bundle['patterns'] ) && is_array( $bundle['patterns'] ) ? count( $bundle['patterns'] ) : 0;
-				echo '<div class="notice notice-success"><p>Pattern-Bundle neu gebaut. Patterns: ' . (int) $count . '</p></div>';
+				$msg   = sprintf(
+					/* translators: %d: number of patterns built */
+					esc_html__( 'Pattern-Bundle neu gebaut. Patterns: %d', 'gutenblock-pro' ),
+					(int) $count
+				);
+				echo '<div class="notice notice-success"><p>' . $msg . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 		);
 	}
@@ -464,10 +489,15 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	/**
 	 * Pages anlegen/aktualisieren.
 	 *
-	 * @param array                $manifest Manifest.
-	 * @param array<string,string> $url_map  Ersetzungen.
+	 * @param array                $manifest      Manifest.
+	 * @param array<string,string> $url_map       Ersetzungen.
+	 * @param bool                 $replace_home  Wenn true, wird `show_on_front`/`page_on_front`
+	 *                                            auf die im Manifest markierte Home-Page gesetzt.
+	 *                                            Andernfalls bleibt die bestehende Startseite der
+	 *                                            Zielinstanz unverändert (Seite wird trotzdem als
+	 *                                            normale Page importiert).
 	 */
-	private function apply_pages( array $manifest, array $url_map ): void {
+	private function apply_pages( array $manifest, array $url_map, bool $replace_home = false ): void {
 		$fields = isset( $manifest['contentFields'] ) && is_array( $manifest['contentFields'] )
 			? $manifest['contentFields']
 			: array();
@@ -503,6 +533,10 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			} else {
 				wp_insert_post( $postarr );
 			}
+		}
+
+		if ( ! $replace_home ) {
+			return;
 		}
 
 		$home = '';

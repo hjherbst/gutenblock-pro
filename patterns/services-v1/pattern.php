@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Services v1',
-  'description' => 'Two-column layout (33/33/33) — H3 titles and paragraphs in each column, with filled CTAs in each.',
+  'description' => 'One-column header with two-column layout (33/33/33) — H2 and paragraph above, three equal columns with title, paragraph, and filled CTA each.',
   'type' => 'pattern',
   'group' => 'services',
   'categories' => 
@@ -16,7 +16,7 @@ return array (
   array (
   ),
   'content' => '',
-  'ai_hint' => 'Three columns 33/33/33 with vertical alignment; container background is a solid color; each column contains an H3 title, a paragraph, and a filled CTA button; no further media.',
+  'ai_hint' => 'One-column header above a three-column layout (33/33/33); container background is a solid color; header with H2 and centered paragraph; each column contains an H3, paragraph, and a filled CTA; no additional media.',
   'tones' => 
   array (
     0 => 'neutral',

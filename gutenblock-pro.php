@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock Pro
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: Professional block patterns and Full Site Editor building blocks – also acts as the import bridge for the GutenBlock SaaS website builder.
- * Version: 1.24.2
+ * Version: 1.25.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.24.2' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.25.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );
@@ -173,7 +173,26 @@ add_action( 'plugins_loaded', 'gutenblock_pro_cleanup_legacy_mu_bridge', 20 );
  * Initialize the plugin
  */
 function gutenblock_pro_init() {
-	// Load plugin text domain
+	// Locale fallback BEFORE load_plugin_textdomain: msgids are German,
+	// so a de_* site needs no catalog; every non-German site should fall
+	// back to en_US instead of seeing the raw German msgid because there
+	// is no catalog for its locale (fr_FR, es_ES, …).
+	add_filter(
+		'plugin_locale',
+		function ( $locale, $domain ) {
+			if ( 'gutenblock-pro' !== $domain ) {
+				return $locale;
+			}
+			if ( is_string( $locale ) && 0 === strpos( $locale, 'de_' ) ) {
+				return $locale;
+			}
+			return 'en_US';
+		},
+		10,
+		2
+	);
+
+	// Load plugin text domain (with the filtered locale).
 	load_plugin_textdomain( 'gutenblock-pro', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
 	// Initialize License System

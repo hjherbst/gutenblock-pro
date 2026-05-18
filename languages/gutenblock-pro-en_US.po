@@ -939,3 +939,48 @@ msgstr "SVG"
 #: src/blocks/material-icon/index.js:16
 msgid "Material"
 msgstr "Material"
+
+# --- Provisioning Wizard (Import page) ------------------------------------
+
+#: inc/class-provisioning-wizard.php
+msgid "Startseite ersetzen"
+msgstr "Replace homepage"
+
+#: inc/class-provisioning-wizard.php
+msgid "Aktiviert ersetzt diese Option deine aktuelle WordPress-Startseite durch die im SaaS gestaltete Startseite. Lasse die Option deaktiviert, wenn deine bestehende Startseite erhalten bleiben soll – alle weiteren Seiten werden in beiden Fällen importiert."
+msgstr "When enabled, your current WordPress homepage is replaced with the homepage designed in the SaaS. Leave it disabled to keep your existing homepage — all other pages are imported either way."
+
+#: inc/class-provisioning-wizard.php
+msgid "Bitte gültigen Token einfügen."
+msgstr "Please enter a valid token."
+
+#: inc/class-provisioning-wizard.php
+msgid "Ungültiges Manifest."
+msgstr "Invalid manifest."
+
+#: inc/class-provisioning-wizard.php
+#, php-format
+msgid "Manifest HTTP %1$d: %2$s"
+msgstr "Manifest HTTP %1$d: %2$s"
+
+#: inc/class-provisioning-wizard.php
+msgid "Pattern-Bundle-Builder ist nicht verfügbar."
+msgstr "Pattern bundle builder is not available."
+
+#: inc/class-provisioning-wizard.php
+#, php-format
+msgid "Pattern-Bundle neu gebaut. Patterns: %d"
+msgstr "Pattern bundle rebuilt. Patterns: %d"
+
+#: inc/class-provisioning-wizard.php
+#, php-format
+msgid "Import erfolgreich. Seiten: %1$d · Styles: %2$s · Startseite: %3$s"
+msgstr "Import successful. Pages: %1$d · Styles: %2$s · Homepage: %3$s"
+
+#: inc/class-provisioning-wizard.php
+msgid "ersetzt"
+msgstr "replaced"
+
+#: inc/class-provisioning-wizard.php
+msgid "beibehalten"
+msgstr "kept"
