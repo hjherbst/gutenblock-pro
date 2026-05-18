@@ -12,7 +12,7 @@ import { SearchControl } from '@wordpress/components';
 import iconIndex from '@material-symbols-svg/metadata/icon-index.json';
 
 const DEBOUNCE_MS = 200;
-const MAX_PATHS_TO_FETCH = 20;
+const MAX_PATHS_TO_FETCH = 50;
 const GRID_ICON_SIZE = 32;
 
 /** Plugin custom icons (not in @material-symbols-svg), e.g. filled star */
@@ -85,7 +85,7 @@ function IconThumb( { path, viewBox, size = GRID_ICON_SIZE, color = '#444' } ) {
  * IconSearch – Suchfeld + Grid mit SVG-Vorschau, ruft onSelect( iconName ) auf.
  * getPathForIcon returns { path, viewBox } or null.
  */
-export default function IconSearch( { onSelect, getPathForIcon, defaultViewBox = '0 -960 960 960' } ) {
+export default function IconSearch( { onSelect, getPathsForIcons, defaultViewBox = '0 -960 960 960' } ) {
 	const [ search, setSearch ] = useState( '' );
 	const [ pathCacheVersion, setPathCacheVersion ] = useState( 0 );
 	const pathCacheRef = useRef( {} );
@@ -97,7 +97,7 @@ export default function IconSearch( { onSelect, getPathForIcon, defaultViewBox =
 	// Pfade für die aktuell angezeigte Liste laden (in Batches à MAX_PATHS_TO_FETCH).
 	// pathCacheVersion in deps: nach jedem Batch erneut ausführen, damit die nächsten 20 geladen werden.
 	useEffect( () => {
-		if ( ! getPathForIcon || ! iconNames.length ) return;
+		if ( ! getPathsForIcons || ! iconNames.length ) return;
 		const cache = pathCacheRef.current;
 		const toFetch = iconNames
 			.filter( ( name ) => cache[ name ] === undefined && ! pendingRef.current.has( name ) )
@@ -105,19 +105,28 @@ export default function IconSearch( { onSelect, getPathForIcon, defaultViewBox =
 		if ( toFetch.length === 0 ) return;
 		toFetch.forEach( ( name ) => {
 			pendingRef.current.add( name );
-			getPathForIcon( name ).then( ( data ) => {
-				pendingRef.current.delete( name );
-				if ( data != null && data.path ) {
-					cache[ name ] = { path: data.path, viewBox: data.viewBox || defaultViewBox };
-					setPathCacheVersion( ( v ) => v + 1 );
-				}
-			} );
 		} );
-	}, [ iconNames.join( ',' ), pathCacheVersion, getPathForIcon, defaultViewBox ] );
+		getPathsForIcons( toFetch ).then( ( result ) => {
+			toFetch.forEach( ( name ) => {
+				const data = result?.[ name ] || null;
+				pendingRef.current.delete( name );
+				cache[ name ] = data && data.path
+					? { path: data.path, viewBox: data.viewBox || defaultViewBox }
+					: null;
+			} );
+			setPathCacheVersion( ( v ) => v + 1 );
+		} ).catch( () => {
+			toFetch.forEach( ( name ) => {
+				pendingRef.current.delete( name );
+				cache[ name ] = null;
+			} );
+			setPathCacheVersion( ( v ) => v + 1 );
+		} );
+	}, [ iconNames.join( ',' ), pathCacheVersion, getPathsForIcons, defaultViewBox ] );
 
 	const handleSelect = useCallback(
 		( name ) => {
-			if ( onSelect ) onSelect( name );
+			if ( onSelect ) onSelect( name, pathCacheRef.current[ name ] || null );
 		},
 		[ onSelect ]
 	);

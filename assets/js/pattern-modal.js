@@ -6,7 +6,7 @@
 (function (wp) {
 	'use strict';
 
-	const { createElement: el, Fragment, useState, useEffect } = wp.element;
+	const { createElement: el, Fragment, useState, useEffect, useRef } = wp.element;
 	const { registerPlugin } = wp.plugins;
 	const { 
 		Modal, 
@@ -29,6 +29,49 @@
 		dark:    { fill: '#1e1e1e', border: '#1e1e1e', label: 'Dark' },
 		soft:    { fill: '#e8f0fe', border: '#9ab8e8', label: 'Soft' },
 	};
+
+	function LazyPatternPreview({ previewUrl, tone }) {
+		const ref = useRef(null);
+		const [isVisible, setIsVisible] = useState(false);
+
+		useEffect(() => {
+			if (isVisible) return;
+			const node = ref.current;
+			if (!node) return;
+
+			if (!('IntersectionObserver' in window)) {
+				setIsVisible(true);
+				return;
+			}
+
+			const observer = new IntersectionObserver((entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) {
+					setIsVisible(true);
+					observer.disconnect();
+				}
+			}, {
+				root: document.querySelector('.gutenblock-pro-modal-content'),
+				rootMargin: '500px 0px',
+				threshold: 0.01,
+			});
+			observer.observe(node);
+			return () => observer.disconnect();
+		}, [isVisible]);
+
+		return el('div', {
+			ref,
+			className: 'gutenblock-pro-modal-pattern-preview'
+		}, isVisible ? el('iframe', {
+			key: tone,
+			src: previewUrl,
+			sandbox: 'allow-same-origin allow-scripts',
+			loading: 'lazy',
+			tabIndex: -1
+		}) : el('div', {
+			className: 'gutenblock-pro-modal-pattern-preview-placeholder',
+			'aria-hidden': true
+		}));
+	}
 
 	function PatternModal({ isOpen, onClose, category = null }) {
 		const [patterns, setPatterns] = useState([]);
@@ -245,15 +288,10 @@
 				'&tone=' + encodeURIComponent(tone) +
 				'&_wpnonce=' + encodeURIComponent(gutenblockProModal.nonce || '');
 
-			return el('div', {
-				className: 'gutenblock-pro-modal-pattern-preview'
-			}, el('iframe', {
-				key: tone, // Force re-render bei Tone-Wechsel
-				src: previewUrl,
-				sandbox: 'allow-same-origin allow-scripts',
-				loading: 'lazy',
-				tabIndex: -1
-			}));
+			return el(LazyPatternPreview, {
+				previewUrl,
+				tone,
+			});
 		};
 
 		const renderToneSwatches = (pattern) => {
@@ -295,7 +333,7 @@
 				onClick: () => {
 					if (isLocked) {
 						// Show upgrade notice on click
-						const upgradeUrl = gutenblockProModal.upgradeUrl || 'https://app.gutenblock.com/licenses';
+						const upgradeUrl = gutenblockProModal.upgradeUrl || 'https://gutenblock.com/licenses';
 						if (window.confirm('Dieses Pattern benötigt GutenBlock Pro Plus.\n\nMöchtest du jetzt upgraden?')) {
 							window.open(upgradeUrl, '_blank');
 						}
@@ -441,7 +479,7 @@
 					}
 				}, cacheClearing ? 'Wird geladen…' : '↺ Cache erneuern'),
 			el('a', {
-					href: 'http://app.gutenblock.com/gutenblock-pro',
+					href: 'https://gutenblock.com/gutenblock-pro',
 					target: '_blank',
 					rel: 'noopener noreferrer',
 					className: 'gutenblock-pro-modal-link',

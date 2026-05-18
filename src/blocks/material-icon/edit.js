@@ -85,14 +85,29 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 
 	const fetchPaths = useCallback( ( iconName ) => {
 		if ( ! iconName ) return;
+		const cached = pathCacheRef.current[ iconName ];
+		if ( cached?.path ) {
+			setPathData( {
+				outlined: { outline: { w400: cached.path } },
+				viewBox: cached.viewBox || DEFAULT_VIEWBOX,
+			} );
+			setAttributes( {
+				svgPath: cached.path,
+				viewBox: cached.viewBox || DEFAULT_VIEWBOX,
+			} );
+			return;
+		}
 		setLoadingPaths( true );
 		ajaxGet( { action: 'gutenblock_pro_icon_paths', icon: iconName } )
 			.then( ( res ) => {
 				if ( res && res.success && res.data ) {
+					const path = getPathFromData( res.data );
+					const resolvedViewBox = getViewBoxFromData( res.data );
+					pathCacheRef.current[ iconName ] = path ? { path, viewBox: resolvedViewBox } : null;
 					setPathData( res.data );
 					setAttributes( {
-						svgPath: getPathFromData( res.data ),
-						viewBox: getViewBoxFromData( res.data ),
+						svgPath: path,
+						viewBox: resolvedViewBox,
 					} );
 				}
 			} )
@@ -107,11 +122,23 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 	}, [ iconSource, icon, pathData, loadingPaths, fetchPaths ] );
 
 	const onSelectIcon = useCallback(
-		( iconName ) => {
-			setAttributes( { iconSource: 'material', icon: iconName, customSvgId: 0, customSvgMarkup: '' } );
+		( iconName, cachedPathData = null ) => {
+			const nextAttributes = { iconSource: 'material', icon: iconName, customSvgId: 0, customSvgMarkup: '' };
+			if ( cachedPathData?.path ) {
+				nextAttributes.svgPath = cachedPathData.path;
+				nextAttributes.viewBox = cachedPathData.viewBox || DEFAULT_VIEWBOX;
+				setPathData( {
+					outlined: { outline: { w400: cachedPathData.path } },
+					viewBox: cachedPathData.viewBox || DEFAULT_VIEWBOX,
+				} );
+			} else {
+				setPathData( null );
+			}
+			setAttributes( nextAttributes );
 			setIsModalOpen( false );
-			setPathData( null );
-			fetchPaths( iconName );
+			if ( ! cachedPathData?.path ) {
+				fetchPaths( iconName );
+			}
 		},
 		[ setAttributes, fetchPaths ]
 	);
@@ -129,25 +156,47 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 	const hasIcon = hasMaterialIcon || hasCustomSvg;
 	const pathCacheRef = useRef( {} );
 
-	const getPathForIcon = useCallback( ( iconName ) => {
+	const getPathsForIcons = useCallback( ( iconNames ) => {
+		const names = [ ...new Set( ( iconNames || [] ).filter( Boolean ) ) ];
 		const cache = pathCacheRef.current;
-		if ( cache[ iconName ] !== undefined ) {
-			return Promise.resolve( cache[ iconName ] );
+		const missing = names.filter( ( name ) => cache[ name ] === undefined );
+		if ( missing.length === 0 ) {
+			return Promise.resolve(
+				names.reduce( ( acc, name ) => {
+					acc[ name ] = cache[ name ];
+					return acc;
+				}, {} )
+			);
 		}
-		return ajaxGet( { action: 'gutenblock_pro_icon_paths', icon: iconName } ).then( ( res ) => {
-			if ( res && res.success && res.data ) {
-				const path = getPathFromData( res.data );
-				const viewBox = getViewBoxFromData( res.data );
-				const out = path ? { path, viewBox } : null;
-				cache[ iconName ] = out;
-				return out;
-			}
-			cache[ iconName ] = null;
-			return null;
-		} ).catch( () => {
-			cache[ iconName ] = null;
-			return null;
-		} );
+
+		const params = new URLSearchParams( { action: 'gutenblock_pro_icon_paths_batch' } );
+		missing.forEach( ( name ) => params.append( 'icons[]', name ) );
+		const base = window.gutenblockProConfig?.ajaxUrl || window.ajaxurl || '/wp-admin/admin-ajax.php';
+
+		return fetch( `${ base }?${ params.toString() }`, { credentials: 'include' } )
+			.then( ( r ) => r.json() )
+			.then( ( res ) => {
+				if ( res && res.success && res.data ) {
+					missing.forEach( ( name ) => {
+						const raw = res.data[ name ];
+						if ( raw ) {
+							const path = getPathFromData( raw );
+							const viewBox = getViewBoxFromData( raw );
+							cache[ name ] = path ? { path, viewBox } : null;
+						} else {
+							cache[ name ] = null;
+						}
+					} );
+				} else {
+					missing.forEach( ( name ) => {
+						cache[ name ] = null;
+					} );
+				}
+				return names.reduce( ( acc, name ) => {
+					acc[ name ] = cache[ name ];
+					return acc;
+				}, {} );
+			} );
 	}, [] );
 
 	const linkValue = useMemo(
@@ -273,7 +322,7 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 							>
 								{ ( tab ) => (
 									tab.name === 'material' ? (
-										<IconSearch onSelect={ onSelectIcon } getPathForIcon={ getPathForIcon } defaultViewBox={ DEFAULT_VIEWBOX } />
+										<IconSearch onSelect={ onSelectIcon } getPathsForIcons={ getPathsForIcons } defaultViewBox={ DEFAULT_VIEWBOX } />
 									) : (
 										<CustomSvgTab onSelect={ onSelectCustomSvg } onClose={ () => setIsModalOpen( false ) } />
 									)

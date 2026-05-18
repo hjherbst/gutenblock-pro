@@ -10,11 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Admin UI + Import-Logik (Token oder Manifest-URL).
+ * Admin UI + Import-Logik (Provisioning-Token).
  */
 class GutenBlock_Pro_Provisioning_Wizard {
 
-	const OPTION_SAAS_BASE        = 'gutenblock_pro_saas_base_url';
 	const OPTION_IMPORT_STYLES    = 'gutenblock_pro_import_styles';
 	const OPTION_CUSTOMIZER_FONTS = 'gutenblock_pro_customizer_fonts_url';
 
@@ -77,7 +76,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		if ( defined( 'GUTENBLOCK_SAAS_API_URL' ) && GUTENBLOCK_SAAS_API_URL ) {
 			return rtrim( (string) GUTENBLOCK_SAAS_API_URL, '/' );
 		}
-		return 'https://app.gutenblock.com';
+		return 'https://gutenblock.com';
 	}
 
 	/**
@@ -111,7 +110,6 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			return;
 		}
 
-		$base               = (string) get_option( self::OPTION_SAAS_BASE, self::default_saas_base() );
 		$last               = (string) get_option( 'gutenblock_pro_last_manifest_sync', '' );
 		$last_pages         = (int) get_option( 'gutenblock_pro_last_manifest_pages_count', 0 );
 		$styles_active      = (bool) get_option( 'gutenblock_pro_customizer_css_url', '' );
@@ -144,12 +142,6 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		echo '<div class="gbp-field">';
 		echo '<label for="gutenblock_token">' . esc_html__( 'Provisioning-Token', 'gutenblock-pro' ) . '</label>';
 		echo '<input type="text" class="large-text code" id="gutenblock_token" name="gutenblock_token" value="" autocomplete="off" placeholder="' . esc_attr__( '64-stelliger Hex-Token aus dem Dashboard', 'gutenblock-pro' ) . '" />';
-		echo '</div>';
-
-		echo '<div class="gbp-field">';
-		echo '<label for="gutenblock_saas_base">' . esc_html__( 'SaaS-Basis-URL', 'gutenblock-pro' ) . '</label>';
-		echo '<input type="url" class="regular-text" id="gutenblock_saas_base" name="gutenblock_saas_base" value="' . esc_attr( $base ) . '" placeholder="https://app.gutenblock.com" />';
-		echo '<p class="gbp-help">' . esc_html__( 'Normalerweise nicht ändern.', 'gutenblock-pro' ) . '</p>';
 		echo '</div>';
 
 		// Optionaler Styles-Override
@@ -219,7 +211,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			. '.gbp-card-intro{margin:0 0 14px;color:#50575e;font-size:13px;}'
 			. '.gbp-form .gbp-field{margin:0 0 14px;}'
 			. '.gbp-form label{display:block;font-size:12px;font-weight:600;color:#1d2327;margin-bottom:4px;}'
-			. '.gbp-form input[type=text].large-text,.gbp-form input[type=url].regular-text{width:100%;max-width:680px;}'
+			. '.gbp-form input[type=text].large-text{width:100%;max-width:680px;}'
 			. '.gbp-help{margin:4px 0 0;font-size:12px;color:#646970;}'
 			. '.gbp-status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}'
 			. '.gbp-stat{display:flex;flex-direction:column;gap:2px;padding:10px 12px;background:#f6f7f7;border:1px solid #ebedee;border-radius:6px;}'
@@ -258,7 +250,6 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		check_admin_referer( 'gutenblock_provision', 'gutenblock_provision_nonce' );
 
 		$token = isset( $_POST['gutenblock_token'] ) ? sanitize_text_field( wp_unslash( $_POST['gutenblock_token'] ) ) : '';
-		$base  = isset( $_POST['gutenblock_saas_base'] ) ? esc_url_raw( wp_unslash( $_POST['gutenblock_saas_base'] ) ) : '';
 
 		if ( strlen( $token ) < 16 ) {
 			add_action(
@@ -270,11 +261,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			return;
 		}
 
-		if ( $base ) {
-			update_option( self::OPTION_SAAS_BASE, rtrim( $base, '/' ) );
-		} else {
-			$base = get_option( self::OPTION_SAAS_BASE, self::default_saas_base() );
-		}
+		$base = self::default_saas_base();
 
 		$manifest_url = rtrim( $base, '/' ) . '/api/v1/sites/' . rawurlencode( $token ) . '/manifest';
 
