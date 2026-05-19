@@ -361,13 +361,19 @@ p.is-style-step-circle.has-text-align-right {
 			$config = $this->load_block_config( $slug, $config_file );
 
 			if ( $config ) {
+				// Route label/description through gettext so the i18n fallback
+				// can localise the German source strings on non-de_* locales
+				// (the "Block-Erweiterungen" admin tab renders these verbatim).
+				$label_raw       = isset( $config['label'] ) ? $config['label'] : $slug;
+				$description_raw = isset( $config['description'] ) ? $config['description'] : '';
+
 				$this->block_variants[] = array(
 					'slug'        => $slug,
 					'block'       => $config['block'],
 					'name'        => $config['name'],
-					'label'       => $config['label'],
+					'label'       => __( $label_raw, 'gutenblock-pro' ),
 					'type'        => $config['type'] ?? 'variant',
-					'description' => $config['description'] ?? '',
+					'description' => $description_raw !== '' ? __( $description_raw, 'gutenblock-pro' ) : '',
 					'folder'      => $folder,
 					'has_style'   => file_exists( $style_file ),
 				);

@@ -165,6 +165,16 @@ class GutenBlock_Pro_Features_Page {
 			}
 		}
 
+		// Route every label/description through the gettext pipeline so the
+		// i18n fallback can localise them on non-de_* locales. The msgids stay
+		// the raw German strings defined above (or block.json).
+		foreach ( $base as $slug => $def ) {
+			$base[ $slug ]['label'] = isset( $def['label'] ) ? __( $def['label'], 'gutenblock-pro' ) : $slug;
+			if ( isset( $def['description'] ) && $def['description'] !== '' ) {
+				$base[ $slug ]['description'] = __( $def['description'], 'gutenblock-pro' );
+			}
+		}
+
 		return $base;
 	}
 

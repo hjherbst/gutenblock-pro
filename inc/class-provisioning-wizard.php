@@ -168,6 +168,28 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		echo '</div>';
 		echo '</div>';
 
+		// Opt-in: Header als Template-Part anlegen/aktivieren.
+		echo '<div class="gbp-option gbp-import-header-toggle">';
+		echo '<label class="gbp-checkbox">';
+		echo '<input type="checkbox" name="gutenblock_import_header" value="1" />';
+		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Header aus SaaS importieren', 'gutenblock-pro' ) . '</span>';
+		echo '</label>';
+		echo '<div class="gbp-warn">';
+		echo esc_html__( 'Aktiviert erstellt einen neuen Header-Template-Part neben den bestehenden. Vorherige Importe aus dem SaaS werden ersetzt; eigene oder andere Header bleiben erhalten.', 'gutenblock-pro' );
+		echo '</div>';
+		echo '</div>';
+
+		// Opt-in: Footer als Template-Part anlegen/aktivieren.
+		echo '<div class="gbp-option gbp-import-footer-toggle">';
+		echo '<label class="gbp-checkbox">';
+		echo '<input type="checkbox" name="gutenblock_import_footer" value="1" />';
+		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Footer aus SaaS importieren', 'gutenblock-pro' ) . '</span>';
+		echo '</label>';
+		echo '<div class="gbp-warn">';
+		echo esc_html__( 'Aktiviert erstellt einen neuen Footer-Template-Part neben den bestehenden. Vorherige Importe aus dem SaaS werden ersetzt; eigene oder andere Footer bleiben erhalten.', 'gutenblock-pro' );
+		echo '</div>';
+		echo '</div>';
+
 		echo '<div class="gbp-actions">';
 		submit_button( __( 'Import starten', 'gutenblock-pro' ), 'primary', 'gutenblock_provision_submit', false );
 		echo '</div>';
@@ -314,6 +336,8 @@ class GutenBlock_Pro_Provisioning_Wizard {
 
 		$import_styles = ! empty( $_POST['gutenblock_import_styles'] );
 		$replace_home  = ! empty( $_POST['gutenblock_replace_home'] );
+		$import_header = ! empty( $_POST['gutenblock_import_header'] );
+		$import_footer = ! empty( $_POST['gutenblock_import_footer'] );
 		update_option( self::OPTION_IMPORT_STYLES, $import_styles ? 1 : 0 );
 
 		$url_map = $this->import_assets( $data );
@@ -325,7 +349,18 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		} else {
 			$this->clear_customizer_css();
 		}
-		$this->apply_header_footer_options( $data );
+		// Legacy: Options-basierte Speicherung beibehalten (für ältere Themes,
+		// die `gutenblock_pro_*_pattern_markup` direkt lesen).
+		$this->apply_header_footer_options( $data, $url_map );
+		// Neu: optionaler Import als echte `wp_template_part`-Posts.
+		$this->apply_header_footer_template_parts(
+			$data,
+			$url_map,
+			array(
+				'header' => $import_header,
+				'footer' => $import_footer,
+			)
+		);
 
 		$pages_count = isset( $data['pages'] ) && is_array( $data['pages'] ) ? count( $data['pages'] ) : 0;
 		update_option( 'gutenblock_pro_last_manifest_sync', current_time( 'mysql' ) );
@@ -333,13 +368,24 @@ class GutenBlock_Pro_Provisioning_Wizard {
 
 		add_action(
 			'admin_notices',
-			function () use ( $pages_count, $import_styles, $replace_home ) {
+			function () use ( $pages_count, $import_styles, $replace_home, $import_header, $import_footer ) {
+				$chrome_parts = array();
+				if ( $import_header ) {
+					$chrome_parts[] = esc_html__( 'Header', 'gutenblock-pro' );
+				}
+				if ( $import_footer ) {
+					$chrome_parts[] = esc_html__( 'Footer', 'gutenblock-pro' );
+				}
+				$chrome_label = $chrome_parts
+					? implode( ' + ', $chrome_parts )
+					: esc_html__( '–', 'gutenblock-pro' );
 				$msg = sprintf(
-					/* translators: 1: pages count, 2: styles state, 3: home state */
-					esc_html__( 'Import erfolgreich. Seiten: %1$d · Styles: %2$s · Startseite: %3$s', 'gutenblock-pro' ),
+					/* translators: 1: pages count, 2: styles state, 3: home state, 4: imported chrome parts */
+					esc_html__( 'Import erfolgreich. Seiten: %1$d · Styles: %2$s · Startseite: %3$s · Template-Parts: %4$s', 'gutenblock-pro' ),
 					(int) $pages_count,
 					$import_styles ? esc_html__( 'aus SaaS übernommen', 'gutenblock-pro' ) : esc_html__( 'unverändert', 'gutenblock-pro' ),
-					$replace_home ? esc_html__( 'ersetzt', 'gutenblock-pro' ) : esc_html__( 'beibehalten', 'gutenblock-pro' )
+					$replace_home ? esc_html__( 'ersetzt', 'gutenblock-pro' ) : esc_html__( 'beibehalten', 'gutenblock-pro' ),
+					$chrome_label
 				);
 				echo '<div class="notice notice-success"><p>' . $msg . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
@@ -832,25 +878,147 @@ class GutenBlock_Pro_Provisioning_Wizard {
 
 	/**
 	 * Header-/Footer-Pattern (Manifest: patternSlug und/oder blockMarkup).
+	 * Legacy-Pfad: Markup als Option speichern. URL-Map wird angewendet, damit
+	 * lokal sideloadete Assets greifen.
 	 *
-	 * @param array $manifest Manifest.
+	 * @param array                $manifest Manifest.
+	 * @param array<string,string> $url_map  Optional: remoteUrl → lokale URL.
 	 */
-	private function apply_header_footer_options( array $manifest ): void {
+	private function apply_header_footer_options( array $manifest, array $url_map = array() ): void {
 		foreach ( array( 'header', 'footer' ) as $part ) {
 			if ( empty( $manifest[ $part ] ) || ! is_array( $manifest[ $part ] ) ) {
 				continue;
 			}
-			$h      = $manifest[ $part ];
-			$markup = '';
-			if ( ! empty( $h['blockMarkup'] ) ) {
-				$markup = (string) $h['blockMarkup'];
-			} elseif ( ! empty( $h['patternSlug'] ) ) {
-				$markup = $this->pattern_file_markup( (string) $h['patternSlug'] );
-			}
+			$markup = $this->build_chrome_markup( $manifest[ $part ], $url_map );
 			if ( '' !== $markup ) {
 				update_option( 'gutenblock_pro_' . $part . '_pattern_markup', $markup );
 			}
 		}
+	}
+
+	/**
+	 * Optionaler Import als echte FSE-Template-Parts. Pro Part (Header/Footer)
+	 * wird beim Aktiv-Setzen ein neuer `wp_template_part`-Post angelegt und
+	 * mit den Metas `_gutenblock_saas_import = 1` und
+	 * `_gutenblock_saas_import_version` markiert. Frühere SaaS-Importe werden
+	 * vor dem Insert in den Papierkorb verschoben — sodass nur der neue
+	 * Import aktiv ist. Nicht-SaaS Header/Footer (Theme-Defaults oder eigene
+	 * Anpassungen) bleiben unangetastet.
+	 *
+	 * @param array                $manifest Manifest.
+	 * @param array<string,string> $url_map  remoteUrl → lokale URL.
+	 * @param array{header:bool,footer:bool} $enabled Welche Teile importieren.
+	 */
+	private function apply_header_footer_template_parts( array $manifest, array $url_map, array $enabled ): void {
+		$theme_slug = (string) get_stylesheet();
+
+		foreach ( array( 'header', 'footer' ) as $part ) {
+			if ( empty( $enabled[ $part ] ) ) {
+				continue;
+			}
+			if ( empty( $manifest[ $part ] ) || ! is_array( $manifest[ $part ] ) ) {
+				continue;
+			}
+			$markup = $this->build_chrome_markup( $manifest[ $part ], $url_map );
+			if ( '' === $markup ) {
+				continue;
+			}
+
+			// Frühere SaaS-Importe in derselben Area in den Papierkorb verschieben.
+			$previous = $this->find_saas_template_parts( $part );
+			foreach ( $previous as $prev_id ) {
+				wp_trash_post( $prev_id );
+			}
+
+			$timestamp = current_time( 'mysql' );
+			$slug      = 'gbp-saas-' . $part . '-' . gmdate( 'YmdHis' );
+			$title     = ucfirst( $part ) . ' (GutenBlock SaaS)';
+
+			$post_id = wp_insert_post(
+				array(
+					'post_type'    => 'wp_template_part',
+					'post_status'  => 'publish',
+					'post_name'    => $slug,
+					'post_title'   => $title,
+					'post_content' => $markup,
+				),
+				true
+			);
+
+			if ( is_wp_error( $post_id ) || ! $post_id ) {
+				continue;
+			}
+
+			// Area-Taxonomie setzen (Header/Footer) — vom Block-Editor erwartet.
+			wp_set_object_terms( $post_id, $part, 'wp_template_part_area', false );
+			// Theme-Zuordnung — Template-Parts werden je Theme verwaltet.
+			if ( $theme_slug ) {
+				wp_set_object_terms( $post_id, $theme_slug, 'wp_theme', false );
+			}
+			// Markierung als SaaS-Import (für künftiges Auto-Replace).
+			update_post_meta( $post_id, '_gutenblock_saas_import', 1 );
+			update_post_meta( $post_id, '_gutenblock_saas_import_version', $timestamp );
+			update_post_meta( $post_id, '_gutenblock_saas_import_area', $part );
+		}
+	}
+
+	/**
+	 * Findet bestehende Template-Part-Posts in einer Area, die aus einem
+	 * früheren SaaS-Import stammen.
+	 *
+	 * @param string $area 'header'|'footer'.
+	 * @return int[] Post-IDs.
+	 */
+	private function find_saas_template_parts( string $area ): array {
+		$query = new WP_Query(
+			array(
+				'post_type'      => 'wp_template_part',
+				'post_status'    => array( 'publish', 'draft', 'pending', 'future' ),
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				'meta_query'     => array(
+					array(
+						'key'   => '_gutenblock_saas_import',
+						'value' => '1',
+					),
+					array(
+						'key'   => '_gutenblock_saas_import_area',
+						'value' => $area,
+					),
+				),
+				// phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.SuppressFiltersTrue
+				'suppress_filters' => false,
+			)
+		);
+		return array_map( 'intval', (array) $query->posts );
+	}
+
+	/**
+	 * Erzeugt das finale Block-Markup für einen Chrome-Slot. Bevorzugt
+	 * `blockMarkup` aus dem Manifest, fällt sonst auf das lokale Pattern
+	 * (`patterns/{slug}/content.html`) zurück. URL-Rewriting wird zuletzt
+	 * angewendet — der SaaS-Bildhost wird so durch lokale Attachment-URLs
+	 * ersetzt.
+	 *
+	 * @param array                $chrome  Manifest-Eintrag (header/footer).
+	 * @param array<string,string> $url_map remoteUrl → lokale URL.
+	 * @return string
+	 */
+	private function build_chrome_markup( array $chrome, array $url_map ): string {
+		$markup = '';
+		if ( ! empty( $chrome['blockMarkup'] ) ) {
+			$markup = (string) $chrome['blockMarkup'];
+		} elseif ( ! empty( $chrome['patternSlug'] ) ) {
+			$markup = $this->pattern_file_markup( (string) $chrome['patternSlug'] );
+		}
+		if ( '' === $markup ) {
+			return '';
+		}
+		if ( ! empty( $url_map ) ) {
+			$markup = strtr( $markup, $url_map );
+		}
+		return $markup;
 	}
 
 	/**

@@ -85,6 +85,7 @@ function gutenblock_pro_resolve_pattern_php_path( $slug ) {
 }
 
 // Load classes
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-i18n-fallback.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-tone-injector.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-pattern-loader.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-asset-loader.php';
@@ -194,6 +195,12 @@ function gutenblock_pro_init() {
 
 	// Load plugin text domain (with the filtered locale).
 	load_plugin_textdomain( 'gutenblock-pro', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+
+	// Hard-coded EN fallback for any msgid the compiled .mo catalog does not
+	// cover yet (admin pages were written in German, the .mo file lags behind
+	// new strings). Active only on non-de_* locales — German sites keep the
+	// untouched msgids.
+	( new GutenBlock_Pro_I18n_Fallback() )->init();
 
 	// Initialize License System
 	GutenBlock_Pro_License::get_instance();

@@ -73,6 +73,35 @@
 		}));
 	}
 
+	/**
+	 * Liest den aktuellen Editor-Kontext aus dem block-editor-Store.
+	 * Rückgabewerte:
+	 *  - 'template'      → Site Editor: `wp_template` oder `wp_template_part`.
+	 *    Pattern-Modal zeigt dort NUR Header/Footer-Patterns.
+	 *  - 'post'          → klassischer Post-/Page-/CPT-Editor.
+	 *    Pattern-Modal blendet Header/Footer-Patterns aus.
+	 *  - 'unknown'       → noch nicht entscheidbar (Verhalten wie 'post').
+	 */
+	function detectEditorScope() {
+		try {
+			const editorStore = wp.data.select('core/editor');
+			const postType = editorStore && typeof editorStore.getCurrentPostType === 'function'
+				? editorStore.getCurrentPostType()
+				: null;
+			if (postType === 'wp_template' || postType === 'wp_template_part') {
+				return 'template';
+			}
+			if (postType) {
+				return 'post';
+			}
+		} catch (e) {
+			// Editor-Store noch nicht ready oder nicht verfügbar — Default unten.
+		}
+		return 'unknown';
+	}
+
+	const HEADER_FOOTER_GROUPS = ['header', 'footer'];
+
 	function PatternModal({ isOpen, onClose, category = null }) {
 		const [patterns, setPatterns] = useState([]);
 		const [loading, setLoading] = useState(true);
@@ -83,13 +112,48 @@
 		// Welche Tone-Variante ist pro Pattern aktiv (für Hover-Preview & Click-Insert)
 		const [activeTones, setActiveTones] = useState({});
 		const { insertBlocks: insertBlocksAction } = useDispatch('core/block-editor');
+		const editorScope = detectEditorScope();
+		const isTemplateScope = editorScope === 'template';
+		// In Template-Scope nur „Sections"-Tab (Header/Footer) — Pages ausblenden.
+		useEffect(() => {
+			if (isTemplateScope && selectedCategory !== 'sections') {
+				setSelectedCategory('sections');
+			}
+		}, [isTemplateScope, selectedCategory]);
 
 		// Get all registered patterns
 		useEffect(() => {
 			if (!isOpen) return;
 
-			const CACHE_KEY = 'gbp_patterns_v1';
+			// Kontext (template vs. post) ist Bestandteil des Cache-Keys, damit
+			// ein Wechsel zwischen Site-Editor und Beitrags-Editor nicht aus
+			// dem falschen Cache liest.
+			const CACHE_KEY = 'gbp_patterns_v2_' + editorScope;
 			const CACHE_TTL = 5 * 60 * 1000; // 5 Minuten
+
+			const filterByScope = (allPatterns) => {
+				if (isTemplateScope) {
+					// Site-Editor: ausschließlich Header/Footer-Patterns.
+					const onlyChrome = allPatterns.filter((p) =>
+						HEADER_FOOTER_GROUPS.indexOf((p.group || '').toLowerCase()) !== -1
+					);
+					return {
+						sections: onlyChrome,
+						pages: [],
+						all: onlyChrome,
+					};
+				}
+				// Post-/Page-/CPT-Editor: Header/Footer-Patterns ausblenden —
+				// die gehören in den Template-Editor.
+				const filtered = allPatterns.filter((p) =>
+					HEADER_FOOTER_GROUPS.indexOf((p.group || '').toLowerCase()) === -1
+				);
+				return {
+					sections: filtered.filter((p) => p.type !== 'page'),
+					pages: filtered.filter((p) => p.type === 'page'),
+					all: filtered,
+				};
+			};
 
 			// sessionStorage-Cache prüfen
 			try {
@@ -121,21 +185,7 @@
 			.then(data => {
 				if (data.success && data.data) {
 					const allPatterns = data.data.patterns || [];
-					
-					// Separate sections and pages
-					// Note: Premium patterns without access are still shown but locked
-					const sections = allPatterns.filter(p => 
-						p.type !== 'page'
-					);
-					const pages = allPatterns.filter(p => 
-						p.type === 'page'
-					);
-
-					const patternsData = {
-						sections: sections,
-						pages: pages,
-						all: allPatterns
-					};
+					const patternsData = filterByScope(allPatterns);
 
 					setPatterns(patternsData);
 
@@ -150,11 +200,17 @@
 				console.error('Error loading patterns:', error);
 				setLoading(false);
 			});
-		}, [isOpen, refreshKey]);
+		}, [isOpen, refreshKey, editorScope, isTemplateScope]);
 
 		const handleClearCache = () => {
 			setCacheClearing(true);
-			try { sessionStorage.removeItem('gbp_patterns_v1'); } catch (e) {}
+			try {
+				// Alte und neue Cache-Keys (alle Scopes) entfernen.
+				sessionStorage.removeItem('gbp_patterns_v1');
+				sessionStorage.removeItem('gbp_patterns_v2_template');
+				sessionStorage.removeItem('gbp_patterns_v2_post');
+				sessionStorage.removeItem('gbp_patterns_v2_unknown');
+			} catch (e) {}
 
 			fetch(gutenblockProModal.ajaxUrl, {
 				method: 'POST',
@@ -451,7 +507,13 @@
 				}),
 				el('div', {
 					className: 'gutenblock-pro-modal-tabs'
-				}, [
+				}, isTemplateScope ? [
+					// Template-Editor: nur Header/Footer-Patterns, daher keine
+					// Tab-Umschaltung — wir zeigen sie als feste Label-Pille.
+					el('span', {
+						className: 'gutenblock-pro-modal-tab-static'
+					}, 'Header & Footer')
+				] : [
 					el(Button, {
 						onClick: () => setSelectedCategory('sections'),
 						variant: selectedCategory === 'sections' ? 'primary' : 'secondary',

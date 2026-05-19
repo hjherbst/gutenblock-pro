@@ -310,6 +310,23 @@ class GutenBlock_Pro_Pattern_Loader {
 			if ( ! empty( $parsed['group'] ) && isset( self::$groups[ $parsed['group'] ] ) ) {
 				$parsed['categories'][] = 'gutenblock-pro-sections-' . $parsed['group'];
 			}
+
+			// Header- und Footer-Patterns sind Template-Parts und sollen nur
+			// im Site Editor (Templates / Template-Parts) eingefügt werden.
+			// `blockTypes` mit `core/template-part/{area}` macht sie für den
+			// nativen "Choose a header/footer"-Dialog auffindbar; gleichzeitig
+			// `inserter: false`, damit sie nicht im normalen Beitrags-Inserter
+			// auftauchen. Unser eigenes Modal filtert zusätzlich nach
+			// Editor-Kontext.
+			$group_lower = strtolower( (string) $parsed['group'] );
+			if ( $group_lower === 'header' || $group_lower === 'footer' ) {
+				$block_type = 'core/template-part/' . $group_lower;
+				if ( ! in_array( $block_type, $parsed['blockTypes'], true ) ) {
+					$parsed['blockTypes'][] = $block_type;
+				}
+				$parsed['inserter'] = false;
+				$parsed['template_part_only'] = true;
+			}
 		}
 
 		return $parsed;
@@ -657,17 +674,21 @@ class GutenBlock_Pro_Pattern_Loader {
 			$tones = isset( $pattern['tones'] ) && is_array( $pattern['tones'] ) ? $pattern['tones'] : array( 'neutral' );
 
 			$patterns_for_modal[] = array(
-				'name'        => 'gutenblock-pro/' . $slug,
-				'title'       => $pattern['title'],
-				'description' => $pattern['description'],
-				'content'     => $content,
-				'type'        => isset( $pattern['type'] ) ? $pattern['type'] : 'pattern',
-				'group'       => isset( $pattern['group'] ) ? $pattern['group'] : '',
-				'keywords'    => isset( $pattern['keywords'] ) ? $pattern['keywords'] : array(),
-				'slug'        => $slug,
-				'premium'     => $is_premium,
-				'hasAccess'   => $has_access,
-				'tones'       => array_values( $tones ),
+				'name'              => 'gutenblock-pro/' . $slug,
+				'title'             => $pattern['title'],
+				'description'       => $pattern['description'],
+				'content'           => $content,
+				'type'              => isset( $pattern['type'] ) ? $pattern['type'] : 'pattern',
+				'group'             => isset( $pattern['group'] ) ? $pattern['group'] : '',
+				'keywords'          => isset( $pattern['keywords'] ) ? $pattern['keywords'] : array(),
+				'slug'              => $slug,
+				'premium'           => $is_premium,
+				'hasAccess'         => $has_access,
+				'tones'             => array_values( $tones ),
+				// Markiert Patterns, die nur im Template-/Template-Part-Editor
+				// auftauchen sollen (Header/Footer). Vom Modal-JS für die
+				// Editor-Scope-Filterung genutzt.
+				'templatePartOnly'  => ! empty( $pattern['template_part_only'] ),
 			);
 		}
 
