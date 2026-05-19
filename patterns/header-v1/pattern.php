@@ -1,11 +1,11 @@
 <?php
 /**
- * Pattern: header v2
+ * Pattern: Header v1
  */
 
 return array (
-  'title' => 'header v2',
-  'description' => 'image logo left, navigations with contact button right',
+  'title' => 'Header v1',
+  'description' => 'Logo image left, navigation items with contact button right',
   'type' => 'pattern',
   'group' => 'header',
   'categories' => 
@@ -16,7 +16,7 @@ return array (
   array (
   ),
   'content' => '',
-  'ai_hint' => 'image logo left, navigations with contact button right',
+  'ai_hint' => 'Logo image left, navigation items with contact button right',
   'tones' => 
   array (
     0 => 'neutral',

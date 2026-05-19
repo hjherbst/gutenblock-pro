@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Footer v1',
-  'description' => 'Three-column footer (40/20/40) — paragraph left, social links center, contact info right.',
+  'description' => 'Two-column footer (50/50) — paragraph left, social links group with contact info right, followed by a spacer and additional links.',
   'type' => 'pattern',
   'group' => 'footer',
   'categories' => 
@@ -17,7 +17,7 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Three columns with widths 40/20/40; no container background; left column: paragraph, center column: social links, right column: two paragraphs for contact info; no headings or CTAs; no extra media.',
+  'ai_hint' => 'Two columns 50/50 with vertical-top alignment; no container background; left column: paragraph; right column: social links group containing two paragraphs for contact info; followed by a spacer; additional links in a wide group with small font size; no CTA buttons or extra media.',
   'content_fields' => 
   array (
   ),
