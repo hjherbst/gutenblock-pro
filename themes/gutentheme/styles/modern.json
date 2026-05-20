@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schemas.wp.org/wp/6.5/theme.json",
+    "version": 2,
+    "title": "Modern",
+    "settings": {
+        "color": {
+            "palette": [
+                { "color": "#f8f9fa", "name": "Base",     "slug": "base" },
+                { "color": "#212529", "name": "Contrast", "slug": "contrast" },
+                { "color": "#0d6efd", "name": "Primary",  "slug": "primary" },
+                { "color": "#e9ecef", "name": "Tertiary", "slug": "tertiary" }
+            ]
+        },
+        "layout": {
+            "contentSize": "860px",
+            "wideSize": "1280px"
+        }
+    },
+    "styles": {
+        "typography": {
+            "fontFamily": "var(--wp--preset--font-family--geist)"
+        },
+        "elements": {
+            "heading": {
+                "typography": {
+                    "fontFamily": "var(--wp--preset--font-family--sora)",
+                    "fontStyle": "normal",
+                    "fontWeight": "600"
+                }
+            }
+        }
+    }
+}

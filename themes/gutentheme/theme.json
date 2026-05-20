@@ -1,0 +1,214 @@
+{
+    "$schema": "https://schemas.wp.org/wp/6.5/theme.json",
+    "version": 2,
+    "settings": {
+        "appearanceTools": true,
+        "useRootPaddingAwareAlignments": true,
+        "color": {
+            "defaultPalette": false,
+            "palette": [
+                {
+                    "color": "#ffffff",
+                    "name": "Base",
+                    "slug": "base"
+                },
+                {
+                    "color": "#111111",
+                    "name": "Contrast",
+                    "slug": "contrast"
+                },
+                {
+                    "color": "#9DFF20",
+                    "name": "Primary",
+                    "slug": "primary"
+                },
+                {
+                    "color": "#F0F0F0",
+                    "name": "Tertiary",
+                    "slug": "tertiary"
+                }
+            ]
+        },
+        "layout": {
+            "contentSize": "720px",
+            "wideSize": "1200px"
+        },
+        "spacing": {
+            "spacingScale": {
+                "steps": 0
+            },
+            "spacingSizes": [
+                { "name": "1", "slug": "30", "size": "clamp(1.5rem, 5vw, 2rem)" },
+                { "name": "2", "slug": "40", "size": "clamp(1.8rem, 1.8rem + ((1vw - 0.48rem) * 2.885), 3rem)" },
+                { "name": "3", "slug": "50", "size": "clamp(2.5rem, 8vw, 4.5rem)" },
+                { "name": "4", "slug": "60", "size": "clamp(3.75rem, 10vw, 7rem)" },
+                { "name": "5", "slug": "70", "size": "clamp(5rem, 5.25rem + ((1vw - 0.48rem) * 9.096), 8rem)" },
+                { "name": "6", "slug": "80", "size": "clamp(7rem, 14vw, 11rem)" }
+            ],
+            "units": ["%", "px", "em", "rem", "vh", "vw"]
+        },
+        "typography": {
+            "defaultFontSizes": false,
+            "fontSizes": [
+                { "fluid": false, "name": "Small",        "size": "0.875rem", "slug": "small" },
+                { "fluid": false, "name": "Medium",       "size": "1rem",     "slug": "medium" },
+                { "fluid": false, "name": "Large",        "size": "1.125rem", "slug": "large" },
+                { "fluid": false, "name": "X-Large",      "size": "1.5rem",   "slug": "x-large" },
+                { "fluid": false, "name": "XX-Large",     "size": "2.25rem",  "slug": "xx-large" }
+            ],
+            "fontFamilies": [
+                {
+                    "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif",
+                    "name": "System Font",
+                    "slug": "system-font"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Sora",
+                            "fontStyle": "normal",
+                            "fontWeight": "100 800",
+                            "src": [ "file:./assets/fonts/sora/Sora-VariableFont_wght.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Sora, sans-serif",
+                    "name": "Sora",
+                    "slug": "sora"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Geist",
+                            "fontStyle": "normal",
+                            "fontWeight": "100 900",
+                            "src": [ "file:./assets/fonts/geist/Geist-VariableFont_wght.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Geist, sans-serif",
+                    "name": "Geist",
+                    "slug": "geist"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Playfair Display",
+                            "fontStyle": "normal",
+                            "fontWeight": "400 900",
+                            "src": [ "file:./assets/fonts/playfair-display/PlayfairDisplay-VariableFont_wght.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'Playfair Display', serif",
+                    "name": "Playfair Display",
+                    "slug": "playfair-display"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Montserrat",
+                            "fontStyle": "normal",
+                            "fontWeight": "100 900",
+                            "src": [ "file:./assets/fonts/montserrat/Montserrat-VariableFont_wght.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Montserrat, sans-serif",
+                    "name": "Montserrat",
+                    "slug": "montserrat"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Merriweather",
+                            "fontStyle": "normal",
+                            "fontWeight": "300 900",
+                            "src": [ "file:./assets/fonts/merriweather/Merriweather-VariableFont_wght.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Merriweather, serif",
+                    "name": "Merriweather",
+                    "slug": "merriweather"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Space Grotesk",
+                            "fontStyle": "normal",
+                            "fontWeight": "300 700",
+                            "src": [ "file:./assets/fonts/space-grotesk/SpaceGrotesk-VariableFont_wght.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'Space Grotesk', sans-serif",
+                    "name": "Space Grotesk",
+                    "slug": "space-grotesk"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Crimson Pro",
+                            "fontStyle": "normal",
+                            "fontWeight": "200 900",
+                            "src": [ "file:./assets/fonts/crimson-pro/CrimsonPro-VariableFont_wght.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'Crimson Pro', serif",
+                    "name": "Crimson Pro",
+                    "slug": "crimson-pro"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Libre Caslon Display",
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "src": [ "file:./assets/fonts/libre-caslon-display/LibreCaslonDisplay-Regular.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'Libre Caslon Display', serif",
+                    "name": "Libre Caslon Display",
+                    "slug": "libre-caslon-display"
+                }
+            ]
+        }
+    },
+    "styles": {
+        "color": {
+            "background": "var(--wp--preset--color--base)",
+            "text": "var(--wp--preset--color--contrast)"
+        },
+        "typography": {
+            "fontFamily": "var(--wp--preset--font-family--system-font)",
+            "fontSize": "1rem",
+            "lineHeight": "1.6"
+        },
+        "css": ".wp-element-button:visited, .wp-block-button__link:visited { color: currentColor !important; }",
+        "elements": {
+            "link": {
+                ":hover": {
+                    "color": {
+                        "text": "var(--wp--preset--color--primary)"
+                    }
+                }
+            },
+            "button": {
+                "color": {
+                    "background": "var(--wp--preset--color--primary)",
+                    "text": "var(--wp--preset--color--base)"
+                },
+                "typography": {
+                    "fontWeight": "600"
+                },
+                ":hover": {
+                    "color": {
+                        "background": "var(--wp--preset--color--contrast)",
+                        "text": "var(--wp--preset--color--base)"
+                    }
+                }
+            },
+            "heading": {
+                "typography": {
+                    "lineHeight": "1.2",
+                    "fontWeight": "700"
+                }
+            }
+        }
+    }
+}

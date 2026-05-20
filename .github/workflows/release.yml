@@ -33,6 +33,7 @@ jobs:
           cp -r inc dist/gutenblock-pro/
           cp -r languages dist/gutenblock-pro/ 2>/dev/null || true
           cp -r patterns dist/gutenblock-pro/
+          cp -r themes dist/gutenblock-pro/ 2>/dev/null || true
           cp -r vendor dist/gutenblock-pro/
           cp gutenblock-pro.php dist/gutenblock-pro/
           cp readme.txt dist/gutenblock-pro/ 2>/dev/null || true

@@ -959,8 +959,122 @@ msgid "Hol deine bei gutenblock.com gestaltete Site in diese WordPress-Installat
 msgstr "Bring the site you designed at gutenblock.com into this WordPress installation: pages, header/footer, menu and media are imported."
 
 #: inc/class-provisioning-wizard.php
+msgid "Hol deine bei gutenblock.com gestaltete Site in diese WordPress-Installation. Wähle, ob die gesamte Site übernommen oder nur Seiten ergänzt werden sollen."
+msgstr "Bring the site you designed at gutenblock.com into this WordPress installation. Choose whether to take over the entire site or only add pages."
+
+#: inc/class-provisioning-wizard.php
 msgid "Importierte Styles aktiv"
 msgstr "Imported styles active"
+
+#: inc/class-provisioning-wizard.php
+msgid "Globale Styles vom Projekt aktiv"
+msgstr "Project global styles active"
+
+#: inc/class-provisioning-wizard.php
+msgid "Site komplett übernehmen"
+msgstr "Take over entire site"
+
+#: inc/class-provisioning-wizard.php
+msgid "Empfohlen für eine neue WordPress-Installation. Alle Inhalte und das Erscheinungsbild werden 1:1 aus deinem gutenblock.com-Projekt übernommen."
+msgstr "Recommended for a fresh WordPress installation. All content and appearance are taken over 1:1 from your gutenblock.com project."
+
+#: inc/class-provisioning-wizard.php
+msgid "GutenTheme installieren und aktivieren"
+msgstr "Install and activate GutenTheme"
+
+#: inc/class-provisioning-wizard.php
+msgid "Seiten anlegen / überschreiben (mit Revisions-Backup)"
+msgstr "Create / overwrite pages (with revision backup)"
+
+#: inc/class-provisioning-wizard.php
+msgid "Bilder in die Mediathek importieren"
+msgstr "Import images into the media library"
+
+#: inc/class-provisioning-wizard.php
+msgid "Header & Footer als Template-Parts setzen"
+msgstr "Set header & footer as template parts"
+
+#: inc/class-provisioning-wizard.php
+msgid "Navigation als wp_navigation-Block anlegen"
+msgstr "Create navigation as a wp_navigation block"
+
+#: inc/class-provisioning-wizard.php
+msgid "Globale Styles aus dem Projekt übernehmen"
+msgstr "Apply global styles from the project"
+
+#: inc/class-provisioning-wizard.php
+msgid "SaaS-Startseite als WordPress-Startseite setzen"
+msgstr "Set gutenblock.com homepage as the WordPress homepage"
+
+#: inc/class-provisioning-wizard.php
+msgid "Achtung:"
+msgstr "Warning:"
+
+#: inc/class-provisioning-wizard.php
+msgid "Bestehende Seiten und Theme-Einstellungen werden überschrieben. Frühere Versionen findest du in den Revisionen."
+msgstr "Existing pages and theme settings are overwritten. Previous versions are available in the revisions."
+
+#: inc/class-provisioning-wizard.php
+msgid "Site übernehmen"
+msgstr "Take over site"
+
+#: inc/class-provisioning-wizard.php
+msgid "Nur Seiten importieren"
+msgstr "Import pages only"
+
+#: inc/class-provisioning-wizard.php
+msgid "Übernimmt nur Inhalte aus deinem gutenblock.com-Projekt. Dein bestehendes Theme, Header, Footer und Menü bleiben."
+msgstr "Imports only content from your gutenblock.com project. Your existing theme, header, footer and menu remain."
+
+#: inc/class-provisioning-wizard.php
+msgid "Globale Styles auf aktives Theme anwenden"
+msgstr "Apply global styles to the active theme"
+
+#: inc/class-provisioning-wizard.php
+msgid "Mergt Farben, Schriften und semantische Schriftgrößen aus dem Projekt in die Global Styles des aktiven Block-Themes. Bestehende Werte werden für die gleichen Slugs überschrieben, alles andere bleibt."
+msgstr "Merges colors, fonts and semantic font sizes from the project into the Global Styles of the active block theme. Existing values for the same slugs are overwritten, everything else is kept."
+
+#: inc/class-provisioning-wizard.php
+msgid "Setzt die SaaS-Startseite als WordPress-Startseite (page_on_front). Lasse die Option aus, wenn deine bestehende Startseite bleiben soll."
+msgstr "Sets the gutenblock.com homepage as the WordPress homepage (page_on_front). Leave it off to keep your existing homepage."
+
+#: inc/class-provisioning-wizard.php
+msgid "Seiten importieren"
+msgstr "Import pages"
+
+#: inc/class-provisioning-wizard.php
+msgid "GutenTheme-Bundle nicht im Plugin gefunden – bitte Plugin neu installieren."
+msgstr "GutenTheme bundle not found inside the plugin – please reinstall the plugin."
+
+#: inc/class-provisioning-wizard.php
+msgid "Theme konnte nicht kopiert werden (keine Filesystem-Rechte)."
+msgstr "Theme could not be copied (missing filesystem permissions)."
+
+#: inc/class-provisioning-wizard.php
+msgid "aktiviert"
+msgstr "activated"
+
+#: inc/class-provisioning-wizard.php
+msgid "installiert + aktiviert"
+msgstr "installed + activated"
+
+#: inc/class-provisioning-wizard.php
+msgid "angelegt"
+msgstr "created"
+
+#: inc/class-provisioning-wizard.php
+msgid "–"
+msgstr "–"
+
+#: inc/class-provisioning-wizard.php
+#, php-format
+msgid "Site übernommen. Seiten: %1$d · GutenTheme: %2$s · Navigation: %3$s · Styles + Header + Footer: übernommen"
+msgstr "Site taken over. Pages: %1$d · GutenTheme: %2$s · Navigation: %3$s · Styles + header + footer: applied"
+
+#: inc/class-provisioning-wizard.php
+#, php-format
+msgid "Seiten importiert. Seiten: %1$d · Styles: %2$s · Startseite: %3$s"
+msgstr "Pages imported. Pages: %1$d · Styles: %2$s · Homepage: %3$s"
 
 #: inc/class-provisioning-wizard.php
 msgid "Trage den Provisioning-Token aus deinem gutenblock.com-Projekt (Site → WordPress verbinden) ein."

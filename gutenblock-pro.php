@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock Pro
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: Professional block patterns and Full Site Editor building blocks – also acts as the import bridge for the GutenBlock SaaS website builder.
- * Version: 1.26.0
+ * Version: 1.27.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.26.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.27.0' );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_PATTERNS_PATH', GUTENBLOCK_PRO_PATH . 'patterns/' );

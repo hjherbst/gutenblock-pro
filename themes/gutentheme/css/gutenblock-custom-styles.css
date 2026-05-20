@@ -1,0 +1,33 @@
+/**
+ * GutenTheme editor preview fixes.
+ *
+ * Loaded only inside the block editor (Gutenberg / FSE iframe) via
+ * `add_editor_style()` and `enqueue_block_editor_assets`. Frontend pattern
+ * styling lives in the GutenBlock Pro plugin's per-pattern CSS — anything
+ * functional for patterns belongs in the plugin, not the theme.
+ */
+
+/* WordPress fixes ---------------------------------------------------- */
+
+/* Keep visited buttons in their current text color. */
+.wp-element-button:visited,
+.wp-block-button__link:visited {
+	color: currentColor !important;
+}
+
+/* No underline on links inside theme header/footer template parts. */
+header a,
+footer a {
+	text-decoration: none;
+}
+
+/* Grid containers with media-text children: force 6 columns in the awkward
+ * 576–1024px range so two `columnSpan: 3` media-text blocks fit side by side
+ * (default `minimumColumnWidth: 12rem` produces 4–5 columns and leaves
+ * unwanted whitespace on the right).
+ */
+@media (min-width: 576px) and (max-width: 1024px) {
+	.wp-block-group.alignwide.is-layout-grid:has(> .wp-block-group .wp-block-media-text) {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+	}
+}

@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schemas.wp.org/wp/6.5/theme.json",
+    "version": 2,
+    "title": "Business",
+    "settings": {
+        "color": {
+            "palette": [
+                { "color": "#ffffff", "name": "Base",     "slug": "base" },
+                { "color": "#1e293b", "name": "Contrast", "slug": "contrast" },
+                { "color": "#3b82f6", "name": "Primary",  "slug": "primary" },
+                { "color": "#f1f5f9", "name": "Tertiary", "slug": "tertiary" }
+            ]
+        },
+        "layout": {
+            "contentSize": "800px",
+            "wideSize": "1200px"
+        }
+    },
+    "styles": {
+        "typography": {
+            "fontFamily": "var(--wp--preset--font-family--system-font)"
+        },
+        "elements": {
+            "heading": {
+                "typography": {
+                    "fontFamily": "var(--wp--preset--font-family--montserrat)",
+                    "fontStyle": "normal",
+                    "fontWeight": "700"
+                }
+            }
+        }
+    }
+}
