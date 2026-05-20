@@ -5,7 +5,7 @@
 
 return array (
   'title' => 'Hero v6',
-  'description' => 'Hero section with background — two columns (50/50): H1 + filled CTA left, paragraph right.',
+  'description' => 'Hero section with background — two columns (50/50) — H1 and outline CTA left, paragraph right.',
   'type' => 'pattern',
   'group' => 'hero',
   'categories' => 
@@ -17,7 +17,7 @@ return array (
   ),
   'content' => '',
   'premium' => false,
-  'ai_hint' => 'Hero layout with container background image and gradient overlay; two columns 50/50 with vertical-bottom alignment; left column contains H1 and one outline button; right column contains a paragraph; no further media.',
+  'ai_hint' => 'Hero layout with cover background; two columns 50/50 with vertical-bottom alignment; left column: H1 and outline CTA; right column: paragraph; no further media.',
   'content_fields' => 
   array (
     0 => 'hero-headline',
