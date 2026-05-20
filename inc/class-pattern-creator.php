@@ -276,6 +276,13 @@ class GutenBlock_Pro_Pattern_Creator {
 		// Normalize core/image blocks so they pass validation when pattern is inserted
 		$content = GutenBlock_Pro_Pattern_Loader::normalize_core_image_blocks( $content );
 
+		// Persist plugin-asset URLs as the host-agnostic `__PLUGIN_URL__` placeholder.
+		// The plugin-image picker writes absolute URLs (e.g. http://localhost:10038/...)
+		// into block attributes because the editor needs a real URL for previews. Before
+		// the markup is written to disk we map those URLs back to the placeholder so the
+		// committed `content.html` works on any WordPress installation.
+		$content = GutenBlock_Pro_Pattern_Loader::to_plugin_url_placeholder( $content );
+
 		$content_filename = 'content.html';
 
 		// Auto-Detect: bei Cover/BG-Image/Gradient kann der User keine Varianten erzwingen

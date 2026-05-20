@@ -456,11 +456,18 @@ class GutenBlock_Pro_Pattern_Loader {
 		if ( ! is_string( $content ) || $content === '' ) {
 			return $content;
 		}
-		if ( ! defined( 'GUTENBLOCK_PRO_FILE' ) ) {
+
+		// Prefer the precomputed plugin URL constant; fall back to `plugins_url()`
+		// against `GUTENBLOCK_PRO_FILE` for safety. Both yield the same value but
+		// the constant route works even on early hooks where `plugins_url()` may
+		// not yet be available.
+		if ( defined( 'GUTENBLOCK_PRO_URL' ) ) {
+			$base = rtrim( GUTENBLOCK_PRO_URL, '/' );
+		} elseif ( defined( 'GUTENBLOCK_PRO_FILE' ) && function_exists( 'plugins_url' ) ) {
+			$base = rtrim( plugins_url( '', GUTENBLOCK_PRO_FILE ), '/' );
+		} else {
 			return $content;
 		}
-
-		$base = rtrim( plugins_url( '', GUTENBLOCK_PRO_FILE ), '/' );
 
 		if ( strpos( $content, '__PLUGIN_URL__' ) !== false ) {
 			$content = str_replace( '__PLUGIN_URL__', $base, $content );
@@ -477,6 +484,47 @@ class GutenBlock_Pro_Pattern_Loader {
 			},
 			$content
 		);
+	}
+
+	/**
+	 * Inverse of {@see self::normalize_plugin_asset_urls()}: rewrites concrete
+	 * plugin-asset URLs back to the host-agnostic `__PLUGIN_URL__` placeholder.
+	 *
+	 * Use this BEFORE persisting pattern content to disk (e.g. in
+	 * `class-pattern-creator.php::ajax_save_pattern()`), so that `content.html`
+	 * files committed into the plugin do not contain instance-specific URLs
+	 * such as `http://localhost:10038/wp-content/plugins/gutenblock-pro/...`.
+	 *
+	 * Handles both absolute and root-relative variants:
+	 *   - `https?://<host>/wp-content/plugins/gutenblock-pro/assets/images/X`
+	 *   - `/wp-content/plugins/gutenblock-pro/assets/images/X`
+	 *
+	 * Idempotent: existing `__PLUGIN_URL__` placeholders are left untouched.
+	 *
+	 * @param string $content
+	 * @return string
+	 */
+	public static function to_plugin_url_placeholder( $content ) {
+		if ( ! is_string( $content ) || $content === '' ) {
+			return $content;
+		}
+
+		// Absolute URL with scheme + host
+		$content = preg_replace(
+			'#https?://[^\s"\'<>]+?/wp-content/plugins/gutenblock-pro/(assets/images/[^\s"\'<>]+)#i',
+			'__PLUGIN_URL__/$1',
+			$content
+		);
+
+		// Root-relative path (boundary: must not be preceded by alnum/dot/slash so we
+		// do not break already-absolute URLs or already-placeholdered occurrences).
+		$content = preg_replace(
+			'#(?<![A-Za-z0-9./_-])/wp-content/plugins/gutenblock-pro/(assets/images/[^\s"\'<>]+)#',
+			'__PLUGIN_URL__/$1',
+			$content
+		);
+
+		return $content;
 	}
 
 	/**

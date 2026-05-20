@@ -1256,8 +1256,13 @@ class GutenBlock_Pro_Admin_Page {
 			wp_die( 'Pattern not found' );
 		}
 
-		// Transient-Cache: Key aus Slug, Locale, Tone und Datei-Änderungszeit
-		$cache_key = 'gbp_prev_' . substr( md5( $pattern_slug . $locale . $tone_param . filemtime( $content_file ) ), 0, 20 );
+		// Transient-Cache: Key aus Slug, Locale, Tone, Datei-Änderungszeit und Plugin-
+		// Version. Der Versions-Bestandteil sorgt dafür, dass jeder Plugin-Update den
+		// Vorschau-Cache implizit invalidiert – nötig, wenn sich die Render-Pipeline
+		// ändert (z. B. neue URL-Normalisierung) ohne dass die `content.html` selbst
+		// touched wurde.
+		$plugin_version = defined( 'GUTENBLOCK_PRO_VERSION' ) ? GUTENBLOCK_PRO_VERSION : '0';
+		$cache_key = 'gbp_prev_' . substr( md5( $pattern_slug . $locale . $tone_param . filemtime( $content_file ) . $plugin_version ), 0, 20 );
 		$cached_html = get_transient( $cache_key );
 		if ( false !== $cached_html ) {
 			echo $cached_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -1275,6 +1280,15 @@ class GutenBlock_Pro_Admin_Page {
 
 		// Get content and render blocks
 		$content = file_get_contents( $content_file );
+
+		// Resolve `__PLUGIN_URL__` placeholders and any legacy absolute/root-relative
+		// plugin-asset URLs to the current installation's plugin URL. Mirrors the
+		// normalization that runs on `register_block_pattern()` so the standalone
+		// iframe preview (admin page + Gutenberg sections modal) renders images
+		// the exact same way as the FSE pattern inserter.
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$content = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $content );
+		}
 
 		// Ton-Variante injizieren
 		if ( $tone_param !== 'neutral' ) {
