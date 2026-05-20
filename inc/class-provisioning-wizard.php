@@ -118,8 +118,8 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		$this->render_admin_styles();
 
 		echo '<div class="wrap gbp-import-wrap">';
-		echo '<h1 class="wp-heading-inline">' . esc_html__( 'Import aus GutenBlock-SaaS', 'gutenblock-pro' ) . '</h1>';
-		echo '<p class="description gbp-lead">' . esc_html__( 'Übernimm deine im SaaS-Editor gestaltete Site in diese WordPress-Installation: Seiten, Header/Footer, Menü und Medien.', 'gutenblock-pro' ) . '</p>';
+		echo '<h1 class="wp-heading-inline">' . esc_html__( 'Import von gutenblock.com', 'gutenblock-pro' ) . '</h1>';
+		echo '<p class="description gbp-lead">' . esc_html__( 'Hol deine bei gutenblock.com gestaltete Site in diese WordPress-Installation: Seiten, Header/Footer, Menü und Medien werden übernommen.', 'gutenblock-pro' ) . '</p>';
 
 		// ── Karte: Status ────────────────────────────────────────────────
 		echo '<div class="gbp-card gbp-card-status">';
@@ -127,36 +127,37 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		echo '<div class="gbp-status-grid">';
 		echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Letzter Import', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $last ? esc_html( $last ) : '<em>—</em>' ) . '</span></div>';
 		echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Seiten zuletzt', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $last_pages ? (int) $last_pages : '<em>—</em>' ) . '</span></div>';
-		echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'SaaS-Styles aktiv', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $styles_active ? '<span class="gbp-pill gbp-pill-on">' . esc_html__( 'Aktiv', 'gutenblock-pro' ) . '</span>' : '<span class="gbp-pill gbp-pill-off">' . esc_html__( 'Aus', 'gutenblock-pro' ) . '</span>' ) . '</span></div>';
+		echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Importierte Styles aktiv', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $styles_active ? '<span class="gbp-pill gbp-pill-on">' . esc_html__( 'Aktiv', 'gutenblock-pro' ) . '</span>' : '<span class="gbp-pill gbp-pill-off">' . esc_html__( 'Aus', 'gutenblock-pro' ) . '</span>' ) . '</span></div>';
 		echo '</div>';
 		echo '</div>';
 
 		// ── Karte: Import-Formular ───────────────────────────────────────
 		echo '<div class="gbp-card">';
 		echo '<div class="gbp-card-head"><h2>' . esc_html__( 'Import starten', 'gutenblock-pro' ) . '</h2></div>';
-		echo '<p class="gbp-card-intro">' . esc_html__( 'Trage deinen Provisioning-Token aus dem GutenBlock-Dashboard (Site → Ausliefern) ein.', 'gutenblock-pro' ) . '</p>';
+		echo '<p class="gbp-card-intro">' . esc_html__( 'Trage den Provisioning-Token aus deinem gutenblock.com-Projekt (Site → WordPress verbinden) ein.', 'gutenblock-pro' ) . '</p>';
+		echo '<p class="gbp-card-note">' . esc_html__( 'Hinweis: Existieren bereits Seiten mit denselben Slugs, sichert WordPress die bisherige Version als Revision. Du kannst sie jederzeit über „Seite bearbeiten → Revisionen" wiederherstellen.', 'gutenblock-pro' ) . '</p>';
 
 		echo '<form method="post" action="" class="gbp-form">';
 		wp_nonce_field( 'gutenblock_provision', 'gutenblock_provision_nonce' );
 
 		echo '<div class="gbp-field">';
 		echo '<label for="gutenblock_token">' . esc_html__( 'Provisioning-Token', 'gutenblock-pro' ) . '</label>';
-		echo '<input type="text" class="large-text code" id="gutenblock_token" name="gutenblock_token" value="" autocomplete="off" placeholder="' . esc_attr__( '64-stelliger Hex-Token aus dem Dashboard', 'gutenblock-pro' ) . '" />';
+		echo '<input type="text" class="large-text code" id="gutenblock_token" name="gutenblock_token" value="" autocomplete="off" placeholder="' . esc_attr__( '64-stelliger Hex-Token aus deinem gutenblock.com-Projekt', 'gutenblock-pro' ) . '" />';
 		echo '</div>';
 
 		// Optionaler Styles-Override
 		echo '<div class="gbp-option gbp-styles-toggle">';
 		echo '<label class="gbp-checkbox">';
 		echo '<input type="checkbox" name="gutenblock_import_styles" value="1" />';
-		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Styles aus dem SaaS übernehmen', 'gutenblock-pro' ) . '</span>';
+		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Styles von gutenblock.com übernehmen', 'gutenblock-pro' ) . '</span>';
 		echo '</label>';
 		echo '<div class="gbp-warn">';
 		echo '<strong>' . esc_html__( 'Hinweis:', 'gutenblock-pro' ) . '</strong> ';
-		echo esc_html__( 'Aktiviert ersetzt diese Option Farben, Schriften (inkl. Heading-Weight) und semantische Schriftgrößen (H1–H4, Absatz) deiner Site durch die im SaaS festgelegten Werte. Diese werden als zusätzliches Stylesheet eingehängt und überschreiben Theme-Defaults via `!important`. Bestehende Block-individuelle Overrides bleiben erhalten.', 'gutenblock-pro' );
+		echo esc_html__( 'Aktiviert ersetzt diese Option Farben, Schriften (inkl. Heading-Weight) und semantische Schriftgrößen (H1–H4, Absatz) deiner Site durch die in deinem gutenblock.com-Projekt festgelegten Werte. Diese werden als zusätzliches Stylesheet eingehängt und überschreiben Theme-Defaults via `!important`. Bestehende Block-individuelle Overrides bleiben erhalten.', 'gutenblock-pro' );
 		echo '</div>';
 		echo '</div>';
 
-		// Opt-in: aktuelle Startseite durch SaaS-Home ersetzen (sonst beibehalten).
+		// Opt-in: replace current WordPress home page with the gutenblock.com home (otherwise keep it).
 		echo '<div class="gbp-option gbp-replace-home-toggle">';
 		echo '<label class="gbp-checkbox">';
 		echo '<input type="checkbox" name="gutenblock_replace_home" value="1" />';
@@ -164,7 +165,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		echo '</label>';
 		echo '<div class="gbp-warn">';
 		echo '<strong>' . esc_html__( 'Hinweis:', 'gutenblock-pro' ) . '</strong> ';
-		echo esc_html__( 'Aktiviert ersetzt diese Option deine aktuelle WordPress-Startseite durch die im SaaS gestaltete Startseite. Lasse die Option deaktiviert, wenn deine bestehende Startseite erhalten bleiben soll – alle weiteren Seiten werden in beiden Fällen importiert.', 'gutenblock-pro' );
+		echo esc_html__( 'Aktiviert ersetzt diese Option deine aktuelle WordPress-Startseite durch die bei gutenblock.com gestaltete Startseite. Lasse die Option deaktiviert, wenn deine bestehende Startseite erhalten bleiben soll – alle weiteren Seiten werden in beiden Fällen importiert.', 'gutenblock-pro' );
 		echo '</div>';
 		echo '</div>';
 
@@ -172,10 +173,10 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		echo '<div class="gbp-option gbp-import-header-toggle">';
 		echo '<label class="gbp-checkbox">';
 		echo '<input type="checkbox" name="gutenblock_import_header" value="1" />';
-		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Header aus SaaS importieren', 'gutenblock-pro' ) . '</span>';
+		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Header von gutenblock.com importieren', 'gutenblock-pro' ) . '</span>';
 		echo '</label>';
 		echo '<div class="gbp-warn">';
-		echo esc_html__( 'Aktiviert erstellt einen neuen Header-Template-Part neben den bestehenden. Vorherige Importe aus dem SaaS werden ersetzt; eigene oder andere Header bleiben erhalten.', 'gutenblock-pro' );
+		echo esc_html__( 'Aktiviert erstellt einen neuen Header-Template-Part neben den bestehenden. Vorherige Importe von gutenblock.com werden ersetzt; eigene oder andere Header bleiben erhalten.', 'gutenblock-pro' );
 		echo '</div>';
 		echo '</div>';
 
@@ -183,10 +184,10 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		echo '<div class="gbp-option gbp-import-footer-toggle">';
 		echo '<label class="gbp-checkbox">';
 		echo '<input type="checkbox" name="gutenblock_import_footer" value="1" />';
-		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Footer aus SaaS importieren', 'gutenblock-pro' ) . '</span>';
+		echo '<span class="gbp-checkbox-text">' . esc_html__( 'Footer von gutenblock.com importieren', 'gutenblock-pro' ) . '</span>';
 		echo '</label>';
 		echo '<div class="gbp-warn">';
-		echo esc_html__( 'Aktiviert erstellt einen neuen Footer-Template-Part neben den bestehenden. Vorherige Importe aus dem SaaS werden ersetzt; eigene oder andere Footer bleiben erhalten.', 'gutenblock-pro' );
+		echo esc_html__( 'Aktiviert erstellt einen neuen Footer-Template-Part neben den bestehenden. Vorherige Importe von gutenblock.com werden ersetzt; eigene oder andere Footer bleiben erhalten.', 'gutenblock-pro' );
 		echo '</div>';
 		echo '</div>';
 
@@ -204,7 +205,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 
 			echo '<div class="gbp-card gbp-card-internal">';
 			echo '<div class="gbp-card-head"><h2>' . esc_html__( 'Pattern-Bundle (intern)', 'gutenblock-pro' ) . '</h2><span class="gbp-pill gbp-pill-admin">' . esc_html__( 'Admin', 'gutenblock-pro' ) . '</span></div>';
-			echo '<p class="gbp-card-intro">' . esc_html__( 'Statisches Pattern-Bundle für den SaaS-Canvas neu bauen.', 'gutenblock-pro' ) . '</p>';
+			echo '<p class="gbp-card-intro">' . esc_html__( 'Statisches Pattern-Bundle für gutenblock.com neu bauen.', 'gutenblock-pro' ) . '</p>';
 			echo '<div class="gbp-status-grid">';
 			echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Letzter Build', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . ( $built_at ? esc_html( $built_at ) : '<em>—</em>' ) . '</span></div>';
 			echo '<div class="gbp-stat"><span class="gbp-stat-label">' . esc_html__( 'Patterns', 'gutenblock-pro' ) . '</span><span class="gbp-stat-value">' . (int) $count . '</span></div>';
@@ -231,6 +232,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			. '.gbp-card-head{display:flex;align-items:center;gap:10px;margin:0 0 10px;}'
 			. '.gbp-card-head h2{font-size:14px;margin:0;color:#1d2327;font-weight:600;}'
 			. '.gbp-card-intro{margin:0 0 14px;color:#50575e;font-size:13px;}'
+			. '.gbp-card-note{margin:-8px 0 14px;padding:8px 12px;border-left:3px solid #b9c0c7;background:#f6f7f7;color:#3c434a;font-size:12px;border-radius:4px;}'
 			. '.gbp-form .gbp-field{margin:0 0 14px;}'
 			. '.gbp-form label{display:block;font-size:12px;font-weight:600;color:#1d2327;margin-bottom:4px;}'
 			. '.gbp-form input[type=text].large-text{width:100%;max-width:680px;}'
@@ -383,7 +385,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 					/* translators: 1: pages count, 2: styles state, 3: home state, 4: imported chrome parts */
 					esc_html__( 'Import erfolgreich. Seiten: %1$d · Styles: %2$s · Startseite: %3$s · Template-Parts: %4$s', 'gutenblock-pro' ),
 					(int) $pages_count,
-					$import_styles ? esc_html__( 'aus SaaS übernommen', 'gutenblock-pro' ) : esc_html__( 'unverändert', 'gutenblock-pro' ),
+					$import_styles ? esc_html__( 'übernommen', 'gutenblock-pro' ) : esc_html__( 'unverändert', 'gutenblock-pro' ),
 					$replace_home ? esc_html__( 'ersetzt', 'gutenblock-pro' ) : esc_html__( 'beibehalten', 'gutenblock-pro' ),
 					$chrome_label
 				);
@@ -470,6 +472,8 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		$assets   = isset( $manifest['assets'] ) && is_array( $manifest['assets'] ) ? $manifest['assets'] : array();
 		$need_lib = false;
 
+		$this->debug_log( sprintf( 'import_assets: %d candidates', count( $assets ) ) );
+
 		foreach ( $assets as $row ) {
 			$url = isset( $row['remoteUrl'] ) ? (string) $row['remoteUrl'] : '';
 			if ( ! $url || isset( $map[ $url ] ) ) {
@@ -487,11 +491,26 @@ class GutenBlock_Pro_Provisioning_Wizard {
 				$new_url = wp_get_attachment_url( $att_id );
 				if ( $new_url ) {
 					$map[ $url ] = $new_url;
+					$this->debug_log( sprintf( 'import_assets: sideloaded %s → %s (att=%d, role=%s)', $url, $new_url, $att_id, isset( $row['role'] ) ? $row['role'] : '' ) );
 				}
+			} else {
+				$this->debug_log( sprintf( 'import_assets: sideload FAILED for %s (role=%s)', $url, isset( $row['role'] ) ? $row['role'] : '' ) );
 			}
 		}
 
 		return $map;
+	}
+
+	/**
+	 * Lightweight debug logger. Writes only when WP_DEBUG is enabled so
+	 * production sites stay silent. Each line is prefixed for easy `grep`.
+	 *
+	 * @param string $message Log message.
+	 */
+	private function debug_log( string $message ): void {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[gutenblock-pro/provisioning] ' . $message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		}
 	}
 
 	/**
@@ -561,10 +580,24 @@ class GutenBlock_Pro_Provisioning_Wizard {
 				'post_content' => $content,
 			);
 			if ( $existing ) {
+				// Force-capture the current state as a revision so the user can
+				// roll back via Editor → Revisions if they had hand-edited the
+				// page before this import. `wp_update_post()` would normally
+				// create a revision too, but only when WP_POST_REVISIONS and the
+				// post type's `revisions` support are both enabled — making the
+				// snapshot explicit closes that gap and is idempotent (WP
+				// dedupes identical revisions).
+				if ( post_type_supports( 'page', 'revisions' ) ) {
+					wp_save_post_revision( (int) $existing->ID );
+				}
 				$postarr['ID'] = (int) $existing->ID;
 				wp_update_post( $postarr );
+				update_post_meta( (int) $existing->ID, '_gutenblock_pro_last_import', current_time( 'mysql' ) );
 			} else {
-				wp_insert_post( $postarr );
+				$new_id = wp_insert_post( $postarr );
+				if ( $new_id && ! is_wp_error( $new_id ) ) {
+					update_post_meta( (int) $new_id, '_gutenblock_pro_last_import', current_time( 'mysql' ) );
+				}
 			}
 		}
 
@@ -610,9 +643,117 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			if ( 'neutral' !== $tone && class_exists( 'GutenBlock_Pro_Tone_Injector' ) ) {
 				$markup = GutenBlock_Pro_Tone_Injector::inject( $markup, $tone );
 			}
-			$out .= $this->apply_text_fields_to_markup( $markup, $fields ) . "\n\n";
+			$markup = $this->apply_text_fields_to_markup( $markup, $fields );
+			// Apply user-supplied per-section image overrides (AI generations,
+			// uploads, library picks) BEFORE the global URL map kicks in. The
+			// remote URL is then replaced again by the local Media Library URL
+			// during `apply_pages()` via the sideload `$url_map`.
+			if ( ! empty( $section['imageOverrides'] ) && is_array( $section['imageOverrides'] ) ) {
+				$markup = $this->apply_image_overrides_to_markup( $markup, $section['imageOverrides'] );
+			}
+			$out .= $markup . "\n\n";
 		}
 		return $out;
+	}
+
+	/**
+	 * Replaces the n-th `<img>` inside a section's block markup with a
+	 * per-section override URL coming from the manifest. Mirrors the SaaS DOM
+	 * renderer's image indexing (document order of `<img>` inside the
+	 * section). Also patches matching `"url":"OLD"` attributes inside Gutenberg
+	 * block comments so subsequent editor saves keep the new image. The new
+	 * remote URL is mapped to a local attachment URL later via `$url_map`.
+	 *
+	 * @param string $markup    Block markup for one section.
+	 * @param array  $overrides Array of `{ imgIndex: int, url: string }`.
+	 * @return string
+	 */
+	private function apply_image_overrides_to_markup( string $markup, array $overrides ): string {
+		if ( '' === $markup || empty( $overrides ) ) {
+			return $markup;
+		}
+		// Build imgIndex => url lookup; ignore malformed entries.
+		$by_index = array();
+		foreach ( $overrides as $entry ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$idx = isset( $entry['imgIndex'] ) ? (int) $entry['imgIndex'] : -1;
+			$url = isset( $entry['url'] ) ? (string) $entry['url'] : '';
+			if ( $idx < 0 || '' === $url ) {
+				continue;
+			}
+			$by_index[ $idx ] = $url;
+		}
+		if ( empty( $by_index ) ) {
+			return $markup;
+		}
+		$this->debug_log( sprintf( 'apply_image_overrides: %d overrides, markup length=%d', count( $by_index ), strlen( $markup ) ) );
+
+		// 1) Patch the rendered <img> tags using WP_HTML_Tag_Processor (WP 6.2+)
+		//    so the public frontend immediately shows the new image even before
+		//    the URL map rewrites the URL to its local equivalent.
+		$old_urls = array();
+		if ( class_exists( 'WP_HTML_Tag_Processor' ) ) {
+			$processor = new WP_HTML_Tag_Processor( $markup );
+			$cursor    = 0;
+			while ( $processor->next_tag( 'img' ) ) {
+				if ( isset( $by_index[ $cursor ] ) ) {
+					$current = (string) $processor->get_attribute( 'src' );
+					if ( '' !== $current ) {
+						$old_urls[ $cursor ] = $current;
+					}
+					$processor->set_attribute( 'src', $by_index[ $cursor ] );
+					// Drop responsive sources, otherwise the browser may pick a
+					// stale Unsplash/stock URL from `srcset` and ignore `src`.
+					$processor->remove_attribute( 'srcset' );
+					$processor->remove_attribute( 'sizes' );
+					$processor->remove_attribute( 'data-gb-image-original' );
+					$this->debug_log( sprintf( 'apply_image_overrides: img[%d] %s → %s', $cursor, $current, $by_index[ $cursor ] ) );
+				}
+				$cursor++;
+			}
+			$this->debug_log( sprintf( 'apply_image_overrides: scanned %d <img> tags via WP_HTML_Tag_Processor', $cursor ) );
+			$markup = $processor->get_updated_html();
+		} else {
+			// Fallback for very old WordPress versions: rewrite via regex.
+			$cursor_ref = 0;
+			$markup     = preg_replace_callback(
+				'/<img\b[^>]*>/i',
+				static function ( $m ) use ( &$cursor_ref, $by_index, &$old_urls ) {
+					$tag = $m[0];
+					if ( isset( $by_index[ $cursor_ref ] ) ) {
+						if ( preg_match( '/\bsrc="([^"]*)"/i', $tag, $sm ) ) {
+							$old_urls[ $cursor_ref ] = $sm[1];
+						}
+						$tag = preg_replace( '/\bsrc="[^"]*"/i', 'src="' . esc_attr( $by_index[ $cursor_ref ] ) . '"', $tag );
+						$tag = preg_replace( '/\bsrcset="[^"]*"/i', '', $tag );
+						$tag = preg_replace( '/\bsizes="[^"]*"/i', '', $tag );
+					}
+					$cursor_ref++;
+					return $tag;
+				},
+				$markup
+			);
+		}
+
+		// 2) Block comments carry their own `"url":"..."` attribute for
+		//    `core/image`, `core/cover` etc. Replace each captured old URL
+		//    inside the markup so a later editor "Update" keeps the override
+		//    instead of reverting to the pattern's stock URL. Scoped to this
+		//    section's markup only, so we don't touch unrelated occurrences.
+		foreach ( $old_urls as $idx => $old ) {
+			if ( ! isset( $by_index[ $idx ] ) || '' === $old ) {
+				continue;
+			}
+			$new = $by_index[ $idx ];
+			if ( $old === $new ) {
+				continue;
+			}
+			$markup = str_replace( $old, $new, $markup );
+		}
+
+		return $markup;
 	}
 
 	/**
@@ -781,7 +922,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		$semantic = isset( $c['semanticFontSizes'] ) && is_array( $c['semanticFontSizes'] ) ? $c['semanticFontSizes'] : array();
 
 		$lines = array();
-		$lines[] = '/* GutenBlock SaaS Customizer – generated ' . gmdate( 'c' ) . ' */';
+		$lines[] = '/* GutenBlock Customizer – generated ' . gmdate( 'c' ) . ' */';
 
 		// Farben
 		$mapc = array(
@@ -932,7 +1073,7 @@ class GutenBlock_Pro_Provisioning_Wizard {
 
 			$timestamp = current_time( 'mysql' );
 			$slug      = 'gbp-saas-' . $part . '-' . gmdate( 'YmdHis' );
-			$title     = ucfirst( $part ) . ' (GutenBlock SaaS)';
+			$title     = ucfirst( $part ) . ' (GutenBlock Import)';
 
 			$post_id = wp_insert_post(
 				array(
@@ -1014,6 +1155,12 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		}
 		if ( '' === $markup ) {
 			return '';
+		}
+		// Apply SaaS-side image overrides before the URL map rewrites the
+		// remote URLs to local Media Library URLs (same order as
+		// `assemble_page_from_sections`).
+		if ( ! empty( $chrome['imageOverrides'] ) && is_array( $chrome['imageOverrides'] ) ) {
+			$markup = $this->apply_image_overrides_to_markup( $markup, $chrome['imageOverrides'] );
 		}
 		if ( ! empty( $url_map ) ) {
 			$markup = strtr( $markup, $url_map );

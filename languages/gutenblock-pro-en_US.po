@@ -947,8 +947,64 @@ msgid "Startseite ersetzen"
 msgstr "Replace homepage"
 
 #: inc/class-provisioning-wizard.php
-msgid "Aktiviert ersetzt diese Option deine aktuelle WordPress-Startseite durch die im SaaS gestaltete Startseite. Lasse die Option deaktiviert, wenn deine bestehende Startseite erhalten bleiben soll – alle weiteren Seiten werden in beiden Fällen importiert."
-msgstr "When enabled, your current WordPress homepage is replaced with the homepage designed in the SaaS. Leave it disabled to keep your existing homepage — all other pages are imported either way."
+msgid "Aktiviert ersetzt diese Option deine aktuelle WordPress-Startseite durch die bei gutenblock.com gestaltete Startseite. Lasse die Option deaktiviert, wenn deine bestehende Startseite erhalten bleiben soll – alle weiteren Seiten werden in beiden Fällen importiert."
+msgstr "When enabled, your current WordPress homepage is replaced with the homepage designed at gutenblock.com. Leave it disabled to keep your existing homepage — all other pages are imported either way."
+
+#: inc/class-provisioning-wizard.php
+msgid "Import von gutenblock.com"
+msgstr "Import from gutenblock.com"
+
+#: inc/class-provisioning-wizard.php
+msgid "Hol deine bei gutenblock.com gestaltete Site in diese WordPress-Installation: Seiten, Header/Footer, Menü und Medien werden übernommen."
+msgstr "Bring the site you designed at gutenblock.com into this WordPress installation: pages, header/footer, menu and media are imported."
+
+#: inc/class-provisioning-wizard.php
+msgid "Importierte Styles aktiv"
+msgstr "Imported styles active"
+
+#: inc/class-provisioning-wizard.php
+msgid "Trage den Provisioning-Token aus deinem gutenblock.com-Projekt (Site → WordPress verbinden) ein."
+msgstr "Paste the provisioning token from your gutenblock.com project (Site → Connect WordPress)."
+
+#: inc/class-provisioning-wizard.php
+msgid "64-stelliger Hex-Token aus deinem gutenblock.com-Projekt"
+msgstr "64-character hex token from your gutenblock.com project"
+
+#: inc/class-provisioning-wizard.php
+msgid "Styles von gutenblock.com übernehmen"
+msgstr "Import styles from gutenblock.com"
+
+#: inc/class-provisioning-wizard.php
+msgid "Aktiviert ersetzt diese Option Farben, Schriften (inkl. Heading-Weight) und semantische Schriftgrößen (H1–H4, Absatz) deiner Site durch die in deinem gutenblock.com-Projekt festgelegten Werte. Diese werden als zusätzliches Stylesheet eingehängt und überschreiben Theme-Defaults via `!important`. Bestehende Block-individuelle Overrides bleiben erhalten."
+msgstr "When enabled, this option replaces colors, fonts (incl. heading weight) and semantic font sizes (H1–H4, paragraph) of your site with the values from your gutenblock.com project. They are enqueued as an additional stylesheet and override theme defaults via `!important`. Existing per-block overrides remain untouched."
+
+#: inc/class-provisioning-wizard.php
+msgid "Header von gutenblock.com importieren"
+msgstr "Import header from gutenblock.com"
+
+#: inc/class-provisioning-wizard.php
+msgid "Aktiviert erstellt einen neuen Header-Template-Part neben den bestehenden. Vorherige Importe von gutenblock.com werden ersetzt; eigene oder andere Header bleiben erhalten."
+msgstr "When enabled, a new header template part is created alongside the existing ones. Previous imports from gutenblock.com are replaced; your own or other headers stay untouched."
+
+#: inc/class-provisioning-wizard.php
+msgid "Footer von gutenblock.com importieren"
+msgstr "Import footer from gutenblock.com"
+
+#: inc/class-provisioning-wizard.php
+msgid "Aktiviert erstellt einen neuen Footer-Template-Part neben den bestehenden. Vorherige Importe von gutenblock.com werden ersetzt; eigene oder andere Footer bleiben erhalten."
+msgstr "When enabled, a new footer template part is created alongside the existing ones. Previous imports from gutenblock.com are replaced; your own or other footers stay untouched."
+
+#: inc/class-provisioning-wizard.php
+msgid "Statisches Pattern-Bundle für gutenblock.com neu bauen."
+msgstr "Rebuild the static pattern bundle for gutenblock.com."
+
+#: inc/class-provisioning-wizard.php
+msgid "übernommen"
+msgstr "imported"
+
+#: inc/class-provisioning-wizard.php
+msgid "Hinweis: Existieren bereits Seiten mit denselben Slugs, sichert WordPress die bisherige Version als Revision. Du kannst sie jederzeit über „Seite bearbeiten → Revisionen\" wiederherstellen."
+msgstr "Note: If pages with the same slugs already exist, WordPress stores the previous version as a revision. You can restore them any time via Edit Page → Revisions."
 
 #: inc/class-provisioning-wizard.php
 msgid "Bitte gültigen Token einfügen."
