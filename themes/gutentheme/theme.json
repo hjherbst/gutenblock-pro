@@ -99,7 +99,7 @@
                     ],
                     "fontFamily": "'Playfair Display', serif",
                     "name": "Playfair Display",
-                    "slug": "playfair-display"
+                    "slug": "playfair"
                 },
                 {
                     "fontFace": [
@@ -165,6 +165,142 @@
                     "fontFamily": "'Libre Caslon Display', serif",
                     "name": "Libre Caslon Display",
                     "slug": "libre-caslon-display"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Inter",
+                            "fontStyle": "normal",
+                            "fontWeight": "100 900",
+                            "src": [ "file:./assets/fonts/inter/Inter[opsz,wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Inter, sans-serif",
+                    "name": "Inter",
+                    "slug": "inter"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Urbanist",
+                            "fontStyle": "normal",
+                            "fontWeight": "100 900",
+                            "src": [ "file:./assets/fonts/urbanist/Urbanist[wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Urbanist, sans-serif",
+                    "name": "Urbanist",
+                    "slug": "urbanist"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Open Sans",
+                            "fontStyle": "normal",
+                            "fontWeight": "300 800",
+                            "src": [ "file:./assets/fonts/open-sans/OpenSans[wdth,wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'Open Sans', sans-serif",
+                    "name": "Open Sans",
+                    "slug": "open-sans"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Bricolage Grotesque",
+                            "fontStyle": "normal",
+                            "fontWeight": "200 800",
+                            "src": [ "file:./assets/fonts/bricolage-grotesque/BricolageGrotesque[opsz,wdth,wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'Bricolage Grotesque', sans-serif",
+                    "name": "Bricolage Grotesque",
+                    "slug": "bricolage"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Mulish",
+                            "fontStyle": "normal",
+                            "fontWeight": "200 1000",
+                            "src": [ "file:./assets/fonts/mulish/Mulish[wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Mulish, sans-serif",
+                    "name": "Mulish",
+                    "slug": "mulish"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Poppins",
+                            "fontStyle": "normal",
+                            "fontWeight": "400",
+                            "src": [ "file:./assets/fonts/poppins/Poppins-Regular.ttf" ]
+                        },
+                        {
+                            "fontFamily": "Poppins",
+                            "fontStyle": "normal",
+                            "fontWeight": "700",
+                            "src": [ "file:./assets/fonts/poppins/Poppins-Bold.ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Poppins, sans-serif",
+                    "name": "Poppins",
+                    "slug": "poppins"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Bodoni Moda",
+                            "fontStyle": "normal",
+                            "fontWeight": "400 900",
+                            "src": [ "file:./assets/fonts/bodoni-moda/BodoniModa[opsz,wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'Bodoni Moda', serif",
+                    "name": "Bodoni Moda",
+                    "slug": "bodoni"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "EB Garamond",
+                            "fontStyle": "normal",
+                            "fontWeight": "400 800",
+                            "src": [ "file:./assets/fonts/eb-garamond/EBGaramond[wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'EB Garamond', serif",
+                    "name": "EB Garamond",
+                    "slug": "eb-garamond"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Fraunces",
+                            "fontStyle": "normal",
+                            "fontWeight": "100 900",
+                            "src": [ "file:./assets/fonts/fraunces/Fraunces[SOFT,WONK,opsz,wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "Fraunces, serif",
+                    "name": "Fraunces",
+                    "slug": "fraunces"
+                },
+                {
+                    "fontFace": [
+                        {
+                            "fontFamily": "Cormorant Garamond",
+                            "fontStyle": "normal",
+                            "fontWeight": "300 700",
+                            "src": [ "file:./assets/fonts/cormorant-garamond/CormorantGaramond[wght].ttf" ]
+                        }
+                    ],
+                    "fontFamily": "'Cormorant Garamond', serif",
+                    "name": "Cormorant Garamond",
+                    "slug": "cormorant"
                 }
             ]
         }

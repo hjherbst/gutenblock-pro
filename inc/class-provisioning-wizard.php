@@ -350,8 +350,9 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		// 5) Klassisches Menü weiterhin für ältere Theme-Locations.
 		$this->apply_menu( $data );
 
-		// 6) Header/Footer als Template-Parts inkl. patchedem nav-ref.
-		$this->apply_header_footer_options( $data, $url_map );
+		// 6) Header/Footer als kanonische FSE-Template-Parts (Slug
+		//    `header`/`footer` für das aktive Theme) inkl. gepatchtem
+		//    `wp:navigation` ref auf den neuen lokalen `wp_navigation`-Post.
 		$this->apply_header_footer_template_parts(
 			$data,
 			$url_map,
@@ -369,11 +370,19 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		add_action(
 			'admin_notices',
 			function () use ( $pages_count, $theme_status, $nav_post_id ) {
-				$theme_label = 'activated' === $theme_status
-					? esc_html__( 'aktiviert', 'gutenblock-pro' )
-					: ( 'installed' === $theme_status
-						? esc_html__( 'installiert + aktiviert', 'gutenblock-pro' )
-						: esc_html__( '–', 'gutenblock-pro' ) );
+				switch ( $theme_status ) {
+					case 'activated':
+						$theme_label = esc_html__( 'aktiviert', 'gutenblock-pro' );
+						break;
+					case 'installed':
+						$theme_label = esc_html__( 'installiert + aktiviert', 'gutenblock-pro' );
+						break;
+					case 'refreshed':
+						$theme_label = esc_html__( 'Bundle aktualisiert', 'gutenblock-pro' );
+						break;
+					default:
+						$theme_label = esc_html__( '–', 'gutenblock-pro' );
+				}
 				$nav_label = $nav_post_id ? esc_html__( 'angelegt', 'gutenblock-pro' ) : esc_html__( '–', 'gutenblock-pro' );
 				$msg = sprintf(
 					/* translators: 1: pages count, 2: theme status, 3: navigation status */
@@ -1139,36 +1148,37 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	}
 
 	/**
-	 * Header-/Footer-Pattern (Manifest: patternSlug und/oder blockMarkup).
-	 * Legacy-Pfad: Markup als Option speichern. URL-Map wird angewendet, damit
-	 * lokal sideloadete Assets greifen.
+	 * @deprecated 1.27.3 Replaced by apply_header_footer_template_parts(),
+	 * which writes header/footer to canonical FSE template-parts instead
+	 * of opaque options. The old `gutenblock_pro_{part}_pattern_markup`
+	 * options were never read anywhere — this stub is kept only to avoid
+	 * fatals if any third-party code calls it via reflection or filters.
 	 *
-	 * @param array                $manifest Manifest.
-	 * @param array<string,string> $url_map  Optional: remoteUrl → lokale URL.
+	 * @param array                $manifest Manifest (unused).
+	 * @param array<string,string> $url_map  URL-Map (unused).
+	 * @return void
 	 */
 	private function apply_header_footer_options( array $manifest, array $url_map = array() ): void {
-		foreach ( array( 'header', 'footer' ) as $part ) {
-			if ( empty( $manifest[ $part ] ) || ! is_array( $manifest[ $part ] ) ) {
-				continue;
-			}
-			$markup = $this->build_chrome_markup( $manifest[ $part ], $url_map );
-			if ( '' !== $markup ) {
-				update_option( 'gutenblock_pro_' . $part . '_pattern_markup', $markup );
-			}
-		}
+		unset( $manifest, $url_map );
 	}
 
 	/**
-	 * Optionaler Import als echte FSE-Template-Parts. Pro Part (Header/Footer)
-	 * wird beim Aktiv-Setzen ein neuer `wp_template_part`-Post angelegt und
-	 * mit den Metas `_gutenblock_saas_import = 1` und
-	 * `_gutenblock_saas_import_version` markiert. Frühere SaaS-Importe werden
-	 * vor dem Insert in den Papierkorb verschoben — sodass nur der neue
-	 * Import aktiv ist. Nicht-SaaS Header/Footer (Theme-Defaults oder eigene
-	 * Anpassungen) bleiben unangetastet.
+	 * Imports the SaaS header/footer as canonical FSE template-parts of the
+	 * active theme. Uses the slugs `header` and `footer` (not timestamped
+	 * imports) so the theme's templates — which reference
+	 * `<!-- wp:template-part {"slug":"header",...} /-->` — resolve against
+	 * the imported markup automatically.
 	 *
-	 * @param array                $manifest         Manifest.
-	 * @param array<string,string> $url_map          remoteUrl → lokale URL.
+	 * If a template-part with the same slug + theme already exists (e.g. a
+	 * previous import or the theme's own placeholder), its content is
+	 * replaced in place and a revision is saved beforehand so the old
+	 * version can be restored via the Site Editor's revisions panel.
+	 *
+	 * Legacy `gbp-saas-*` posts from older plugin versions are trashed in
+	 * the same pass so the editor's template-parts list stays clean.
+	 *
+	 * @param array                $manifest           Manifest.
+	 * @param array<string,string> $url_map            remoteUrl → lokale URL.
 	 * @param array{header:bool,footer:bool} $enabled  Welche Teile importieren.
 	 * @param int                  $navigation_post_id Optionale Post-ID des frisch
 	 *                                                 angelegten `wp_navigation`-Posts;
@@ -1177,6 +1187,9 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	 */
 	private function apply_header_footer_template_parts( array $manifest, array $url_map, array $enabled, int $navigation_post_id = 0 ): void {
 		$theme_slug = (string) get_stylesheet();
+		if ( '' === $theme_slug ) {
+			return;
+		}
 
 		foreach ( array( 'header', 'footer' ) as $part ) {
 			if ( empty( $enabled[ $part ] ) ) {
@@ -1190,42 +1203,122 @@ class GutenBlock_Pro_Provisioning_Wizard {
 				continue;
 			}
 
-			// Frühere SaaS-Importe in derselben Area in den Papierkorb verschieben.
-			$previous = $this->find_saas_template_parts( $part );
-			foreach ( $previous as $prev_id ) {
-				wp_trash_post( $prev_id );
-			}
-
+			$slug      = $part;
+			$title     = ucfirst( $part );
 			$timestamp = current_time( 'mysql' );
-			$slug      = 'gbp-saas-' . $part . '-' . gmdate( 'YmdHis' );
-			$title     = ucfirst( $part ) . ' (GutenBlock Import)';
 
-			$post_id = wp_insert_post(
-				array(
-					'post_type'    => 'wp_template_part',
-					'post_status'  => 'publish',
-					'post_name'    => $slug,
-					'post_title'   => $title,
-					'post_content' => $markup,
-				),
-				true
-			);
+			// Look up an existing template-part for this theme + area. The
+			// (slug, theme) tuple is what WordPress uses to resolve the
+			// `<!-- wp:template-part {"slug":..., "theme":...} /-->` block
+			// references, so we must update the canonical entry rather
+			// than insert a side-by-side copy.
+			$existing_id = $this->find_template_part_by_slug_and_theme( $slug, $theme_slug );
 
-			if ( is_wp_error( $post_id ) || ! $post_id ) {
-				continue;
+			if ( $existing_id > 0 ) {
+				// Preserve the previous version as a revision so users can
+				// roll back via Site Editor → Template Part → Revisions.
+				wp_save_post_revision( $existing_id );
+				wp_update_post(
+					array(
+						'ID'           => $existing_id,
+						'post_status'  => 'publish',
+						'post_title'   => $title,
+						'post_content' => $markup,
+					)
+				);
+				$post_id = $existing_id;
+			} else {
+				$post_id = wp_insert_post(
+					array(
+						'post_type'    => 'wp_template_part',
+						'post_status'  => 'publish',
+						'post_name'    => $slug,
+						'post_title'   => $title,
+						'post_content' => $markup,
+					),
+					true
+				);
+				if ( is_wp_error( $post_id ) || ! $post_id ) {
+					continue;
+				}
 			}
 
 			// Area-Taxonomie setzen (Header/Footer) — vom Block-Editor erwartet.
 			wp_set_object_terms( $post_id, $part, 'wp_template_part_area', false );
 			// Theme-Zuordnung — Template-Parts werden je Theme verwaltet.
-			if ( $theme_slug ) {
-				wp_set_object_terms( $post_id, $theme_slug, 'wp_theme', false );
-			}
+			wp_set_object_terms( $post_id, $theme_slug, 'wp_theme', false );
 			// Markierung als SaaS-Import (für künftiges Auto-Replace).
 			update_post_meta( $post_id, '_gutenblock_saas_import', 1 );
 			update_post_meta( $post_id, '_gutenblock_saas_import_version', $timestamp );
 			update_post_meta( $post_id, '_gutenblock_saas_import_area', $part );
+
+			// Cleanup: trash any legacy `gbp-saas-{part}-{timestamp}` posts
+			// from earlier plugin versions so the Site Editor's
+			// template-parts list doesn't accumulate orphaned imports.
+			$legacy_ids = $this->find_legacy_saas_template_parts( $part );
+			foreach ( $legacy_ids as $legacy_id ) {
+				if ( $legacy_id !== $post_id ) {
+					wp_trash_post( $legacy_id );
+				}
+			}
 		}
+	}
+
+	/**
+	 * Returns the post ID of the `wp_template_part` registered under the
+	 * given (slug, theme) tuple, or 0 if none exists. Considers any
+	 * non-trash status so we can rescue trashed copies created by earlier
+	 * plugin versions.
+	 *
+	 * @param string $slug       Template-part slug, e.g. `header`.
+	 * @param string $theme_slug Active theme stylesheet, e.g. `gutentheme`.
+	 * @return int
+	 */
+	private function find_template_part_by_slug_and_theme( string $slug, string $theme_slug ): int {
+		$query = new WP_Query(
+			array(
+				'post_type'      => 'wp_template_part',
+				'post_status'    => array( 'publish', 'draft', 'pending', 'future' ),
+				'name'           => $slug,
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+				'tax_query'      => array(
+					array(
+						'taxonomy' => 'wp_theme',
+						'field'    => 'name',
+						'terms'    => $theme_slug,
+					),
+				),
+				'suppress_filters' => false,
+			)
+		);
+		if ( empty( $query->posts ) ) {
+			return 0;
+		}
+		return (int) $query->posts[0];
+	}
+
+	/**
+	 * Finds legacy `wp_template_part` posts whose post_name matches
+	 * `gbp-saas-{area}-*`. These were inserted by the pre-canonical-slug
+	 * import path and would otherwise pile up in the editor.
+	 *
+	 * @param string $area 'header'|'footer'.
+	 * @return int[] Post-IDs.
+	 */
+	private function find_legacy_saas_template_parts( string $area ): array {
+		global $wpdb;
+		$like = $wpdb->esc_like( 'gbp-saas-' . $area . '-' ) . '%';
+		$ids  = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT ID FROM {$wpdb->posts} WHERE post_type = %s AND post_name LIKE %s",
+				'wp_template_part',
+				$like
+			)
+		);
+		return array_map( 'intval', (array) $ids );
 	}
 
 	/**
@@ -1283,16 +1376,27 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		if ( '' === $markup ) {
 			return '';
 		}
-		// Apply SaaS-side image overrides before the URL map rewrites the
-		// remote URLs to local Media Library URLs (same order as
-		// `assemble_page_from_sections`).
+		// 1) Repoint the SaaS-baked `wp:navigation` ref (a foreign post id
+		//    that does not exist on this WP) to the freshly inserted local
+		//    `wp_navigation` post. Must run first so subsequent transforms
+		//    operate on the corrected block markup.
+		$markup = $this->patch_navigation_ref_in_markup( $markup, $navigation_post_id );
+
+		// 2) Tone-Injection (same contract as assemble_page_from_sections()):
+		//    the chrome slot may carry `tone: 'cool-50' | 'warm-100' | …`.
+		$tone = isset( $chrome['tone'] ) ? (string) $chrome['tone'] : 'neutral';
+		if ( 'neutral' !== $tone && class_exists( 'GutenBlock_Pro_Tone_Injector' ) ) {
+			$markup = GutenBlock_Pro_Tone_Injector::inject( $markup, $tone );
+		}
+
+		// 3) Apply SaaS-side image overrides before the URL map rewrites the
+		//    remote URLs to local Media Library URLs (same order as
+		//    `assemble_page_from_sections`).
 		if ( ! empty( $chrome['imageOverrides'] ) && is_array( $chrome['imageOverrides'] ) ) {
 			$markup = $this->apply_image_overrides_to_markup( $markup, $chrome['imageOverrides'] );
 		}
-		// Repoint the SaaS-baked `wp:navigation` ref (a foreign post-id) to the
-		// freshly inserted `wp_navigation` post on this instance, otherwise the
-		// block falls back to the theme's default menu lookup.
-		$markup = $this->patch_navigation_ref_in_markup( $markup, $navigation_post_id );
+
+		// 4) Rewrite any remaining absolute SaaS URLs to local attachment URLs.
 		if ( ! empty( $url_map ) ) {
 			$markup = strtr( $markup, $url_map );
 		}
@@ -1300,25 +1404,33 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	}
 
 	/**
-	 * Replaces the `ref` of a `<!-- wp:navigation … /-->` block comment with
-	 * the local `wp_navigation` post id. If `$navigation_post_id` is 0 or no
-	 * `ref` field is present, the existing attribute is removed so the block
-	 * gracefully falls back to a page list at render time.
+	 * Replaces the `ref` attribute of every `<!-- wp:navigation … /-->`
+	 * block comment in the markup with the local `wp_navigation` post id.
+	 * If `$navigation_post_id` is 0 (no menu items in the manifest), the
+	 * existing `ref` is stripped so the block gracefully falls back to a
+	 * page list at render time instead of showing a "deleted" banner.
 	 *
-	 * @param string $markup            Block markup.
+	 * The regex uses PCRE's recursive sub-pattern (`(?-1)`) to match
+	 * arbitrarily nested JSON in the attribute object, e.g.
+	 * `{"ref":478,"style":{"spacing":{"margin":{"top":"0"}}}}`. The
+	 * previous non-recursive `\{[^}]*\}` only matched flat attribute
+	 * blobs and silently skipped any block with nested objects.
+	 *
+	 * @param string $markup             Block markup.
 	 * @param int    $navigation_post_id Target post id (0 to strip the ref).
 	 * @return string
 	 */
 	private function patch_navigation_ref_in_markup( string $markup, int $navigation_post_id ): string {
-		if ( '' === $markup ) {
+		if ( '' === $markup || stripos( $markup, 'wp:navigation' ) === false ) {
 			return $markup;
 		}
-		return preg_replace_callback(
-			'/<!--\s*wp:navigation(\s+\{[^}]*\})?\s*\/-->/i',
+		$pattern = '/<!--\s*wp:navigation(?:\s+(\{(?:[^{}]++|(?-1))*+\}))?\s*\/-->/i';
+		$result  = preg_replace_callback(
+			$pattern,
 			static function ( $m ) use ( $navigation_post_id ) {
 				$attrs_json = isset( $m[1] ) ? trim( (string) $m[1] ) : '';
 				$attrs      = array();
-				if ( $attrs_json !== '' ) {
+				if ( '' !== $attrs_json ) {
 					$decoded = json_decode( $attrs_json, true );
 					if ( is_array( $decoded ) ) {
 						$attrs = $decoded;
@@ -1335,28 +1447,24 @@ class GutenBlock_Pro_Provisioning_Wizard {
 				return '<!-- wp:navigation ' . wp_json_encode( $attrs ) . ' /-->';
 			},
 			$markup
-		) ?: $markup;
+		);
+		return is_string( $result ) ? $result : $markup;
 	}
 
 	/**
-	 * Stellt das gebundelte GutenTheme in `wp-content/themes/gutentheme`
-	 * bereit (kopiert nur, wenn der Zielordner nicht existiert) und
-	 * aktiviert es per `switch_theme()`. Liefert einen Statusstring zum
-	 * Anzeigen in der Admin-Notice: `noop|activated|installed`.
+	 * Provisions the bundled GutenTheme in `wp-content/themes/gutentheme`
+	 * and activates it via `switch_theme()`. On every Mode A run the
+	 * bundled files (templates, parts, theme.json, style.css, assets…) are
+	 * refreshed via `copy_dir()` so re-imports actually pick up the
+	 * shipped envelope — user customisations stay safe because they live
+	 * in the database (`wp_template`, `wp_global_styles`), not in the
+	 * theme filesystem. Returns a status string for the admin notice:
+	 * `noop|activated|installed|refreshed`.
 	 */
 	private function install_and_activate_gutentheme(): string {
 		$slug   = 'gutentheme';
 		$source = trailingslashit( GUTENBLOCK_PRO_PATH ) . 'themes/' . $slug;
 		$target = trailingslashit( get_theme_root() ) . $slug;
-
-		// Theme aktivieren, wenn schon installiert.
-		if ( is_dir( $target ) ) {
-			if ( (string) get_stylesheet() !== $slug ) {
-				switch_theme( $slug );
-				return 'activated';
-			}
-			return 'noop';
-		}
 
 		if ( ! is_dir( $source ) ) {
 			$this->debug_log( 'install_and_activate_gutentheme: bundle missing at ' . $source );
@@ -1369,39 +1477,60 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			return 'noop';
 		}
 
+		$existed = is_dir( $target );
+
+		if ( ! $this->copy_bundled_theme_files( $source, $target ) ) {
+			return 'noop';
+		}
+
+		if ( (string) get_stylesheet() !== $slug ) {
+			switch_theme( $slug );
+			return $existed ? 'activated' : 'installed';
+		}
+
+		return $existed ? 'refreshed' : 'installed';
+	}
+
+	/**
+	 * Copies the bundled theme directory onto an installation, overwriting
+	 * existing files. Used by both first-install and re-import paths so
+	 * shipped template envelopes / theme.json stay in lock-step with the
+	 * plugin version. Returns false if the copy could not start.
+	 *
+	 * @param string $source Absolute path of the bundled theme directory.
+	 * @param string $target Absolute path of the target theme directory.
+	 * @return bool
+	 */
+	private function copy_bundled_theme_files( string $source, string $target ): bool {
 		if ( ! function_exists( 'copy_dir' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 		}
 		if ( ! WP_Filesystem() ) {
-			$this->debug_log( 'install_and_activate_gutentheme: WP_Filesystem init failed' );
+			$this->debug_log( 'copy_bundled_theme_files: WP_Filesystem init failed' );
 			add_action(
 				'admin_notices',
 				function () {
 					echo '<div class="notice notice-error"><p>' . esc_html__( 'Theme konnte nicht kopiert werden (keine Filesystem-Rechte).', 'gutenblock-pro' ) . '</p></div>';
 				}
 			);
-			return 'noop';
+			return false;
 		}
-
 		if ( ! wp_mkdir_p( $target ) ) {
-			$this->debug_log( 'install_and_activate_gutentheme: cannot create ' . $target );
-			return 'noop';
+			$this->debug_log( 'copy_bundled_theme_files: cannot create ' . $target );
+			return false;
 		}
-
 		$result = copy_dir( $source, $target );
 		if ( is_wp_error( $result ) ) {
-			$this->debug_log( 'install_and_activate_gutentheme: copy_dir error ' . $result->get_error_message() );
+			$this->debug_log( 'copy_bundled_theme_files: copy_dir error ' . $result->get_error_message() );
 			add_action(
 				'admin_notices',
 				function () use ( $result ) {
 					echo '<div class="notice notice-error"><p>' . esc_html( $result->get_error_message() ) . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				}
 			);
-			return 'noop';
+			return false;
 		}
-
-		switch_theme( $slug );
-		return 'installed';
+		return true;
 	}
 
 	/**
@@ -1496,18 +1625,38 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		$body_family    = isset( $fonts['body'] ) ? trim( (string) $fonts['body'] ) : '';
 		$heading_family = isset( $fonts['heading'] ) ? trim( (string) $fonts['heading'] ) : '';
 		$heading_weight = isset( $fonts['headingWeight'] ) ? (int) $fonts['headingWeight'] : 0;
+		$body_slug      = isset( $fonts['bodySlug'] ) ? sanitize_key( (string) $fonts['bodySlug'] ) : '';
+		$heading_slug   = isset( $fonts['headingSlug'] ) ? sanitize_key( (string) $fonts['headingSlug'] ) : '';
 
-		if ( $body_family !== '' ) {
+		// Resolve which fonts the active theme advertises via `theme.json`
+		// so we can prefer the `var:preset|font-family|{slug}` reference
+		// — that's what loads the locally bundled font face. Falls back to
+		// raw CSS-family strings (with Google Fonts enqueue) when the
+		// SaaS-picked family is not registered locally.
+		$theme_slugs        = $this->get_active_theme_font_slugs();
+		$body_preset_ref    = ( '' !== $body_slug && in_array( $body_slug, $theme_slugs, true ) )
+			? 'var:preset|font-family|' . $body_slug
+			: '';
+		$heading_preset_ref = ( '' !== $heading_slug && in_array( $heading_slug, $theme_slugs, true ) )
+			? 'var:preset|font-family|' . $heading_slug
+			: '';
+
+		if ( '' !== $body_preset_ref ) {
+			$json['styles']['typography']['fontFamily'] = $body_preset_ref;
+		} elseif ( '' !== $body_family ) {
 			$json['styles']['typography']['fontFamily'] = $this->safe_font_family( $body_family );
 		}
-		if ( $heading_family !== '' || ( $heading_weight >= 100 && $heading_weight <= 900 ) ) {
+
+		if ( '' !== $heading_preset_ref || '' !== $heading_family || ( $heading_weight >= 100 && $heading_weight <= 900 ) ) {
 			if ( ! isset( $json['styles']['elements']['heading'] ) || ! is_array( $json['styles']['elements']['heading'] ) ) {
 				$json['styles']['elements']['heading'] = array();
 			}
 			if ( ! isset( $json['styles']['elements']['heading']['typography'] ) || ! is_array( $json['styles']['elements']['heading']['typography'] ) ) {
 				$json['styles']['elements']['heading']['typography'] = array();
 			}
-			if ( $heading_family !== '' ) {
+			if ( '' !== $heading_preset_ref ) {
+				$json['styles']['elements']['heading']['typography']['fontFamily'] = $heading_preset_ref;
+			} elseif ( '' !== $heading_family ) {
 				$json['styles']['elements']['heading']['typography']['fontFamily'] = $this->safe_font_family( $heading_family );
 			}
 			if ( $heading_weight >= 100 && $heading_weight <= 900 ) {
@@ -1554,9 +1703,14 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			)
 		);
 
-		// 5) Google Fonts URL — kept as separate option for frontend enqueue.
-		$gf_url = isset( $fonts['googleFontsUrl'] ) ? trim( (string) $fonts['googleFontsUrl'] ) : '';
-		if ( $gf_url && preg_match( '#^https?://fonts\\.googleapis\\.com/#i', $gf_url ) ) {
+		// 5) Google Fonts enqueue — only kept as a fallback when one of the
+		//    SaaS-picked fonts is not bundled with the active theme (i.e.
+		//    the `*Slug` did not resolve to a `theme.json` preset). When
+		//    both slugs resolve locally the option is wiped so we don't
+		//    open an unnecessary outbound request on every page render.
+		$gf_url       = isset( $fonts['googleFontsUrl'] ) ? trim( (string) $fonts['googleFontsUrl'] ) : '';
+		$both_local   = '' !== $body_preset_ref && '' !== $heading_preset_ref;
+		if ( ! $both_local && $gf_url && preg_match( '#^https?://fonts\\.googleapis\\.com/#i', $gf_url ) ) {
 			update_option( self::OPTION_CUSTOMIZER_FONTS, $gf_url );
 		} else {
 			delete_option( self::OPTION_CUSTOMIZER_FONTS );
@@ -1569,6 +1723,47 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		update_option( self::OPTION_IMPORT_STYLES, 0 );
 
 		$this->debug_log( 'apply_global_styles: merged into post=' . $post_id );
+	}
+
+	/**
+	 * Returns the list of `fontFamilies[].slug` values declared by the
+	 * active theme's `theme.json` (including any merged inherited data
+	 * from parent themes and user customizations). Cached per request.
+	 *
+	 * @return array<int,string>
+	 */
+	private function get_active_theme_font_slugs(): array {
+		static $cache = null;
+		if ( is_array( $cache ) ) {
+			return $cache;
+		}
+		$cache = array();
+		if ( ! class_exists( 'WP_Theme_JSON_Resolver' ) ) {
+			return $cache;
+		}
+		$data = null;
+		if ( method_exists( 'WP_Theme_JSON_Resolver', 'get_merged_data' ) ) {
+			$data = WP_Theme_JSON_Resolver::get_merged_data();
+		} elseif ( method_exists( 'WP_Theme_JSON_Resolver', 'get_theme_data' ) ) {
+			$data = WP_Theme_JSON_Resolver::get_theme_data();
+		}
+		if ( ! is_object( $data ) || ! method_exists( $data, 'get_raw_data' ) ) {
+			return $cache;
+		}
+		$raw = $data->get_raw_data();
+		if ( ! is_array( $raw ) ) {
+			return $cache;
+		}
+		$families = $raw['settings']['typography']['fontFamilies'] ?? null;
+		if ( ! is_array( $families ) ) {
+			return $cache;
+		}
+		foreach ( $families as $family ) {
+			if ( is_array( $family ) && isset( $family['slug'] ) && is_string( $family['slug'] ) ) {
+				$cache[] = $family['slug'];
+			}
+		}
+		return $cache;
 	}
 
 	/**
