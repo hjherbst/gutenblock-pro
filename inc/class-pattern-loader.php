@@ -118,6 +118,7 @@ class GutenBlock_Pro_Pattern_Loader {
 			'hasPremium'      => $license->has_premium_access(),
 			'licenseInfo'     => $license_info,
 			'upgradeUrl'      => 'https://gutenblock.com/licenses',
+			'pluginVersion'   => defined( 'GUTENBLOCK_PRO_VERSION' ) ? GUTENBLOCK_PRO_VERSION : '0',
 		) );
 
 		// Tone-Toolbar: Picker in der Block-Toolbar zum Umschalten der Tonalität.

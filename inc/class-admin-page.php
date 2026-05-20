@@ -24,6 +24,8 @@ class GutenBlock_Pro_Admin_Page {
 		// nopriv nötig, wenn Gutenberg-Canvas-iframe die Session-Cookies nicht weitergibt
 		add_action( 'wp_ajax_nopriv_gutenblock_pro_preview_pattern', array( $this, 'ajax_preview_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_clear_preview_cache', array( $this, 'ajax_clear_preview_cache' ) );
+		add_action( 'wp_ajax_gutenblock_pro_warm_previews', array( $this, 'ajax_warm_previews' ) );
+		add_action( 'wp_ajax_nopriv_gutenblock_pro_warm_previews', array( $this, 'ajax_warm_previews' ) );
 		add_action( 'wp_ajax_gutenblock_pro_delete_pattern', array( $this, 'ajax_delete_pattern' ) );
 		add_action( 'wp_ajax_gutenblock_pro_reset_block_style', array( $this, 'ajax_reset_block_style' ) );
 		add_action( 'wp_ajax_gutenblock_pro_reset_pattern_file', array( $this, 'ajax_reset_pattern_file' ) );
@@ -297,8 +299,23 @@ class GutenBlock_Pro_Admin_Page {
 		$is_admin_user = $current_user->exists() && $current_user->user_login === 'hjherbst';
 		
 		$preview_nonce = wp_create_nonce( 'gutenblock_pro_modal' );
+		$cache_dir     = $this->preview_cache_dir();
+		$cache_url     = $this->preview_cache_url();
+		$locale        = get_locale();
+		// Warm the static cache for all visible patterns in a single bootstrap.
+		// Idempotent: existing cache files are kept; only missing ones are
+		// (re-)rendered. Drops first-time admin page load from ~5s to <1s and
+		// makes every subsequent visit instant.
+		$this->prewarm_preview_cache_for( array_keys( $patterns ) );
 		foreach ( $patterns as $slug => $pattern ) :
-			$preview_url = admin_url( 'admin-ajax.php?action=gutenblock_pro_preview_pattern&pattern=' . $slug . '&_wpnonce=' . $preview_nonce );
+			// Prefer the pre-warmed static cache file (served by the web server,
+			// no WordPress bootstrap). If it doesn't exist yet, fall back to the
+			// admin-ajax route which renders on demand and writes the cache file
+			// for the next visit.
+			$cache_file = trailingslashit( $cache_dir ) . $this->preview_cache_filename( $slug, $locale, 'neutral' );
+			$static_url = trailingslashit( $cache_url ) . $this->preview_cache_filename( $slug, $locale, 'neutral' );
+			$ajax_url   = admin_url( 'admin-ajax.php?action=gutenblock_pro_preview_pattern&pattern=' . $slug . '&_wpnonce=' . $preview_nonce );
+			$preview_url = file_exists( $cache_file ) ? $static_url : $ajax_url;
 			$edit_url = admin_url( 'admin.php?page=gutenblock-pro&tab=editor&pattern=' . $slug );
 		?>
 			<div class="pattern-card <?php echo $pattern['enabled'] ? 'enabled' : 'disabled'; ?>" data-slug="<?php echo esc_attr( $slug ); ?>">
@@ -1412,8 +1429,253 @@ class GutenBlock_Pro_Admin_Page {
 		<?php
 		$html = ob_get_clean();
 		set_transient( $cache_key, $html, HOUR_IN_SECONDS );
+
+		// Persist a static copy in uploads/ so subsequent iframe loads bypass the
+		// WordPress bootstrap entirely (web server serves the file directly).
+		// See {@see self::write_preview_to_disk()}.
+		$this->write_preview_to_disk( $pattern_slug, $locale, $tone_param, $html );
+
 		echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
+	}
+
+	/**
+	 * Absolute filesystem path of the static preview cache directory for the
+	 * currently installed plugin version. Auto-creates the directory.
+	 */
+	private function preview_cache_dir(): string {
+		$uploads = wp_upload_dir();
+		$version = defined( 'GUTENBLOCK_PRO_VERSION' ) ? GUTENBLOCK_PRO_VERSION : '0';
+		$dir = trailingslashit( $uploads['basedir'] ) . 'gutenblock-pro/preview-cache/v' . $version;
+		if ( ! is_dir( $dir ) ) {
+			wp_mkdir_p( $dir );
+		}
+		return $dir;
+	}
+
+	/**
+	 * Public URL of the static preview cache directory for the current plugin
+	 * version. Mirrors {@see self::preview_cache_dir()}.
+	 */
+	private function preview_cache_url(): string {
+		$uploads = wp_upload_dir();
+		$version = defined( 'GUTENBLOCK_PRO_VERSION' ) ? GUTENBLOCK_PRO_VERSION : '0';
+		return trailingslashit( $uploads['baseurl'] ) . 'gutenblock-pro/preview-cache/v' . $version;
+	}
+
+	/**
+	 * Build a filesystem-safe filename for a slug/locale/tone combination.
+	 * Slug, locale and tone are all sanitised; unknown tone falls back to `neutral`.
+	 */
+	private function preview_cache_filename( string $slug, string $locale, string $tone ): string {
+		$safe_slug   = preg_replace( '/[^a-z0-9_-]/i', '', $slug );
+		$safe_locale = preg_replace( '/[^a-zA-Z0-9_-]/', '', $locale );
+		$safe_tone   = GutenBlock_Pro_Tone_Injector::is_valid_tone( $tone ) ? $tone : 'neutral';
+		return sprintf( '%s-%s-%s.html', $safe_slug, $safe_locale, $safe_tone );
+	}
+
+	/**
+	 * Atomically write a rendered preview HTML to the static cache file. Best-
+	 * effort; failures are silently ignored because the AJAX endpoint can always
+	 * regenerate the file on demand.
+	 */
+	private function write_preview_to_disk( string $slug, string $locale, string $tone, string $html ): void {
+		$dir = $this->preview_cache_dir();
+		if ( ! is_writable( $dir ) ) {
+			return;
+		}
+		$file = trailingslashit( $dir ) . $this->preview_cache_filename( $slug, $locale, $tone );
+		$tmp  = $file . '.' . uniqid( '', true ) . '.tmp';
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		if ( file_put_contents( $tmp, $html, LOCK_EX ) === false ) {
+			return;
+		}
+		@rename( $tmp, $file );
+	}
+
+	/**
+	 * Render a single pattern preview HTML *without* sending headers/output.
+	 * Used by {@see self::ajax_warm_previews()} to populate many cache files in
+	 * one bootstrap. Returns the HTML string or empty on failure.
+	 */
+	private function render_preview_html( string $slug, string $tone ): string {
+		$pattern_dir  = GUTENBLOCK_PRO_PATTERNS_PATH . $slug;
+		$pattern_file = function_exists( 'gutenblock_pro_resolve_pattern_php_path' )
+			? gutenblock_pro_resolve_pattern_php_path( $slug )
+			: $pattern_dir . '/pattern.php';
+		$style_file = $pattern_dir . '/style.css';
+
+		$locale = get_locale();
+		$lang   = substr( $locale, 0, 2 );
+		$files_to_try = array(
+			$pattern_dir . '/content-' . $locale . '.html',
+			$pattern_dir . '/content-' . $lang . '.html',
+			$pattern_dir . '/content.html',
+		);
+		$content_file = null;
+		foreach ( $files_to_try as $file ) {
+			if ( file_exists( $file ) ) {
+				$content_file = $file;
+				break;
+			}
+		}
+		if ( ! $content_file ) {
+			return '';
+		}
+
+		$is_page_type = false;
+		if ( file_exists( $pattern_file ) ) {
+			$pattern_data = require $pattern_file;
+			$is_page_type = isset( $pattern_data['type'] ) && $pattern_data['type'] === 'page';
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$content = file_get_contents( $content_file );
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$content = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $content );
+		}
+		if ( $tone !== 'neutral' ) {
+			$content = GutenBlock_Pro_Tone_Injector::inject( $content, $tone );
+		}
+		if ( $is_page_type && strpos( $content, '<!-- wp:group' ) === false ) {
+			$content = '<!-- wp:group {"align":"full","layout":{"type":"constrained"}} --><div class="wp-block-group alignfull"><!-- wp:group {"layout":{"type":"constrained"}} --><div class="wp-block-group">' . $content . '</div><!-- /wp:group --></div><!-- /wp:group -->';
+		}
+
+		$rendered = do_blocks( $content );
+
+		$pattern_styles = '';
+		if ( file_exists( $style_file ) ) {
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			$pattern_styles = file_get_contents( $style_file );
+		}
+		$global_styles = '';
+		if ( function_exists( 'wp_get_global_stylesheet' ) ) {
+			$global_styles = wp_get_global_stylesheet();
+		}
+
+		ob_start();
+		?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+<meta charset="<?php bloginfo( 'charset' ); ?>">
+<meta name="viewport" content="width=1400">
+<?php
+wp_enqueue_style( 'wp-block-library' );
+wp_enqueue_style( 'wp-block-library-theme' );
+if ( function_exists( 'wp_enqueue_global_styles' ) ) {
+	wp_enqueue_global_styles();
+}
+wp_print_styles();
+?>
+<style><?php echo $global_styles; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></style>
+<style><?php echo $pattern_styles; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></style>
+<style>html,body{margin:0;padding:0}body{overflow-x:hidden}</style>
+</head>
+<body>
+<?php echo $rendered; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+<?php
+$block_support_styles = '';
+if ( function_exists( 'wp_style_engine_get_stylesheet_from_context' ) ) {
+	$block_support_styles .= wp_style_engine_get_stylesheet_from_context( 'block-supports' );
+}
+if ( $block_support_styles ) {
+	echo '<style>' . $block_support_styles . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+}
+?>
+</body>
+</html>
+<?php
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Server-side warm-up entry point: generate any missing static preview
+	 * cache files for the given pattern slugs (neutral tone only) in the
+	 * current request. Used by the admin page to amortise the cost across the
+	 * existing render cycle instead of paying it per iframe.
+	 *
+	 * @param string[] $slugs
+	 */
+	private function prewarm_preview_cache_for( array $slugs ): void {
+		if ( empty( $slugs ) ) {
+			return;
+		}
+		$cache_dir = $this->preview_cache_dir();
+		$locale    = get_locale();
+		foreach ( $slugs as $slug ) {
+			$slug = sanitize_key( $slug );
+			if ( ! $slug ) {
+				continue;
+			}
+			$path = trailingslashit( $cache_dir ) . $this->preview_cache_filename( $slug, $locale, 'neutral' );
+			if ( file_exists( $path ) ) {
+				continue;
+			}
+			$html = $this->render_preview_html( $slug, 'neutral' );
+			if ( $html === '' ) {
+				continue;
+			}
+			$this->write_preview_to_disk( $slug, $locale, 'neutral', $html );
+		}
+	}
+
+	/**
+	 * AJAX: warm the static preview cache for an arbitrary list of patterns and
+	 * return a manifest mapping each `{slug}__{tone}` key to the public cache
+	 * URL. Caller posts JSON-style:
+	 *   POST action=gutenblock_pro_warm_previews
+	 *        patterns[][slug]=hero-v1
+	 *        patterns[][tone]=neutral
+	 * Missing files are generated synchronously; existing files are reused. One
+	 * single WordPress bootstrap is amortised across all entries.
+	 */
+	public function ajax_warm_previews() {
+		// Same auth posture as ajax_preview_pattern: previews are read-only and
+		// embedded in the editor canvas which strips cookies, so no nonce check.
+		$patterns = isset( $_POST['patterns'] ) && is_array( $_POST['patterns'] )
+			? wp_unslash( $_POST['patterns'] )
+			: array();
+		if ( empty( $patterns ) ) {
+			wp_send_json_success( array( 'manifest' => array() ) );
+		}
+
+		$locale = get_locale();
+		$cache_url = $this->preview_cache_url();
+		$cache_dir = $this->preview_cache_dir();
+		$manifest = array();
+		$generated = 0;
+
+		foreach ( $patterns as $entry ) {
+			if ( ! is_array( $entry ) || empty( $entry['slug'] ) ) {
+				continue;
+			}
+			$slug = sanitize_key( $entry['slug'] );
+			$tone = isset( $entry['tone'] ) ? sanitize_key( $entry['tone'] ) : 'neutral';
+			if ( ! GutenBlock_Pro_Tone_Injector::is_valid_tone( $tone ) ) {
+				$tone = 'neutral';
+			}
+
+			$filename = $this->preview_cache_filename( $slug, $locale, $tone );
+			$path     = trailingslashit( $cache_dir ) . $filename;
+
+			if ( ! file_exists( $path ) ) {
+				$html = $this->render_preview_html( $slug, $tone );
+				if ( $html === '' ) {
+					continue;
+				}
+				$this->write_preview_to_disk( $slug, $locale, $tone, $html );
+				$generated++;
+			}
+
+			$manifest[ $slug . '__' . $tone ] = trailingslashit( $cache_url ) . $filename;
+		}
+
+		wp_send_json_success( array(
+			'manifest'  => $manifest,
+			'generated' => $generated,
+			'cached'    => count( $manifest ) - $generated,
+		) );
 	}
 
 	/**
@@ -1432,6 +1694,14 @@ class GutenBlock_Pro_Admin_Page {
 			WHERE option_name LIKE '_transient_gbp_prev_%'
 			   OR option_name LIKE '_transient_timeout_gbp_prev_%'"
 		);
+
+		// Also clear static preview cache files for the current version.
+		$dir = $this->preview_cache_dir();
+		if ( is_dir( $dir ) ) {
+			foreach ( glob( trailingslashit( $dir ) . '*.html' ) ?: array() as $file ) {
+				@unlink( $file );
+			}
+		}
 
 		wp_send_json_success();
 	}

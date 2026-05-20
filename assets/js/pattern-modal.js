@@ -30,9 +30,11 @@
 		soft:    { fill: '#e8f0fe', border: '#9ab8e8', label: 'Soft' },
 	};
 
-	function LazyPatternPreview({ previewUrl, tone }) {
+	function LazyPatternPreview({ previewUrl, staticUrl, tone }) {
 		const ref = useRef(null);
+		const iframeRef = useRef(null);
 		const [isVisible, setIsVisible] = useState(false);
+		const [hasFallenBack, setHasFallenBack] = useState(false);
 
 		useEffect(() => {
 			if (isVisible) return;
@@ -58,19 +60,96 @@
 			return () => observer.disconnect();
 		}, [isVisible]);
 
+		// Prefer the static cache URL (served by the web server with no PHP); fall
+		// back to the legacy admin-ajax endpoint when the cache hasn't been warmed
+		// yet OR if the iframe fails to load (file deleted/missing).
+		const effectiveSrc = (staticUrl && !hasFallenBack) ? staticUrl : previewUrl;
+
+		// Detect 404 on the static file: same-origin iframe lets us inspect the
+		// loaded document. WordPress 404 page contains body class `error404`; if
+		// we see that or an empty document, fall back to the legacy endpoint.
+		const handleIframeLoad = (event) => {
+			if (!staticUrl || hasFallenBack) return;
+			try {
+				const doc = event.target.contentDocument;
+				if (!doc) return;
+				const isError = doc.body && doc.body.classList && doc.body.classList.contains('error404');
+				const isEmpty = !doc.body || doc.body.children.length === 0;
+				if (isError || isEmpty) {
+					setHasFallenBack(true);
+				}
+			} catch (_e) {
+				// Cross-origin (shouldn't happen here) — leave the static URL alone.
+			}
+		};
+
 		return el('div', {
 			ref,
 			className: 'gutenblock-pro-modal-pattern-preview'
 		}, isVisible ? el('iframe', {
-			key: tone,
-			src: previewUrl,
+			ref: iframeRef,
+			key: tone + (hasFallenBack ? ':fallback' : ''),
+			src: effectiveSrc,
 			sandbox: 'allow-same-origin allow-scripts',
 			loading: 'lazy',
-			tabIndex: -1
+			tabIndex: -1,
+			onLoad: handleIframeLoad,
 		}) : el('div', {
 			className: 'gutenblock-pro-modal-pattern-preview-placeholder',
 			'aria-hidden': true
 		}));
+	}
+
+	/**
+	 * In-memory cache of the preview manifest returned by the warm-previews
+	 * endpoint. Keyed by `${slug}__${tone}` → static URL. Survives the lifetime
+	 * of the editor session so subsequent modal opens are instant.
+	 */
+	const previewManifestCache = new Map();
+	let warmPromise = null;
+
+	/**
+	 * Trigger a single bulk request that materialises static cache files for
+	 * every pattern/tone we want to preview. The server amortises one WordPress
+	 * bootstrap across all entries; first call after a plugin update writes the
+	 * files to disk, every subsequent call just confirms the manifest.
+	 */
+	function warmPreviewCache(entries) {
+		if (!entries || !entries.length) return Promise.resolve(previewManifestCache);
+
+		// De-duplicate: only ask the server for entries we don't already have.
+		const missing = entries.filter(({ slug, tone }) => !previewManifestCache.has(`${slug}__${tone}`));
+		if (missing.length === 0) return Promise.resolve(previewManifestCache);
+
+		// Coalesce concurrent requests during the same modal-open burst.
+		if (warmPromise) return warmPromise;
+
+		const body = new URLSearchParams();
+		body.set('action', 'gutenblock_pro_warm_previews');
+		missing.forEach(({ slug, tone }, idx) => {
+			body.append(`patterns[${idx}][slug]`, slug);
+			body.append(`patterns[${idx}][tone]`, tone || 'neutral');
+		});
+
+		warmPromise = fetch(gutenblockProModal.ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: body.toString(),
+		})
+			.then((r) => (r.ok ? r.json() : null))
+			.then((resp) => {
+				if (resp && resp.success && resp.data && resp.data.manifest) {
+					Object.entries(resp.data.manifest).forEach(([key, url]) => {
+						previewManifestCache.set(key, url);
+					});
+				}
+				return previewManifestCache;
+			})
+			.catch(() => previewManifestCache)
+			.finally(() => { warmPromise = null; });
+
+		return warmPromise;
 	}
 
 	/**
@@ -111,6 +190,10 @@
 		const [cacheClearing, setCacheClearing] = useState(false);
 		// Welche Tone-Variante ist pro Pattern aktiv (für Hover-Preview & Click-Insert)
 		const [activeTones, setActiveTones] = useState({});
+		// Manifest of static-cache URLs returned by warmPreviewCache. Empty until
+		// the warm-previews endpoint has resolved; LazyPatternPreview gracefully
+		// falls back to the legacy admin-ajax URL while we wait.
+		const [previewManifest, setPreviewManifest] = useState(() => Object.fromEntries(previewManifestCache));
 		const { insertBlocks: insertBlocksAction } = useDispatch('core/block-editor');
 		const editorScope = detectEditorScope();
 		const isTemplateScope = editorScope === 'template';
@@ -201,6 +284,28 @@
 				setLoading(false);
 			});
 		}, [isOpen, refreshKey, editorScope, isTemplateScope]);
+
+		// Once patterns are known, fire a single bulk warm-up so the iframe srcs
+		// can switch from the slow admin-ajax route to plain static files served
+		// directly by the web server. Idempotent across modal re-opens.
+		useEffect(() => {
+			if (!isOpen) return;
+			const all = patterns.all || [];
+			if (!all.length) return;
+
+			const entries = [];
+			all.forEach((p) => {
+				const slug = p.slug || (p.name || '').replace('gutenblock-pro/', '');
+				if (!slug) return;
+				const tones = Array.isArray(p.tones) && p.tones.length ? p.tones : ['neutral'];
+				tones.forEach((t) => entries.push({ slug, tone: t }));
+			});
+
+			warmPreviewCache(entries).then((manifest) => {
+				if (!manifest || manifest.size === 0) return;
+				setPreviewManifest(Object.fromEntries(manifest));
+			});
+		}, [isOpen, patterns]);
 
 		const handleClearCache = () => {
 			setCacheClearing(true);
@@ -344,8 +449,15 @@
 				'&tone=' + encodeURIComponent(tone) +
 				'&_wpnonce=' + encodeURIComponent(gutenblockProModal.nonce || '');
 
+			// staticUrl is supplied by the warm-previews manifest once it has
+			// resolved. When present, it bypasses WordPress entirely; the legacy
+			// previewUrl remains the fallback for cache misses or first-time use.
+			const manifestKey = `${patternSlug}__${tone}`;
+			const staticUrl = previewManifest[manifestKey];
+
 			return el(LazyPatternPreview, {
 				previewUrl,
+				staticUrl,
 				tone,
 			});
 		};
