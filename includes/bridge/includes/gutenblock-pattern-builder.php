@@ -159,10 +159,34 @@ function gutenblock_bridge_rest_get_group_order() {
 	if ( ! class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
 		return new WP_REST_Response( array(), 200 );
 	}
+
+	// Determine which groups currently have at least one pattern on disk.
+	// SaaS uses this to filter the AI section-suggestion to "groups we can
+	// actually render" so an empty group never ships to the user.
+	$available    = array();
+	$plugin_dir   = defined( 'GUTENBLOCK_PRO_PATH' ) ? GUTENBLOCK_PRO_PATH : WP_PLUGIN_DIR . '/gutenblock-pro/';
+	$patterns_dir = rtrim( $plugin_dir, '/' ) . '/patterns';
+	if ( is_dir( $patterns_dir ) ) {
+		$dirs = glob( $patterns_dir . '/*', GLOB_ONLYDIR );
+		if ( is_array( $dirs ) ) {
+			foreach ( $dirs as $dir ) {
+				$pattern_file = $dir . '/pattern.php';
+				if ( ! is_file( $pattern_file ) ) {
+					continue;
+				}
+				$meta = include $pattern_file;
+				if ( is_array( $meta ) && ! empty( $meta['group'] ) ) {
+					$available[ (string) $meta['group'] ] = true;
+				}
+			}
+		}
+	}
+
 	return new WP_REST_Response(
 		array(
-			'order'  => array_keys( GutenBlock_Pro_Pattern_Loader::$groups ),
-			'labels' => GutenBlock_Pro_Pattern_Loader::$groups,
+			'order'     => array_keys( GutenBlock_Pro_Pattern_Loader::$groups ),
+			'labels'    => GutenBlock_Pro_Pattern_Loader::$groups,
+			'available' => array_keys( $available ),
 		),
 		200
 	);
