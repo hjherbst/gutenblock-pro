@@ -1744,6 +1744,29 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		$body_slug      = isset( $fonts['bodySlug'] ) ? sanitize_key( (string) $fonts['bodySlug'] ) : '';
 		$heading_slug   = isset( $fonts['headingSlug'] ) ? sanitize_key( (string) $fonts['headingSlug'] ) : '';
 
+		// 2a) Upsert `settings.typography.fontFamilies` so the FSE typography
+		//     picker only lists the two SaaS-picked families, each with the
+		//     full 9 weights × normal + italic fontFace[] from the manifest.
+		//     Other families already declared by the active theme stay
+		//     intact (merge by slug — never wholesale-replace).
+		$font_faces_map = isset( $fonts['fontFaces'] ) && is_array( $fonts['fontFaces'] )
+			? $fonts['fontFaces']
+			: array();
+		$this->upsert_font_families_in_global_styles(
+			$json,
+			$heading_slug,
+			$heading_family,
+			$font_faces_map[ $heading_slug ] ?? null
+		);
+		if ( $body_slug !== $heading_slug ) {
+			$this->upsert_font_families_in_global_styles(
+				$json,
+				$body_slug,
+				$body_family,
+				$font_faces_map[ $body_slug ] ?? null
+			);
+		}
+
 		// Resolve which fonts the active theme advertises via `theme.json`
 		// so we can prefer the `var:preset|font-family|{slug}` reference
 		// — that's what loads the locally bundled font face. Falls back to
@@ -1778,6 +1801,36 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			if ( $heading_weight >= 100 && $heading_weight <= 900 ) {
 				$json['styles']['elements']['heading']['typography']['fontWeight'] = (string) $heading_weight;
 			}
+		}
+
+		// 2b) Shape → FSE-conformant border-radius for buttons + images so the
+		//     SaaS shape pick (none/subtle/medium/strong) lands as editable
+		//     values under "Site Editor → Styles → Buttons / Images → Border".
+		//     Falls back to silently skip when the manifest carries no
+		//     radius hints (older SaaS builds).
+		$shape_radius  = isset( $c['shapeRadius'] ) ? trim( (string) $c['shapeRadius'] ) : '';
+		$button_radius = isset( $c['buttonRadius'] ) ? trim( (string) $c['buttonRadius'] ) : '';
+		$radius_re     = '/^[0-9]+(\.[0-9]+)?(px|rem|em|%)$/';
+		if ( '' !== $button_radius && preg_match( $radius_re, $button_radius ) ) {
+			if ( ! isset( $json['styles']['elements']['button'] ) || ! is_array( $json['styles']['elements']['button'] ) ) {
+				$json['styles']['elements']['button'] = array();
+			}
+			if ( ! isset( $json['styles']['elements']['button']['border'] ) || ! is_array( $json['styles']['elements']['button']['border'] ) ) {
+				$json['styles']['elements']['button']['border'] = array();
+			}
+			$json['styles']['elements']['button']['border']['radius'] = $button_radius;
+		}
+		if ( '' !== $shape_radius && preg_match( $radius_re, $shape_radius ) ) {
+			if ( ! isset( $json['styles']['blocks'] ) || ! is_array( $json['styles']['blocks'] ) ) {
+				$json['styles']['blocks'] = array();
+			}
+			if ( ! isset( $json['styles']['blocks']['core/image'] ) || ! is_array( $json['styles']['blocks']['core/image'] ) ) {
+				$json['styles']['blocks']['core/image'] = array();
+			}
+			if ( ! isset( $json['styles']['blocks']['core/image']['border'] ) || ! is_array( $json['styles']['blocks']['core/image']['border'] ) ) {
+				$json['styles']['blocks']['core/image']['border'] = array();
+			}
+			$json['styles']['blocks']['core/image']['border']['radius'] = $shape_radius;
 		}
 
 		// 3) Semantic font sizes for H1..H4 + paragraph.
@@ -1839,6 +1892,107 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		update_option( self::OPTION_IMPORT_STYLES, 0 );
 
 		$this->debug_log( 'apply_global_styles: merged into post=' . $post_id );
+	}
+
+	/**
+	 * Upserts a single `settings.typography.fontFamilies[]` entry inside
+	 * the user global-styles JSON. If a matching slug already exists its
+	 * `fontFamily` + `fontFace` are replaced; otherwise a new entry is
+	 * appended. Empty/invalid input is a no-op so partial manifests don't
+	 * pollute the saved JSON.
+	 *
+	 * @param array               $json       Decoded global-styles JSON (passed by ref).
+	 * @param string              $slug       Sanitized font slug (= SaaS font id).
+	 * @param string              $family     CSS font-family stack ("'Inter', sans-serif").
+	 * @param array<int,array>|null $font_faces fontFace[] array from the manifest, or null.
+	 */
+	private function upsert_font_families_in_global_styles( array &$json, string $slug, string $family, ?array $font_faces ): void {
+		$slug   = sanitize_key( $slug );
+		$family = trim( $family );
+		if ( '' === $slug || '' === $family ) {
+			return;
+		}
+
+		if ( ! isset( $json['settings'] ) || ! is_array( $json['settings'] ) ) {
+			$json['settings'] = array();
+		}
+		if ( ! isset( $json['settings']['typography'] ) || ! is_array( $json['settings']['typography'] ) ) {
+			$json['settings']['typography'] = array();
+		}
+		if ( ! isset( $json['settings']['typography']['fontFamilies'] ) || ! is_array( $json['settings']['typography']['fontFamilies'] ) ) {
+			$json['settings']['typography']['fontFamilies'] = array();
+		}
+
+		$entry = array(
+			'fontFamily' => $this->safe_font_family( $family ),
+			'name'       => $this->display_name_from_family( $family ),
+			'slug'       => $slug,
+		);
+
+		// Sanitize fontFace[] entries. Only `(fontFamily, fontStyle,
+		// fontWeight, src[])` quartets pass through — anything else would
+		// break the FSE typography panel parser.
+		$clean_faces = array();
+		if ( is_array( $font_faces ) ) {
+			foreach ( $font_faces as $face ) {
+				if ( ! is_array( $face ) ) {
+					continue;
+				}
+				$face_family = isset( $face['fontFamily'] ) ? trim( (string) $face['fontFamily'] ) : '';
+				$face_style  = isset( $face['fontStyle'] ) ? trim( (string) $face['fontStyle'] ) : 'normal';
+				$face_weight = isset( $face['fontWeight'] ) ? trim( (string) $face['fontWeight'] ) : '';
+				$face_src    = isset( $face['src'] ) && is_array( $face['src'] ) ? $face['src'] : array();
+				if ( '' === $face_family || '' === $face_weight || empty( $face_src ) ) {
+					continue;
+				}
+				$src_clean = array();
+				foreach ( $face_src as $src_url ) {
+					if ( is_string( $src_url ) && '' !== $src_url && preg_match( '#^https?://#i', $src_url ) ) {
+						$src_clean[] = esc_url_raw( $src_url );
+					}
+				}
+				if ( empty( $src_clean ) ) {
+					continue;
+				}
+				$clean_faces[] = array(
+					'fontFamily' => $face_family,
+					'fontStyle'  => ( 'italic' === $face_style ) ? 'italic' : 'normal',
+					'fontWeight' => (string) $face_weight,
+					'src'        => $src_clean,
+				);
+			}
+		}
+		if ( ! empty( $clean_faces ) ) {
+			$entry['fontFace'] = $clean_faces;
+		}
+
+		// Replace existing slug entry in place; otherwise append.
+		$replaced = false;
+		foreach ( $json['settings']['typography']['fontFamilies'] as $i => $existing ) {
+			if ( is_array( $existing ) && isset( $existing['slug'] ) && (string) $existing['slug'] === $slug ) {
+				$json['settings']['typography']['fontFamilies'][ $i ] = $entry;
+				$replaced = true;
+				break;
+			}
+		}
+		if ( ! $replaced ) {
+			$json['settings']['typography']['fontFamilies'][] = $entry;
+		}
+	}
+
+	/**
+	 * Derives a human display name from a CSS font-family stack ("'Open
+	 * Sans', sans-serif" → "Open Sans"). Falls back to the slug-cased
+	 * input when no quoted segment is found.
+	 *
+	 * @param string $family CSS family stack.
+	 */
+	private function display_name_from_family( string $family ): string {
+		if ( preg_match( '/[\'"]([^\'"]+)[\'"]/', $family, $m ) ) {
+			return trim( (string) $m[1] );
+		}
+		$first = trim( (string) explode( ',', $family )[0] );
+		return $first !== '' ? $first : $family;
 	}
 
 	/**

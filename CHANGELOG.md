@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.29.0] – 2026-05-26
+
+- Font import: Provisioning now upserts the two SaaS-picked font families (heading + body) into the user `wp_global_styles` with the full 9 weights × normal + italic `fontFace[]` list (Google Fonts CDN URLs). The FSE Typography panel shows only the SaaS picks, each with all variants selectable. Other theme-declared families stay intact (merge by slug, never wholesale-replace).
+- Shape import: The SaaS shape pick (none/subtle/medium/strong) now writes FSE-conformant `border.radius` for `elements.button` and `blocks.core/image` into user `wp_global_styles`. Visible and editable under "Site Editor → Styles → Buttons / Images → Border" instead of relying on theme-baked CSS overrides.
+
 ## [1.28.0] – 2026-05-26
 
 - Import fix: strip `metadata.patternName` from imported sections so they land as inline-editable blocks (no forced pattern-edit mode).
