@@ -697,6 +697,12 @@ class GutenBlock_Pro_Provisioning_Wizard {
 				// per-section list is provided); strip pattern_name here too
 				// so the page lands as plain editable blocks.
 				$content = self::strip_synced_pattern_metadata( $content );
+				// Defensive: if the SaaS bake leaked `__PLUGIN_URL__` or a
+				// raw `/wp-content/plugins/gutenblock-pro/...` path from the
+				// source instance, rewrite it to this site's plugin URL.
+				if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+					$content = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $content );
+				}
 			} else {
 				continue;
 			}
@@ -1503,6 +1509,13 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		//    locked pattern instance (mirrors `assemble_page_from_sections`).
 		$markup = self::strip_synced_pattern_metadata( $markup );
 
+		// 6) Rewrite any leftover `__PLUGIN_URL__` placeholder or raw
+		//    `/wp-content/plugins/gutenblock-pro/...` source URL to this
+		//    site's plugin URL — the chrome manifest may include either.
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$markup = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $markup );
+		}
+
 		return $markup;
 	}
 
@@ -2024,6 +2037,14 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	/**
 	 * Roh-Inhalt aus patterns/{slug}/content.html im Plugin.
 	 *
+	 * Pattern files store image URLs as the host-agnostic `__PLUGIN_URL__`
+	 * placeholder (and sometimes as the source-instance URL). The pattern
+	 * loader rewrites those at `register_block_pattern()` time, but during
+	 * a Provisioning Wizard import we read the file directly and write the
+	 * markup straight into `post_content` — so we have to run the same
+	 * rewrite here, otherwise the imported page ends up with literal
+	 * `<img src="__PLUGIN_URL__/assets/images/…">` strings.
+	 *
 	 * @param string $slug Pattern-Slug.
 	 * @return string
 	 */
@@ -2037,6 +2058,11 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			return '';
 		}
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		return (string) file_get_contents( $path );
+		$content = (string) file_get_contents( $path );
+
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$content = GutenBlock_Pro_Pattern_Loader::normalize_plugin_asset_urls( $content );
+		}
+		return $content;
 	}
 }
