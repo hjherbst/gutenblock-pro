@@ -1367,6 +1367,32 @@ class GutenBlock_Pro_Admin_Page {
 					max-width: 100% !important;
 					width: 100% !important;
 				}
+				/*
+				 * Hard image constraint fallback. The canonical rule
+				 * `.wp-block-image img { max-width: 100%; height: auto }` lives in
+				 * wp-block-library.css which is loaded via <link>. If that
+				 * stylesheet is slow / blocked by the cache layer the browser may
+				 * paint <img> at its intrinsic size before the rule applies,
+				 * leading to the "image is bigger than the pattern" symptom that
+				 * sometimes clears up on a second open. Inline copy guarantees
+				 * the constraint is in effect from the first paint.
+				 */
+				img {
+					max-width: 100%;
+					height: auto;
+				}
+				.wp-block-image img,
+				.wp-block-image figure img,
+				figure.wp-block-image img {
+					max-width: 100%;
+					height: auto;
+				}
+				.wp-block-cover img.wp-block-cover__image-background,
+				.wp-block-cover video.wp-block-cover__video-background {
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
+				}
 			</style>
 		</head>
 		<body <?php body_class( 'gutenblock-pro-preview' ); ?>>
@@ -1570,7 +1596,17 @@ wp_print_styles();
 ?>
 <style><?php echo $global_styles; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></style>
 <style><?php echo $pattern_styles; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></style>
-<style>html,body{margin:0;padding:0}body{overflow-x:hidden}</style>
+<style>
+html,body{margin:0;padding:0}
+body{overflow-x:hidden}
+/* Inline image constraint — see ajax_preview_pattern() for the rationale. */
+img{max-width:100%;height:auto}
+.wp-block-image img,
+.wp-block-image figure img,
+figure.wp-block-image img{max-width:100%;height:auto}
+.wp-block-cover img.wp-block-cover__image-background,
+.wp-block-cover video.wp-block-cover__video-background{width:100%;height:100%;object-fit:cover}
+</style>
 </head>
 <body>
 <?php echo $rendered; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

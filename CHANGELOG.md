@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.30.0] – 2026-05-26
+
+- Pattern preview: hard inline-CSS image constraint in the iframe HTML so pictures stay within their pattern even before `wp-block-library.css` finishes loading. Fixes "some images render larger than the pattern" / "second open looks better" symptom across the section modal and admin patterns overview. The static preview cache is segmented per plugin version, so the fix takes effect on first open after the update.
+- Site Takeover (Mode A): the bundled `gutentheme` is now wiped and re-copied on every import instead of being merged in place, so stale files from a previous version can no longer linger. Theme cache is invalidated so WP picks up the fresh files immediately. Notice copy updated to "sauber neu installiert".
+- Font import hardening: existing `settings.typography.fontFamilies` entries without a `slug` are now dropped before upserting. Fixes the `Undefined array key "slug" in class-wp-theme-json.php` warnings that surfaced on imports against a `wp_global_styles` post inherited from a custom theme.
+
 ## [1.29.1] – 2026-05-26
 
 - Shape import: Button border-radius now lands at `styles.blocks.core/button.border.radius` (was `elements.button.border.radius`) so the value shows up in the FSE Site Editor under "Stile → Blöcke → Button → Rand → Radius" — the spot users intuitively look for. Element-level entries from 1.29.0 imports are cleaned up on the next import. Image radius stays at `blocks.core/image.border.radius`.

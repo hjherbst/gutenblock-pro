@@ -377,8 +377,8 @@ class GutenBlock_Pro_Provisioning_Wizard {
 					case 'installed':
 						$theme_label = esc_html__( 'installiert + aktiviert', 'gutenblock-pro' );
 						break;
-					case 'refreshed':
-						$theme_label = esc_html__( 'Bundle aktualisiert', 'gutenblock-pro' );
+					case 'reinstalled':
+						$theme_label = esc_html__( 'sauber neu installiert', 'gutenblock-pro' );
 						break;
 					default:
 						$theme_label = esc_html__( '–', 'gutenblock-pro' );
@@ -1570,12 +1570,14 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	/**
 	 * Provisions the bundled GutenTheme in `wp-content/themes/gutentheme`
 	 * and activates it via `switch_theme()`. On every Mode A run the
-	 * bundled files (templates, parts, theme.json, style.css, assets…) are
-	 * refreshed via `copy_dir()` so re-imports actually pick up the
-	 * shipped envelope — user customisations stay safe because they live
-	 * in the database (`wp_template`, `wp_global_styles`), not in the
-	 * theme filesystem. Returns a status string for the admin notice:
-	 * `noop|activated|installed|refreshed`.
+	 * target theme directory is wiped first and then re-populated from the
+	 * plugin bundle, guaranteeing a clean install even when a previous
+	 * import left behind partial / corrupted files (e.g. a deleted theme
+	 * folder that WP partially recreated, leftover stale assets from an
+	 * older plugin version, etc). User customisations stay safe because
+	 * they live in the database (`wp_template`, `wp_global_styles`), not
+	 * in the theme filesystem. Returns a status string for the admin
+	 * notice: `noop|activated|installed|reinstalled`.
 	 */
 	private function install_and_activate_gutentheme(): string {
 		$slug   = 'gutentheme';
@@ -1595,16 +1597,67 @@ class GutenBlock_Pro_Provisioning_Wizard {
 
 		$existed = is_dir( $target );
 
+		// Wipe an existing target directory before copying so we never end
+		// up with a hybrid of old + new files. Skipped when the directory
+		// is missing (fresh install case).
+		if ( $existed && ! $this->wipe_theme_directory( $target ) ) {
+			return 'noop';
+		}
+
 		if ( ! $this->copy_bundled_theme_files( $source, $target ) ) {
 			return 'noop';
 		}
 
-		if ( (string) get_stylesheet() !== $slug ) {
-			switch_theme( $slug );
-			return $existed ? 'activated' : 'installed';
+		// Make sure WP picks up the freshly written files instead of any
+		// cached metadata from the previous installation.
+		if ( function_exists( 'wp_clean_themes_cache' ) ) {
+			wp_clean_themes_cache( true );
 		}
 
-		return $existed ? 'refreshed' : 'installed';
+		if ( (string) get_stylesheet() !== $slug ) {
+			switch_theme( $slug );
+			return $existed ? 'reinstalled' : 'installed';
+		}
+
+		return $existed ? 'reinstalled' : 'installed';
+	}
+
+	/**
+	 * Recursively removes the given theme directory. Returns true on
+	 * success (or when the directory was already gone), false when the
+	 * filesystem refused the operation. Errors surface as an admin notice
+	 * so the user sees why the import bailed out.
+	 */
+	private function wipe_theme_directory( string $target ): bool {
+		if ( ! is_dir( $target ) ) {
+			return true;
+		}
+		if ( ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		if ( ! WP_Filesystem() ) {
+			$this->debug_log( 'wipe_theme_directory: WP_Filesystem init failed' );
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' . esc_html__( 'Vorhandenes Theme konnte nicht entfernt werden (keine Filesystem-Rechte).', 'gutenblock-pro' ) . '</p></div>';
+				}
+			);
+			return false;
+		}
+		global $wp_filesystem;
+		$ok = $wp_filesystem->delete( $target, true /* recursive */, 'd' );
+		if ( ! $ok ) {
+			$this->debug_log( 'wipe_theme_directory: delete failed for ' . $target );
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' . esc_html__( 'Vorhandener GutenTheme-Ordner konnte nicht gelöscht werden – bitte Verzeichnis-Rechte prüfen.', 'gutenblock-pro' ) . '</p></div>';
+				}
+			);
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -1939,6 +1992,24 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		if ( ! isset( $json['settings']['typography']['fontFamilies'] ) || ! is_array( $json['settings']['typography']['fontFamilies'] ) ) {
 			$json['settings']['typography']['fontFamilies'] = array();
 		}
+
+		// Drop entries that are missing a `slug` or aren't well-formed
+		// arrays. WP core (`class-wp-theme-json.php`) dereferences
+		// `$font_family['slug']` unconditionally when materialising the
+		// typography preset CSS, raising "Undefined array key 'slug'"
+		// notices that surface in the admin + frontend. We sanitize the
+		// existing list on every import so the import never leaves the
+		// post in a broken state.
+		$json['settings']['typography']['fontFamilies'] = array_values(
+			array_filter(
+				$json['settings']['typography']['fontFamilies'],
+				static function ( $entry ) {
+					return is_array( $entry )
+						&& isset( $entry['slug'] )
+						&& '' !== trim( (string) $entry['slug'] );
+				}
+			)
+		);
 
 		$entry = array(
 			'fontFamily' => $this->safe_font_family( $family ),
