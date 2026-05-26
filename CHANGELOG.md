@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.28.0] – 2026-05-26
+
+- Import fix: strip `metadata.patternName` from imported sections so they land as inline-editable blocks (no forced pattern-edit mode).
+- New patterns: `process-v4`, `text-columns-v2`..`text-columns-v5`.
+- Pattern refresh: `carousel-v1`, `hero-v5`. `header-v2` removed.
+
 ## [1.24.0] – 2026-05-12
 
 - Pattern refresh; `services-v6` removed.
