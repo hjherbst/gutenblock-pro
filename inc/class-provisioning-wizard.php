@@ -1803,22 +1803,39 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			}
 		}
 
-		// 2b) Shape → FSE-conformant border-radius for buttons + images so the
-		//     SaaS shape pick (none/subtle/medium/strong) lands as editable
-		//     values under "Site Editor → Styles → Buttons / Images → Border".
-		//     Falls back to silently skip when the manifest carries no
-		//     radius hints (older SaaS builds).
+		// 2b) Shape → FSE-conformant border-radius for buttons + images as
+		//     editable block-level values, so they show up exactly where
+		//     the user looks for them in the Site Editor:
+		//     "Stile → Blöcke → Button / Bild → Rand → Radius".
+		//     Block-level (not element-level) keeps the value at one
+		//     canonical spot per block — no surprise overrides on
+		//     unrelated element-buttons (form submits, search etc.).
+		//     Silently skipped when the manifest carries no radius hints.
 		$shape_radius  = isset( $c['shapeRadius'] ) ? trim( (string) $c['shapeRadius'] ) : '';
 		$button_radius = isset( $c['buttonRadius'] ) ? trim( (string) $c['buttonRadius'] ) : '';
 		$radius_re     = '/^[0-9]+(\.[0-9]+)?(px|rem|em|%)$/';
+		// Drop any element-level button radius that older plugin versions
+		// (1.29.0) wrote — keeps a single source of truth at block-level.
+		if ( isset( $json['styles']['elements']['button']['border']['radius'] ) ) {
+			unset( $json['styles']['elements']['button']['border']['radius'] );
+			if ( empty( $json['styles']['elements']['button']['border'] ) ) {
+				unset( $json['styles']['elements']['button']['border'] );
+			}
+			if ( empty( $json['styles']['elements']['button'] ) ) {
+				unset( $json['styles']['elements']['button'] );
+			}
+		}
 		if ( '' !== $button_radius && preg_match( $radius_re, $button_radius ) ) {
-			if ( ! isset( $json['styles']['elements']['button'] ) || ! is_array( $json['styles']['elements']['button'] ) ) {
-				$json['styles']['elements']['button'] = array();
+			if ( ! isset( $json['styles']['blocks'] ) || ! is_array( $json['styles']['blocks'] ) ) {
+				$json['styles']['blocks'] = array();
 			}
-			if ( ! isset( $json['styles']['elements']['button']['border'] ) || ! is_array( $json['styles']['elements']['button']['border'] ) ) {
-				$json['styles']['elements']['button']['border'] = array();
+			if ( ! isset( $json['styles']['blocks']['core/button'] ) || ! is_array( $json['styles']['blocks']['core/button'] ) ) {
+				$json['styles']['blocks']['core/button'] = array();
 			}
-			$json['styles']['elements']['button']['border']['radius'] = $button_radius;
+			if ( ! isset( $json['styles']['blocks']['core/button']['border'] ) || ! is_array( $json['styles']['blocks']['core/button']['border'] ) ) {
+				$json['styles']['blocks']['core/button']['border'] = array();
+			}
+			$json['styles']['blocks']['core/button']['border']['radius'] = $button_radius;
 		}
 		if ( '' !== $shape_radius && preg_match( $radius_re, $shape_radius ) ) {
 			if ( ! isset( $json['styles']['blocks'] ) || ! is_array( $json['styles']['blocks'] ) ) {

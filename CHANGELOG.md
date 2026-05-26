@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.29.1] – 2026-05-26
+
+- Shape import: Button border-radius now lands at `styles.blocks.core/button.border.radius` (was `elements.button.border.radius`) so the value shows up in the FSE Site Editor under "Stile → Blöcke → Button → Rand → Radius" — the spot users intuitively look for. Element-level entries from 1.29.0 imports are cleaned up on the next import. Image radius stays at `blocks.core/image.border.radius`.
+
 ## [1.29.0] – 2026-05-26
 
 - Font import: Provisioning now upserts the two SaaS-picked font families (heading + body) into the user `wp_global_styles` with the full 9 weights × normal + italic `fontFace[]` list (Google Fonts CDN URLs). The FSE Typography panel shows only the SaaS picks, each with all variants selectable. Other theme-declared families stay intact (merge by slug, never wholesale-replace).
