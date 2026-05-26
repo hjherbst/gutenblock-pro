@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.30.1] – 2026-05-26
+
+- Global styles sanitizer: on every import the user `wp_global_styles` post is now scrubbed for malformed preset rows across **all** WP preset paths (`color.palette/gradients/duotone`, `typography.fontFamilies/fontSizes`, `spacing.spacingSizes`, `shadow.presets`). Rows without a string `slug` are dropped. Closes the `Undefined array key "slug" in class-wp-theme-json.php` warning that 1.30.0 still left behind when the palette was the offender (legacy nested-list entry from an older build, not the fontFamilies list).
+
 ## [1.30.0] – 2026-05-26
 
 - Pattern preview: hard inline-CSS image constraint in the iframe HTML so pictures stay within their pattern even before `wp-block-library.css` finishes loading. Fixes "some images render larger than the pattern" / "second open looks better" symptom across the section modal and admin patterns overview. The static preview cache is segmented per plugin version, so the fix takes effect on first open after the update.

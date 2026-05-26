@@ -1740,6 +1740,17 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			$json['version'] = 2;
 		}
 
+		// Self-heal: discard any preset entry that isn't a dict with a `slug`
+		// before we read or merge. Older plugin builds occasionally wrote a
+		// nested list into `color.palette[0]` (the whole palette wrapped in
+		// an extra array). WP core (`class-wp-theme-json.php::get_settings_values_by_slug`)
+		// iterates every preset and dereferences `$preset['slug']`
+		// unconditionally, so a single bad row raises the
+		// "Undefined array key 'slug'" warning across the admin + frontend.
+		// Cleaning up on every import makes the import idempotently
+		// self-healing.
+		$this->sanitize_global_styles_presets( $json );
+
 		// 1) Color palette — slugs base/contrast/primary/tertiary mergen.
 		$palette_slugs = array(
 			'base'     => __( 'Base', 'gutenblock-pro' ),
@@ -1965,6 +1976,62 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	}
 
 	/**
+	 * Drops malformed entries from every preset list inside the user
+	 * `wp_global_styles` JSON before we read or upsert anything. WP core
+	 * (`class-wp-theme-json.php::get_settings_values_by_slug` +
+	 * `::get_settings_slugs`, lines ~2180/2226 in WP 6.x) iterates every
+	 * preset and dereferences `$preset['slug']` unconditionally — a single
+	 * non-array row or missing slug emits "Undefined array key 'slug'"
+	 * warnings on every admin + frontend request.
+	 *
+	 * Known triggers in the wild:
+	 * - `color.palette[0]` written as a nested list (whole palette wrapped
+	 *   in an extra array) by an early plugin build.
+	 * - `typography.fontFamilies[]` rows inherited from a custom theme
+	 *   that ship without a slug.
+	 *
+	 * Cleaning up on every import makes provisioning idempotently
+	 * self-healing.
+	 *
+	 * @param array $json Decoded global-styles JSON (passed by ref).
+	 */
+	private function sanitize_global_styles_presets( array &$json ): void {
+		if ( ! isset( $json['settings'] ) || ! is_array( $json['settings'] ) ) {
+			return;
+		}
+
+		// All known preset list paths inside settings (mirrors WP core's
+		// `PRESETS_METADATA`). Adding a path here just hardens the import,
+		// it doesn't affect any preset we don't manage ourselves.
+		$preset_paths = array(
+			array( 'color', 'palette' ),
+			array( 'color', 'gradients' ),
+			array( 'color', 'duotone' ),
+			array( 'typography', 'fontFamilies' ),
+			array( 'typography', 'fontSizes' ),
+			array( 'spacing', 'spacingSizes' ),
+			array( 'shadow', 'presets' ),
+		);
+
+		foreach ( $preset_paths as $path ) {
+			list( $group, $key ) = $path;
+			if ( ! isset( $json['settings'][ $group ][ $key ] ) || ! is_array( $json['settings'][ $group ][ $key ] ) ) {
+				continue;
+			}
+			$json['settings'][ $group ][ $key ] = array_values(
+				array_filter(
+					$json['settings'][ $group ][ $key ],
+					static function ( $entry ) {
+						return is_array( $entry )
+							&& isset( $entry['slug'] )
+							&& '' !== trim( (string) $entry['slug'] );
+					}
+				)
+			);
+		}
+	}
+
+	/**
 	 * Upserts a single `settings.typography.fontFamilies[]` entry inside
 	 * the user global-styles JSON. If a matching slug already exists its
 	 * `fontFamily` + `fontFace` are replaced; otherwise a new entry is
@@ -1993,13 +2060,10 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			$json['settings']['typography']['fontFamilies'] = array();
 		}
 
-		// Drop entries that are missing a `slug` or aren't well-formed
-		// arrays. WP core (`class-wp-theme-json.php`) dereferences
-		// `$font_family['slug']` unconditionally when materialising the
-		// typography preset CSS, raising "Undefined array key 'slug'"
-		// notices that surface in the admin + frontend. We sanitize the
-		// existing list on every import so the import never leaves the
-		// post in a broken state.
+		// Belt-and-braces: `apply_global_styles_from_manifest()` already runs
+		// `sanitize_global_styles_presets()` once at the top of the import,
+		// but this method is also reachable from other code paths (callers
+		// outside the wizard), so drop any malformed leftover here too.
 		$json['settings']['typography']['fontFamilies'] = array_values(
 			array_filter(
 				$json['settings']['typography']['fontFamilies'],
