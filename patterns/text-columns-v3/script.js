@@ -1,12 +1,12 @@
 /**
- * header v2 - Frontend Script
+ * Text Columns v3 - Frontend Script
  */
 
 (function () {
 	'use strict';
 
-	function initHeaderV2() {
-		const elements = document.querySelectorAll('.gb-pattern-header-v2');
+	function initTextColumnsV3() {
+		const elements = document.querySelectorAll('.gb-pattern-text-columns-v3');
 		
 		if (!elements.length) return;
 
@@ -17,8 +17,8 @@
 
 	// Initialize on DOM ready
 	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', initHeaderV2);
+		document.addEventListener('DOMContentLoaded', initTextColumnsV3);
 	} else {
-		initHeaderV2();
+		initTextColumnsV3();
 	}
 })();

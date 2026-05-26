@@ -5,3 +5,17 @@
 .gb-pattern-hero-v5 {
 	/* Add your styles here */
 }
+
+/* Ensure the image always fills the full alignwide container width.
+ * Without this, an injected image whose natural width is smaller than the
+ * container (e.g. a 1152 px Replicate image in a 1280 px slot) would render
+ * at its natural width because max-width:100% only caps, it does not stretch. */
+.gb-pattern-hero-v5 .wp-block-image {
+	display: block;
+	width: 100%;
+}
+
+.gb-pattern-hero-v5 .wp-block-image img {
+	width: 100%;
+	height: auto;
+}
