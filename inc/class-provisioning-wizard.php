@@ -693,6 +693,10 @@ class GutenBlock_Pro_Provisioning_Wizard {
 				$content = $this->assemble_page_from_sections( $page['sections'], $fields );
 			} elseif ( isset( $page['blockMarkup'] ) ) {
 				$content = $this->apply_text_fields_to_markup( (string) $page['blockMarkup'], $fields );
+				// `blockMarkup` is the SaaS-baked page HTML (used when no
+				// per-section list is provided); strip pattern_name here too
+				// so the page lands as plain editable blocks.
+				$content = self::strip_synced_pattern_metadata( $content );
 			} else {
 				continue;
 			}
@@ -781,9 +785,102 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			if ( ! empty( $section['imageOverrides'] ) && is_array( $section['imageOverrides'] ) ) {
 				$markup = $this->apply_image_overrides_to_markup( $markup, $section['imageOverrides'] );
 			}
+			// Strip `metadata.patternName` from every block so each section
+			// lands as a plain Group on the imported page — without it, WP
+			// renders the section as a locked "pattern instance" that forces
+			// the user into a separate edit-pattern mode (see issue tracked
+			// May 2026). `metadata.name` stays so the section still has a
+			// helpful label in the editor's list view.
+			$markup = self::strip_synced_pattern_metadata( $markup );
 			$out .= $markup . "\n\n";
 		}
 		return $out;
+	}
+
+	/**
+	 * Removes `metadata.patternName` from every block in the given Gutenberg
+	 * block markup. The Block Editor treats any block that carries this
+	 * attribute as a pattern instance (collapsed in the list view, edits
+	 * only via "Edit pattern"). When we materialise SaaS sections as inline
+	 * blocks on a page or template part we want the opposite: editable
+	 * inline groups.
+	 *
+	 * Implementation: parse → walk → re-serialize. Keeps the rest of the
+	 * block tree byte-for-byte stable (parse_blocks/serialize_blocks
+	 * round-trip is lossless for well-formed markup).
+	 *
+	 * Public + static so the same helper can be reused from other import
+	 * code paths (e.g. template-part import) without re-instantiating the
+	 * wizard.
+	 *
+	 * @param string $markup Block markup (page content, template part…).
+	 * @return string
+	 */
+	public static function strip_synced_pattern_metadata( string $markup ): string {
+		if ( '' === $markup || false === strpos( $markup, '"patternName"' ) ) {
+			return $markup;
+		}
+		if ( ! function_exists( 'parse_blocks' ) || ! function_exists( 'serialize_blocks' ) ) {
+			// Should never happen in admin/import context, but fall back to
+			// a regex strip so we never return broken markup.
+			return self::strip_pattern_name_regex( $markup );
+		}
+
+		$blocks = parse_blocks( $markup );
+		self::walk_strip_pattern_name( $blocks );
+		return serialize_blocks( $blocks );
+	}
+
+	/**
+	 * Recursive in-place walker for {@see strip_synced_pattern_metadata()}.
+	 *
+	 * @param array $blocks parse_blocks() output (passed by reference).
+	 */
+	private static function walk_strip_pattern_name( array &$blocks ): void {
+		foreach ( $blocks as &$block ) {
+			if ( isset( $block['attrs']['metadata'] ) && is_array( $block['attrs']['metadata'] ) ) {
+				unset( $block['attrs']['metadata']['patternName'] );
+				if ( empty( $block['attrs']['metadata'] ) ) {
+					unset( $block['attrs']['metadata'] );
+				}
+			}
+			if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
+				self::walk_strip_pattern_name( $block['innerBlocks'] );
+			}
+		}
+		unset( $block );
+	}
+
+	/**
+	 * Pure-string fallback: drop every `"patternName":"…"` (incl. preceding
+	 * or trailing comma) from JSON-encoded block attribute objects in the
+	 * markup. Only used when parse_blocks/serialize_blocks aren't loaded.
+	 *
+	 * @param string $markup Block markup.
+	 * @return string
+	 */
+	private static function strip_pattern_name_regex( string $markup ): string {
+		$stripped = (string) preg_replace_callback(
+			'/(,\s*)?"patternName"\s*:\s*"(?:\\\\.|[^"\\\\])*"(\s*,)?/u',
+			static function ( array $m ): string {
+				// Keep a single comma if one was present on either side, so
+				// the surrounding JSON object stays syntactically valid.
+				if ( ! empty( $m[1] ) && ! empty( $m[2] ) ) {
+					return ',';
+				}
+				return '';
+			},
+			$markup
+		);
+		// Drop now-empty `"metadata":{}` objects (incl. an optional leading
+		// or trailing comma) so the block JSON stays clean.
+		return (string) preg_replace_callback(
+			'/(,\s*)?"metadata"\s*:\s*\{\s*\}(\s*,)?/u',
+			static function ( array $m ): string {
+				return ( ! empty( $m[1] ) && ! empty( $m[2] ) ) ? ',' : '';
+			},
+			$stripped
+		);
 	}
 
 	/**
@@ -1400,6 +1497,12 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		if ( ! empty( $url_map ) ) {
 			$markup = strtr( $markup, $url_map );
 		}
+
+		// 5) Strip `metadata.patternName` so the imported header/footer
+		//    template part renders as plain editable blocks instead of a
+		//    locked pattern instance (mirrors `assemble_page_from_sections`).
+		$markup = self::strip_synced_pattern_metadata( $markup );
+
 		return $markup;
 	}
 
