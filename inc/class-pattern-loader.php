@@ -69,6 +69,9 @@ class GutenBlock_Pro_Pattern_Loader {
 		// AJAX endpoint for modal
 		add_action( 'wp_ajax_gutenblock_pro_get_patterns_for_modal', array( $this, 'ajax_get_patterns_for_modal' ) );
 		add_action( 'wp_ajax_gutenblock_pro_get_pattern_tone_content', array( $this, 'ajax_get_pattern_tone_content' ) );
+
+		// Disable content-only editing mode for unsynced patterns in WP 7.0+
+		add_filter( 'block_editor_settings_all', array( $this, 'disable_content_only_for_unsynced_patterns' ) );
 	}
 
 	/**
@@ -835,6 +838,23 @@ class GutenBlock_Pro_Pattern_Loader {
 			'tone'    => $tone,
 			'content' => $content,
 		) );
+	}
+
+	/**
+	 * Disable content-only editing mode for unsynced patterns in WP 7.0+
+	 *
+	 * In WordPress 7.0, unsynced patterns inserted into the editor default
+	 * to `contentOnly` mode, locking down the layout and inner block structure
+	 * and only allowing text/image editing unless the user unlocks it. We
+	 * restore the 6.x behavior where unsynced patterns are inserted as raw,
+	 * fully editable blocks.
+	 *
+	 * @param array $settings Block editor settings.
+	 * @return array Modified block editor settings.
+	 */
+	public function disable_content_only_for_unsynced_patterns( $settings ) {
+		$settings['disableContentOnlyForUnsyncedPatterns'] = true;
+		return $settings;
 	}
 
 	/**
