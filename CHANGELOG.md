@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.30.2] – 2026-05-27
+
+- Site Editor: restore the right-hand "Styles" panel (half-filled-circle pinned-item button) that WP 7.0 lost. Direct comparison of `edit-site.js` 6.9.4 vs 7.0 confirmed the regression: 6.9 mounted `<GlobalStylesSidebar />` unconditionally for block themes; 7.0 moved the component to `editor.js` and gated it behind `postType === "wp_template" || renderingMode === "template-locked"`, hiding the panel on every page-/post-/styles-edit route. We re-introduce both the trigger and the panel by registering a public `<PluginSidebar>` that internally renders the WP-native `GlobalStylesUIWrapper` pulled from `wp.editor.privateApis` (acknowledged opt-in to private APIs; whole resolution path is try/catch-guarded and the file documents the WP-version-coupling risk). Skipped on WP < 7.0 because the native button is still there.
+
+## [1.30.2] – 2026-05-27
+
+- Site Editor: restore the right-hand "Styles" panel (half-filled-circle pinned-item button) that WP 7.0 lost. Direct comparison of `edit-site.js` 6.9.4 vs 7.0 confirmed the regression: 6.9 mounted `<GlobalStylesSidebar />` unconditionally for block themes; 7.0 moved the component to `editor.js` and gated it behind `postType === "wp_template" || renderingMode === "template-locked"`, hiding the panel on every page-/post-/styles-edit route. We re-introduce both the trigger and the panel by registering a public `<PluginSidebar>` that internally renders the WP-native `GlobalStylesUIWrapper` pulled from `wp.editor.privateApis` (acknowledged opt-in to private APIs; whole resolution path is try/catch-guarded and the file documents the WP-version-coupling risk). Skipped on WP < 7.0 because the native button is still there.
+
 ## [1.30.1] – 2026-05-26
 
 - Global styles sanitizer: on every import the user `wp_global_styles` post is now scrubbed for malformed preset rows across **all** WP preset paths (`color.palette/gradients/duotone`, `typography.fontFamilies/fontSizes`, `spacing.spacingSizes`, `shadow.presets`). Rows without a string `slug` are dropped. Closes the `Undefined array key "slug" in class-wp-theme-json.php` warning that 1.30.0 still left behind when the palette was the offender (legacy nested-list entry from an older build, not the fontFamilies list).
