@@ -7,9 +7,9 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
-## [1.30.2] – 2026-05-27
+## [1.30.3] – 2026-05-27
 
-- Site Editor: restore the right-hand "Styles" panel (half-filled-circle pinned-item button) that WP 7.0 lost. Direct comparison of `edit-site.js` 6.9.4 vs 7.0 confirmed the regression: 6.9 mounted `<GlobalStylesSidebar />` unconditionally for block themes; 7.0 moved the component to `editor.js` and gated it behind `postType === "wp_template" || renderingMode === "template-locked"`, hiding the panel on every page-/post-/styles-edit route. We re-introduce both the trigger and the panel by registering a public `<PluginSidebar>` that internally renders the WP-native `GlobalStylesUIWrapper` pulled from `wp.editor.privateApis` (acknowledged opt-in to private APIs; whole resolution path is try/catch-guarded and the file documents the WP-version-coupling risk). Skipped on WP < 7.0 because the native button is still there.
+- Pattern loader: harden `register_single_pattern()` against entries mutated through the `gutenblock_pro_patterns` filter. If a downstream filter drops the `slug`, `content`, or `folder` key — or replaces the whole entry with a non-array — registration now skips/falls back cleanly instead of raising `Undefined array key "slug" in class-pattern-loader.php on line 400`. Base slug is recovered from the tone-suffixed slug (`hero-v1--dark` → `hero-v1`) where needed.
 
 ## [1.30.2] – 2026-05-27
 

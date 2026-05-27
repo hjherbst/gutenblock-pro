@@ -354,6 +354,12 @@ class GutenBlock_Pro_Pattern_Loader {
 				continue;
 			}
 
+			// Filter on `gutenblock_pro_patterns` may have inserted a non-
+			// array entry; guard before we touch any keys.
+			if ( ! is_array( $pattern ) ) {
+				continue;
+			}
+
 			$tones = isset( $pattern['tones'] ) && is_array( $pattern['tones'] ) ? $pattern['tones'] : array( 'neutral' );
 
 			foreach ( $tones as $tone ) {
@@ -374,10 +380,25 @@ class GutenBlock_Pro_Pattern_Loader {
 	 * @param string $tone    Tone key ('neutral'|'dark'|'soft')
 	 */
 	private function register_single_pattern( $slug, $pattern, $tone = 'neutral' ) {
-		// Load content from separate file if not inline
-		$content = $pattern['content'];
+		// Hard-bail if a filter on `gutenblock_pro_patterns` left a non-array
+		// entry in `$this->patterns`. Nothing downstream tolerates that.
+		if ( ! is_array( $pattern ) ) {
+			return;
+		}
 
-		if ( empty( $content ) ) {
+		// External filters can mutate `$this->patterns` after discovery
+		// (and therefore after `wp_parse_args` has applied our defaults).
+		// If such a mutation drops the `slug` key, derive it from the
+		// tone slug instead of letting PHP raise an "Undefined array key"
+		// warning on the CSS-class line below.
+		if ( empty( $pattern['slug'] ) || ! is_string( $pattern['slug'] ) ) {
+			$pattern['slug'] = preg_replace( '/--[a-z0-9-]+$/', '', (string) $slug );
+		}
+
+		// Load content from separate file if not inline
+		$content = isset( $pattern['content'] ) ? $pattern['content'] : '';
+
+		if ( empty( $content ) && ! empty( $pattern['folder'] ) ) {
 			$content = $this->load_localized_content( $pattern['folder'] );
 		}
 
