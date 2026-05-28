@@ -64,6 +64,9 @@ class GutenBlock_Pro_Block_Registry {
 }
 .wp-block-button.is-style-button-arrow-circle .wp-block-button__link.fly::after {
 	transform: translateY(-50%) translateX(200%);
+}
+.wp-block-buttons:has(.wp-block-button.is-style-button-arrow-circle) {
+	align-items: flex-start;
 }',
 		),
 		'button-simple'       => array(

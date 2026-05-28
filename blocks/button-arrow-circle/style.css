@@ -38,3 +38,18 @@
 .wp-block-button.is-style-button-arrow-circle .wp-block-button__link.fly::after {
 	transform: translateY(-50%) translateX(200%);
 }
+
+/*
+ * Theme/global-style padding sets the standard button height, while the
+ * arrow-circle button enforces `min-height: 46px` to safely contain its
+ * absolutely-positioned icon. When both end up next to each other in a
+ * `.wp-block-buttons` row the default `align-items: center` centers the
+ * shorter button between the taller one, which the eye reads as
+ * misalignment. Snapping the row to `flex-start` anchors all buttons at
+ * the top, so any remaining height delta is no longer perceived as the
+ * custom button "sitting too high". Scoped via `:has()` so untouched
+ * standard button rows keep their existing layout.
+ */
+.wp-block-buttons:has(.wp-block-button.is-style-button-arrow-circle) {
+	align-items: flex-start;
+}
