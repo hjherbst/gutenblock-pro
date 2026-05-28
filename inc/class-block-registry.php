@@ -33,11 +33,14 @@ class GutenBlock_Pro_Block_Registry {
 			),
 			'css' => '.wp-block-button.is-style-button-arrow-circle .wp-block-button__link {
 	position: relative;
-	display: inline-block;
+	display: inline-flex;
+	align-items: center;
 	background-color: transparent;
 	background-image: none;
 	color: black;
-	padding: 0.75em 5em 0.75em 1.25em;
+	padding-left: 1.25em;
+	padding-right: 5em;
+	min-height: 46px;
 	border: 1px solid #333;
 	border-radius: 999px;
 	text-decoration: none;

@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.30.4] – 2026-05-28
+
+- Buttons: fix vertical height and alignment of the custom `is-style-button-arrow-circle` button variant. Changed `display` from `inline-block` to `inline-flex` with vertical centering (`align-items: center`), and removed hardcoded top/bottom padding so it inherits the theme's or global style's default vertical padding. Added `min-height: 46px` to safely contain the embedded 38px circle-arrow inlay.
+- Site Editor: disable the restrictive `contentOnly` editing mode for unsynced patterns on WordPress 7.0+. Unsynced patterns now insert as raw, fully editable block structures directly on the canvas, behaving exactly as they did in WordPress 6.x.
+
 ## [1.30.3] – 2026-05-27
 
 - Pattern loader: harden `register_single_pattern()` against entries mutated through the `gutenblock_pro_patterns` filter. If a downstream filter drops the `slug`, `content`, or `folder` key — or replaces the whole entry with a non-array — registration now skips/falls back cleanly instead of raising `Undefined array key "slug" in class-pattern-loader.php on line 400`. Base slug is recovered from the tone-suffixed slug (`hero-v1--dark` → `hero-v1`) where needed.
