@@ -385,7 +385,7 @@ class GutenBlock_Pro_Features_Page {
 		?>
 		<div class="wrap gbp-features-page">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<p class="description"><?php esc_html_e( 'Aktiviere oder deaktiviere optionale Funktionen von GutenBlock Pro.', 'gutenblock-pro' ); ?></p>
+			<p class="description"><?php esc_html_e( 'Aktiviere oder deaktiviere optionale Funktionen des GutenBlock Plugins.', 'gutenblock-pro' ); ?></p>
 
 			<form method="post" action="options.php" class="gbp-features-form">
 				<?php settings_fields( 'gutenblock_pro_features' ); ?>

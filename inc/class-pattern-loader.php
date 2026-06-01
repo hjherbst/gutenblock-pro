@@ -219,7 +219,7 @@ class GutenBlock_Pro_Pattern_Loader {
 
 		// Legacy main category (for backwards compatibility)
 		register_block_pattern_category( 'gutenblock-pro', array(
-			'label' => 'GutenBlock Pro',
+			'label' => 'GutenBlock',
 		) );
 	}
 

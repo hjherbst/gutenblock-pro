@@ -80,6 +80,39 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	}
 
 	/**
+	 * Notifies the SaaS that the import for this token completed, so the
+	 * marketing funnel can mark the migration as done (conversion stage 3).
+	 * Best-effort and non-blocking — failures never affect the import result.
+	 *
+	 * @param string $token Provisioning token used for this import.
+	 */
+	private function notify_provisioning_complete( string $token ): void {
+		if ( strlen( $token ) < 16 ) {
+			return;
+		}
+
+		$url = self::default_saas_base() . '/api/v1/provisioning/complete';
+
+		wp_remote_post(
+			$url,
+			array(
+				'timeout'  => 15,
+				'blocking' => false,
+				'headers'  => array(
+					'Content-Type'  => 'application/json',
+					'Authorization' => 'Bearer ' . $token,
+				),
+				'body'     => wp_json_encode(
+					array(
+						'token'   => $token,
+						'siteUrl' => home_url( '/' ),
+					)
+				),
+			)
+		);
+	}
+
+	/**
 	 * Submenu „Import" unter dem Plugin-Top-Level-Menü `gutenblock-pro`.
 	 */
 	public function register_menu(): void {
@@ -367,6 +400,8 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		update_option( 'gutenblock_pro_last_manifest_sync', current_time( 'mysql' ) );
 		update_option( 'gutenblock_pro_last_manifest_pages_count', $pages_count );
 
+		$this->notify_provisioning_complete( $token );
+
 		add_action(
 			'admin_notices',
 			function () use ( $pages_count, $theme_status, $nav_post_id ) {
@@ -430,6 +465,8 @@ class GutenBlock_Pro_Provisioning_Wizard {
 		$pages_count = is_array( $data['pages'] ) ? count( $data['pages'] ) : 0;
 		update_option( 'gutenblock_pro_last_manifest_sync', current_time( 'mysql' ) );
 		update_option( 'gutenblock_pro_last_manifest_pages_count', $pages_count );
+
+		$this->notify_provisioning_complete( $token );
 
 		add_action(
 			'admin_notices',

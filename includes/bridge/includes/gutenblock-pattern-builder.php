@@ -39,7 +39,7 @@ function gutenblock_bridge_assemble_permission_callback() {
 function gutenblock_bridge_rest_get_patterns() {
 	if ( ! class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
 		return new WP_REST_Response(
-			array( 'error' => 'GutenBlock Pro Plugin ist nicht aktiv oder nicht geladen.' ),
+			array( 'error' => 'GutenBlock Plugin ist nicht aktiv oder nicht geladen.' ),
 			503
 		);
 	}
@@ -1945,7 +1945,7 @@ function gutenblock_bridge_get_semantic_font_sizes_from_theme() {
  */
 function gutenblock_bridge_build_patterns_bundle() {
 	if ( ! class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
-		return new WP_Error( 'plugin_inactive', 'GutenBlock Pro Pattern Loader ist nicht verfügbar.', array( 'status' => 503 ) );
+		return new WP_Error( 'plugin_inactive', 'GutenBlock Plugin Pattern Loader ist nicht verfügbar.', array( 'status' => 503 ) );
 	}
 
 	$plugin_dir = defined( 'GUTENBLOCK_PRO_PATH' ) ? GUTENBLOCK_PRO_PATH : WP_PLUGIN_DIR . '/gutenblock-pro/';

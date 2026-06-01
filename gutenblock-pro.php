@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: GutenBlock Pro
+ * Plugin Name: GutenBlock Plugin
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
- * Description: Professional block patterns and Full Site Editor building blocks – also acts as the import bridge for the GutenBlock SaaS website builder.
- * Version: 1.30.6
+ * Description: Block patterns and Full Site Editor building blocks for WordPress — also acts as the import bridge for the GutenBlock SaaS website builder. Activate a GutenBlock Pro license to unlock premium sections and the higher AI token quota.
+ * Version: 1.30.7
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -13,6 +13,10 @@
  * Text Domain: gutenblock-pro
  * Domain Path: /languages
  *
+ * Display name is "GutenBlock Plugin"; the technical slug, text-domain and
+ * folder stay `gutenblock-pro` so existing installations keep getting updates.
+ * "GutenBlock Pro" now refers exclusively to the paid license tier.
+ *
  * @package GutenBlockPro
  */
 
@@ -21,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.30.6' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.30.7' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
@@ -310,7 +314,7 @@ function gutenblock_pro_register_category() {
 	register_block_pattern_category(
 		'gutenblock-pro',
 		array(
-			'label' => __( 'GutenBlock Pro', 'gutenblock-pro' ),
+			'label' => __( 'GutenBlock', 'gutenblock-pro' ),
 		)
 	);
 }

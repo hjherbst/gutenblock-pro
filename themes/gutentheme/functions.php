@@ -138,8 +138,27 @@ add_action( 'init', function() {
 } );
 
 /**
+ * Public SaaS path for a `gbp_content` post (path only, no host).
+ * Docs hub children live under `/docs/{slug}`; everything else is `/{slug}`.
+ */
+function gutenblock_gbp_content_saas_path( $post ) {
+	if ( ! $post || 'gbp_content' !== $post->post_type ) {
+		return '';
+	}
+	$slug = $post->post_name ? $post->post_name : sanitize_title( $post->post_title );
+	if ( ! $slug ) {
+		return '';
+	}
+	$docs_hub = get_page_by_path( 'docs', OBJECT, 'gbp_content' );
+	if ( $docs_hub && (int) $post->post_parent === (int) $docs_hub->ID ) {
+		return '/docs/' . $slug;
+	}
+	return '/' . $slug;
+}
+
+/**
  * Make the "View"/"Vorschau" link in the editor point at the SaaS URL
- * (https://gutenblock.com/{slug}) instead of the local /content/{slug}.
+ * instead of the local /content/{slug}.
  * Base URL is overridable via the `GUTENBLOCK_SAAS_PUBLIC_URL` constant in
  * wp-config.php (e.g. to point a staging WP at a preview SaaS deployment).
  */
@@ -147,14 +166,14 @@ add_filter( 'post_type_link', function( $url, $post ) {
 	if ( ! $post || 'gbp_content' !== $post->post_type ) {
 		return $url;
 	}
+	$path = gutenblock_gbp_content_saas_path( $post );
+	if ( ! $path ) {
+		return $url;
+	}
 	$base = defined( 'GUTENBLOCK_SAAS_PUBLIC_URL' )
 		? rtrim( (string) GUTENBLOCK_SAAS_PUBLIC_URL, '/' )
 		: 'https://gutenblock.com';
-	$slug = $post->post_name ? $post->post_name : sanitize_title( $post->post_title );
-	if ( ! $slug ) {
-		return $url;
-	}
-	return $base . '/' . $slug;
+	return $base . $path;
 }, 10, 2 );
 
 /**
@@ -180,8 +199,12 @@ add_action( 'manage_gbp_content_posts_custom_column', function( $column, $post_i
 	if ( ! $post ) {
 		return;
 	}
-	$slug = $post->post_name ? $post->post_name : '—';
-	echo '<code>' . esc_html( $slug ) . '</code>';
+	$path = gutenblock_gbp_content_saas_path( $post );
+	if ( ! $path ) {
+		echo '—';
+		return;
+	}
+	echo '<code>' . esc_html( $path ) . '</code>';
 }, 10, 2 );
 
 /**

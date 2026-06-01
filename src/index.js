@@ -932,10 +932,10 @@ const withPremiumBlockLock = createHigherOrderComponent((BlockEdit) => {
 							<PanelRow>
 								<Notice status="warning" isDismissible={false}>
 									<p style={{ marginBottom: '12px' }}>
-										<strong>{__('🔒 Pro Plus erforderlich', 'gutenblock-pro')}</strong>
+										<strong>{__('🔒 GutenBlock Pro erforderlich', 'gutenblock-pro')}</strong>
 									</p>
 									<p style={{ marginBottom: '12px' }}>
-										{__('Dieses Pattern kann als Vorschau eingefügt werden, ist aber nur mit GutenBlock Pro Plus bearbeitbar.', 'gutenblock-pro')}
+										{__('Dieses Pattern kann als Vorschau eingefügt werden, ist aber nur mit GutenBlock Pro bearbeitbar.', 'gutenblock-pro')}
 									</p>
 									<Button
 										isPrimary

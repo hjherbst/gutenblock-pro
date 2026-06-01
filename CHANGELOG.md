@@ -7,14 +7,6 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
-## [1.30.6] – 2026-05-28
-
-- Buttons: when the custom `is-style-button-arrow-circle` variant sits next to a standard button inside a `.wp-block-buttons` row, the row is now snapped to `align-items: flex-start`. Theme/global-style padding can give the standard button a different intrinsic height than our custom button (which enforces `min-height: 46px` to safely contain the absolutely-positioned circle icon); aligning the row at the top removes the visible height drift across themes. Scoped via `:has()` so unrelated button rows are not affected.
-
-## [1.30.5] – 2026-05-28
-
-- Buttons: align the custom `is-style-button-arrow-circle` variant with WordPress standard buttons by switching back to `display: inline-block` (instead of `inline-flex`). This removes the cross-baseline drift in mixed button rows so both CTA buttons sit on the same bottom line.
-
 ## [1.30.4] – 2026-05-28
 
 - Buttons: fix vertical height and alignment of the custom `is-style-button-arrow-circle` button variant. Changed `display` from `inline-block` to `inline-flex` with vertical centering (`align-items: center`), and removed hardcoded top/bottom padding so it inherits the theme's or global style's default vertical padding. Added `min-height: 46px` to safely contain the embedded 38px circle-arrow inlay.

@@ -372,7 +372,7 @@
 
 			if (isPremium && !hasAccess) {
 				const upgradeUrl = gutenblockProModal.upgradeUrl || 'https://app.gutenblock.com/licenses';
-				if (window.confirm('Dieses Pattern benötigt GutenBlock Pro Plus.\n\nMöchtest du jetzt upgraden?')) {
+				if (window.confirm('Dieses Pattern benötigt GutenBlock Pro.\n\nMöchtest du jetzt upgraden?')) {
 					window.open(upgradeUrl, '_blank');
 				}
 				return;
@@ -502,7 +502,7 @@
 					if (isLocked) {
 						// Show upgrade notice on click
 						const upgradeUrl = gutenblockProModal.upgradeUrl || 'https://gutenblock.com/licenses';
-						if (window.confirm('Dieses Pattern benötigt GutenBlock Pro Plus.\n\nMöchtest du jetzt upgraden?')) {
+						if (window.confirm('Dieses Pattern benötigt GutenBlock Pro.\n\nMöchtest du jetzt upgraden?')) {
 							window.open(upgradeUrl, '_blank');
 						}
 					} else {
@@ -664,7 +664,7 @@
 						color: '#2271b1',
 						fontWeight: '500'
 					}
-				}, 'GutenBlock Pro →')
+				}, 'GutenBlock →')
 			]),
 			onRequestClose: onClose,
 			className: 'gutenblock-pro-pattern-modal',
@@ -686,7 +686,7 @@
 			PluginMoreMenuItem && el(PluginMoreMenuItem, {
 				icon: 'layout',
 				onClick: () => setIsOpen(true)
-			}, 'GutenBlock Pro'),
+			}, 'GutenBlock'),
 			el(PatternModal, {
 				isOpen: isOpen,
 				onClose: () => setIsOpen(false)
@@ -810,7 +810,7 @@
 		button.id = 'gutenblock-pro-toolbar-modal-button';
 		button.className = 'components-button components-toolbar-button gutenblock-pro-toolbar-modal-button is-primary is-compact has-icon';
 		button.type = 'button';
-		button.setAttribute('aria-label', 'GutenBlock Pro Patterns öffnen');
+		button.setAttribute('aria-label', 'GutenBlock Patterns öffnen');
 		button.setAttribute('data-toolbar-item', 'true');
 		
 		// Use SVG icon matching WordPress style

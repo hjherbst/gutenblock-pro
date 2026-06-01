@@ -174,8 +174,8 @@ class GutenBlock_Pro_Pattern_Creator {
 			'groups'  => $groups,
 			'pageTypes' => $page_types,
 			'strings' => array(
-				'menuLabel'        => __( 'Als GB Pro Pattern speichern', 'gutenblock-pro' ),
-				'modalTitle'       => __( 'GutenBlock Pro Pattern erstellen', 'gutenblock-pro' ),
+				'menuLabel'        => __( 'Als GutenBlock Pattern speichern', 'gutenblock-pro' ),
+				'modalTitle'       => __( 'GutenBlock Pattern erstellen', 'gutenblock-pro' ),
 				'nameLabel'        => __( 'Pattern Name', 'gutenblock-pro' ),
 				'namePlaceholder'  => __( 'Mein neues Pattern', 'gutenblock-pro' ),
 				'slugLabel'        => __( 'Slug', 'gutenblock-pro' ),

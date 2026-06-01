@@ -191,7 +191,7 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 		<div class="wrap gutenblock-pro-ai-settings">
 			<h1>
 				<span class="dashicons dashicons-admin-generic"></span>
-				<?php esc_html_e( 'GutenBlock Pro - Prompts', 'gutenblock-pro' ); ?>
+				<?php esc_html_e( 'GutenBlock Plugin – Prompts', 'gutenblock-pro' ); ?>
 			</h1>
 
 			<form method="post" action="options.php">
@@ -325,8 +325,8 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 
 		$locale = get_locale();
 		$title  = ( strpos( $locale, 'de' ) === 0 )
-			? __( 'GutenBlock Pro - Lizenz', 'gutenblock-pro' )
-			: __( 'GutenBlock Pro - Licence', 'gutenblock-pro' );
+			? __( 'GutenBlock Pro – Lizenz', 'gutenblock-pro' )
+			: __( 'GutenBlock Pro – License', 'gutenblock-pro' );
 		?>
 		<div class="wrap gutenblock-pro-ai-settings">
 			<h1>
