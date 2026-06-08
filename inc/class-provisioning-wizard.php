@@ -1645,6 +1645,13 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			return 'noop';
 		}
 
+		// Variable fonts (~6.8 MB) are no longer shipped inside the plugin
+		// release ZIP so the WordPress auto-updater stops timing out on the
+		// multi-MB package download (504 Gateway Timeout). Pull the TTFs the
+		// theme.json actually references on demand straight into the freshly
+		// copied theme so the FSE `file:` fontFaces keep resolving.
+		$this->ensure_theme_fonts( $target );
+
 		// Make sure WP picks up the freshly written files instead of any
 		// cached metadata from the previous installation.
 		if ( function_exists( 'wp_clean_themes_cache' ) ) {
@@ -1737,6 +1744,139 @@ class GutenBlock_Pro_Provisioning_Wizard {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * Downloads the variable-font TTF files referenced by the freshly copied
+	 * theme.json into the theme's `assets/fonts/` directory.
+	 *
+	 * Background: the ~6.8 MB of bundled fonts are excluded from the plugin
+	 * release ZIP (see `.github/workflows/release.yml`) so the WordPress
+	 * auto-updater no longer times out on the multi-MB download. The fonts
+	 * still live in the Git repo, so we fetch only the files the theme
+	 * actually references, version-pinned, from raw.githubusercontent.com.
+	 * Afterwards they are self-hosted on the target site as before.
+	 *
+	 * The operation is idempotent (already-present files are skipped) and
+	 * best-effort: a failed download is logged but never aborts the import.
+	 *
+	 * @param string $theme_dir Absolute path of the active theme directory.
+	 */
+	private function ensure_theme_fonts( string $theme_dir ): void {
+		$theme_json_path = trailingslashit( $theme_dir ) . 'theme.json';
+
+		if ( ! function_exists( 'download_url' ) || ! function_exists( 'WP_Filesystem' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
+		if ( ! WP_Filesystem() ) {
+			$this->debug_log( 'ensure_theme_fonts: WP_Filesystem init failed' );
+			return;
+		}
+		global $wp_filesystem;
+
+		if ( ! $wp_filesystem->is_readable( $theme_json_path ) ) {
+			return;
+		}
+		$data = json_decode( (string) $wp_filesystem->get_contents( $theme_json_path ), true );
+		if ( ! is_array( $data ) ) {
+			return;
+		}
+
+		$families = ( isset( $data['settings']['typography']['fontFamilies'] ) && is_array( $data['settings']['typography']['fontFamilies'] ) )
+			? $data['settings']['typography']['fontFamilies']
+			: array();
+		if ( empty( $families ) ) {
+			return;
+		}
+
+		// Collect the unique `file:./…` relative paths from every fontFace src.
+		$rels = array();
+		foreach ( $families as $family ) {
+			$faces = ( is_array( $family ) && isset( $family['fontFace'] ) && is_array( $family['fontFace'] ) )
+				? $family['fontFace']
+				: array();
+			foreach ( $faces as $face ) {
+				$srcs = isset( $face['src'] ) ? $face['src'] : array();
+				if ( is_string( $srcs ) ) {
+					$srcs = array( $srcs );
+				}
+				if ( ! is_array( $srcs ) ) {
+					continue;
+				}
+				foreach ( $srcs as $src ) {
+					if ( is_string( $src ) && 0 === strpos( $src, 'file:./' ) ) {
+						$rels[ substr( $src, strlen( 'file:./' ) ) ] = true;
+					}
+				}
+			}
+		}
+		if ( empty( $rels ) ) {
+			return;
+		}
+
+		// Several MB across ~20 files; give the import request more headroom.
+		if ( function_exists( 'set_time_limit' ) ) {
+			@set_time_limit( 0 ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		}
+
+		$fetched = 0;
+		$failed  = 0;
+		foreach ( array_keys( $rels ) as $rel ) {
+			$dest = trailingslashit( $theme_dir ) . $rel;
+
+			// Idempotent: keep anything already shipped/downloaded.
+			if ( $wp_filesystem->exists( $dest ) && $wp_filesystem->size( $dest ) > 0 ) {
+				continue;
+			}
+
+			$tmp = download_url( $this->raw_font_url( $rel ), 30 );
+			if ( is_wp_error( $tmp ) ) {
+				++$failed;
+				$this->debug_log( 'ensure_theme_fonts: download failed ' . $rel . ' — ' . $tmp->get_error_message() );
+				continue;
+			}
+
+			$bytes = $wp_filesystem->get_contents( $tmp );
+			$wp_filesystem->delete( $tmp );
+			if ( false === $bytes || '' === $bytes ) {
+				++$failed;
+				$this->debug_log( 'ensure_theme_fonts: empty body ' . $rel );
+				continue;
+			}
+
+			$dir = dirname( $dest );
+			if ( ! $wp_filesystem->is_dir( $dir ) ) {
+				wp_mkdir_p( $dir );
+			}
+			if ( $wp_filesystem->put_contents( $dest, $bytes, FS_CHMOD_FILE ) ) {
+				++$fetched;
+			} else {
+				++$failed;
+				$this->debug_log( 'ensure_theme_fonts: write failed ' . $dest );
+			}
+		}
+
+		$this->debug_log( sprintf( 'ensure_theme_fonts: fetched %d, failed %d', $fetched, $failed ) );
+	}
+
+	/**
+	 * Builds the version-pinned raw.githubusercontent.com URL for a font file
+	 * given relative to the theme root (e.g. `assets/fonts/sora/Sora-…ttf`).
+	 * Each path segment is URL-encoded so variable-font filenames containing
+	 * brackets/commas (e.g. `Inter[opsz,wght].ttf`) resolve correctly.
+	 *
+	 * @param string $rel Theme-relative file path.
+	 * @return string
+	 */
+	private function raw_font_url( string $rel ): string {
+		$version  = defined( 'GUTENBLOCK_PRO_VERSION' ) ? GUTENBLOCK_PRO_VERSION : 'main';
+		$ref      = ( 'main' === $version ) ? 'main' : 'v' . $version;
+		$segments = array_map( 'rawurlencode', explode( '/', $rel ) );
+		return sprintf(
+			'https://raw.githubusercontent.com/hjherbst/gutenblock-pro/%s/themes/gutentheme/%s',
+			rawurlencode( $ref ),
+			implode( '/', $segments )
+		);
 	}
 
 	/**

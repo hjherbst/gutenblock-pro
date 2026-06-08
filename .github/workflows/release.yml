@@ -34,6 +34,12 @@ jobs:
           cp -r languages dist/gutenblock-pro/ 2>/dev/null || true
           cp -r patterns dist/gutenblock-pro/
           cp -r themes dist/gutenblock-pro/ 2>/dev/null || true
+          # Exclude the bundled variable fonts (~6.8 MB) from the update ZIP so
+          # the WordPress auto-updater no longer hits a 504 Gateway Timeout on
+          # the package download. The fonts stay in the repo and are fetched on
+          # demand during import from the version-pinned GitHub raw source
+          # (see ensure_theme_fonts() in inc/class-provisioning-wizard.php).
+          rm -rf dist/gutenblock-pro/themes/gutentheme/assets/fonts
           cp -r vendor dist/gutenblock-pro/
           cp gutenblock-pro.php dist/gutenblock-pro/
           cp readme.txt dist/gutenblock-pro/ 2>/dev/null || true

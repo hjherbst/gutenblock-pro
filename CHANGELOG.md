@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.30.8] – 2026-06-08
+
+- Auto-update fix: the ~6.8 MB of bundled variable fonts are no longer shipped inside the release ZIP. Since fonts were bundled (1.27.4) the package had grown to ~5.25 MB, and the synchronous download in WordPress' update AJAX call regularly exceeded the server's FastCGI/gateway timeout — surfacing as "Aktualisierung fehlgeschlagen: Der Download ist fehlgeschlagen. Gateway Timeout" plus a follow-on `updatePluginError` JS error. The update ZIP now drops back to <2 MB. The fonts stay in the repo and are fetched on demand during import (`ensure_theme_fonts()`), version-pinned, straight from `raw.githubusercontent.com` into the freshly copied theme — fast and still self-hosted afterwards. Idempotent and non-fatal: missing downloads are logged but never abort the import.
+
 ## [1.30.4] – 2026-05-28
 
 - Buttons: fix vertical height and alignment of the custom `is-style-button-arrow-circle` button variant. Changed `display` from `inline-block` to `inline-flex` with vertical centering (`align-items: center`), and removed hardcoded top/bottom padding so it inherits the theme's or global style's default vertical padding. Added `min-height: 46px` to safely contain the embedded 38px circle-arrow inlay.
