@@ -6,3 +6,86 @@
  * Description:    A standalone block theme for GutenBlock Pro patterns.
  * Version:        2.0.0
  */
+
+/* Motion tokens
+---------------------------------------- */
+
+:root {
+	--gt-motion-distance: 30px;
+	--gt-motion-scale: 1.05;
+	--gt-motion-ease: ease-out;
+	--gt-motion-fast: 0.25s;
+	--gt-motion-slow: 0.5s;
+}
+
+/* Smooth in-page scrolling */
+
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}
+
+/* Smooth cross-page transitions (View Transitions API) */
+
+@view-transition {
+	navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	@view-transition {
+		navigation: none;
+	}
+}
+
+/* Interactive element transitions */
+
+a,
+button,
+.wp-element-button {
+	transition: background-color var(--gt-motion-fast) var(--gt-motion-ease),
+	            color var(--gt-motion-fast) var(--gt-motion-ease);
+}
+
+/* Sticky header on back-scroll
+----------------------------------------
+ * scroll.js toggles .scroll-up / .scroll-down on <body> and adds
+ * .scroll-reveal on <html>. Targets the template-part header wrapper
+ * (tagName "header") and any block carrying the .site-header class.
+ */
+
+@media (min-width: 600px) {
+
+	header.wp-block-template-part,
+	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 1000;
+	}
+
+	.scroll-reveal header.wp-block-template-part,
+	.scroll-reveal .site-header {
+		transition: transform var(--gt-motion-slow) var(--gt-motion-ease);
+	}
+
+	.scroll-reveal body.scroll-down header.wp-block-template-part,
+	.scroll-reveal body.scroll-down .site-header {
+		transform: translateY(-100%);
+	}
+
+	.scroll-reveal body.scroll-up header.wp-block-template-part,
+	.scroll-reveal body.scroll-up .site-header {
+		transform: translateY(0);
+	}
+
+}
+
+@media (min-width: 600px) and (prefers-reduced-motion: reduce) {
+
+	.scroll-reveal header.wp-block-template-part,
+	.scroll-reveal .site-header {
+		transform: none !important;
+		transition: none !important;
+	}
+
+}

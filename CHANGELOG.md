@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.32.1] – 2026-06-11
+
+- GutenTheme sync: updated bundled theme from localhost. New JS modules (`motion.js`, `motion-sidebar.js`, `scroll.js`), new CSS (`motion.css`), new font (`google-sans`), updated `functions.php`, `theme.json`, `parts/header.html`, `style.css`; removed `cms-seo-panel.js`.
+
 ## [1.30.8] – 2026-06-08
 
 - Auto-update fix: the ~6.8 MB of bundled variable fonts are no longer shipped inside the release ZIP. Since fonts were bundled (1.27.4) the package had grown to ~5.25 MB, and the synchronous download in WordPress' update AJAX call regularly exceeded the server's FastCGI/gateway timeout — surfacing as "Aktualisierung fehlgeschlagen: Der Download ist fehlgeschlagen. Gateway Timeout" plus a follow-on `updatePluginError` JS error. The update ZIP now drops back to <2 MB. The fonts stay in the repo and are fetched on demand during import (`ensure_theme_fonts()`), version-pinned, straight from `raw.githubusercontent.com` into the freshly copied theme — fast and still self-hosted afterwards. Idempotent and non-fatal: missing downloads are logged but never abort the import.

@@ -35,11 +35,39 @@ add_action( 'after_setup_theme', function() {
  * --------------------------------------------------------------------- */
 
 add_action( 'wp_enqueue_scripts', function() {
+	$version = wp_get_theme()->get( 'Version' );
+
 	wp_enqueue_style(
 		'gutentheme-style',
 		get_stylesheet_directory_uri() . '/style.css',
 		array(),
-		wp_get_theme()->get( 'Version' )
+		$version
+	);
+
+	// Scroll-reveal animations (opt-in per block via the editor "Motion" panel).
+	wp_enqueue_style(
+		'gutentheme-motion',
+		get_stylesheet_directory_uri() . '/css/motion.css',
+		array(),
+		$version
+	);
+
+	// Sticky header on back-scroll: toggles scroll-up/scroll-down on <body>.
+	wp_enqueue_script(
+		'gutentheme-scroll',
+		get_stylesheet_directory_uri() . '/js/scroll.js',
+		array(),
+		$version,
+		true
+	);
+
+	// Reveal-on-scroll runtime for blocks carrying data-motion attributes.
+	wp_enqueue_script(
+		'gutentheme-motion',
+		get_stylesheet_directory_uri() . '/js/motion.js',
+		array(),
+		$version,
+		true
 	);
 } );
 
@@ -47,11 +75,22 @@ add_action( 'wp_enqueue_scripts', function() {
 // grid container fix for media-text). Frontend styling for the patterns
 // comes from the plugin's per-pattern CSS.
 add_action( 'enqueue_block_editor_assets', function() {
+	$version = wp_get_theme()->get( 'Version' );
+
 	wp_enqueue_style(
 		'gutentheme-editor-fixes',
 		get_stylesheet_directory_uri() . '/css/gutenblock-custom-styles.css',
 		array(),
-		wp_get_theme()->get( 'Version' )
+		$version
+	);
+
+	// "Motion" inspector panel for group/columns/column/image blocks.
+	wp_enqueue_script(
+		'gutentheme-motion-sidebar',
+		get_stylesheet_directory_uri() . '/js/motion-sidebar.js',
+		array( 'wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-hooks', 'wp-compose' ),
+		$version,
+		true
 	);
 } );
 
@@ -111,7 +150,7 @@ add_action( 'init', function() {
 			'rest_base'           => 'content-pages',
 			'menu_icon'           => 'dashicons-media-document',
 			'menu_position'       => 22,
-			'hierarchical'        => false,
+			'hierarchical'        => true,
 			'has_archive'         => false,
 			'exclude_from_search' => true,
 			'supports'            => array(
@@ -122,6 +161,7 @@ add_action( 'init', function() {
 				'revisions',
 				'author',
 				'custom-fields',
+				'page-attributes',
 			),
 			// The local "View" URL is only used as an editor-side preview;
 			// the canonical public URL lives on the SaaS (see permalink filter).
