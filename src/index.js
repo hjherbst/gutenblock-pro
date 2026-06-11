@@ -35,6 +35,9 @@ import './blocks/sticky-feature';
 import './blocks/flexible-heading';
 import './blocks/heading-part';
 
+// Contact Form Block (native contact form with email submit)
+import './blocks/contact-form';
+
 /**
  * Set/remove generating animation on a block
  */

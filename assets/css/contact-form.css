@@ -1,0 +1,158 @@
+/**
+ * GutenBlock Pro – Contact Form (frontend).
+ *
+ * Quiet, theme-driven styling: labels above inputs, thin borders, spacing via
+ * theme spacing presets with safe fallbacks. Row 1 is a responsive grid that
+ * collapses to a single column on mobile.
+ */
+
+.gbp-contact-form-wrap {
+	--gbp-cf-gap: var(--wp--preset--spacing--30, 1.5rem);
+	--gbp-cf-field-gap: 0.4rem;
+	--gbp-cf-border: #cacaca;
+}
+
+.gbp-contact-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gbp-cf-gap);
+}
+
+.gbp-contact-form .gbp-cf-row {
+	margin: 0;
+}
+
+/* Row 1: responsive field grid */
+.gbp-cf-row--fields {
+	display: grid;
+	gap: var(--gbp-cf-gap);
+	grid-template-columns: repeat( var( --gbp-cf-cols, 3 ), minmax( 0, 1fr ) );
+}
+
+.gbp-cf-row--fields[data-cols="1"] { --gbp-cf-cols: 1; }
+.gbp-cf-row--fields[data-cols="2"] { --gbp-cf-cols: 2; }
+.gbp-cf-row--fields[data-cols="3"] { --gbp-cf-cols: 3; }
+
+/* Field: label above input */
+.gbp-cf-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gbp-cf-field-gap);
+	margin: 0;
+}
+
+.gbp-cf-field label {
+	font-size: var(--wp--preset--font-size--small, 0.9rem);
+	line-height: 1.3;
+}
+
+.gbp-cf-req {
+	color: inherit;
+}
+
+.gbp-contact-form input[type="text"],
+.gbp-contact-form input[type="email"],
+.gbp-contact-form input[type="tel"],
+.gbp-contact-form textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 0.7em 0.9em;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	border: 1px solid var(--gbp-cf-border);
+	border-radius: 6px;
+}
+
+.gbp-contact-form textarea {
+	resize: vertical;
+	min-height: 8rem;
+}
+
+.gbp-contact-form input:focus,
+.gbp-contact-form textarea:focus {
+	outline: 2px solid var(--wp--preset--color--primary, #1a1a1a);
+	outline-offset: 1px;
+}
+
+.gbp-contact-form input[aria-invalid="true"],
+.gbp-contact-form textarea[aria-invalid="true"] {
+	border-color: #d63638;
+	outline-color: #d63638;
+}
+
+/* Consent row */
+.gbp-cf-consent .gbp-cf-consent-label {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+	font-size: var(--wp--preset--font-size--small, 0.85rem);
+	line-height: 1.5;
+}
+
+.gbp-cf-consent input[type="checkbox"] {
+	margin-top: 0.2em;
+	flex: 0 0 auto;
+}
+
+.gbp-cf-consent-text a {
+	text-decoration: underline;
+}
+
+/* Submit */
+.gbp-cf-submit-row {
+	display: flex;
+}
+
+.gbp-cf-submit[aria-busy="true"],
+.gbp-cf-submit.is-busy {
+	opacity: 0.7;
+	cursor: progress;
+}
+
+/* Honeypot: hide from humans but keep it focusable-free for bots */
+.gbp-cf-hp {
+	position: absolute !important;
+	left: -9999px !important;
+	top: auto;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+/* Field error text */
+.gbp-cf-error {
+	color: #d63638;
+	font-size: 0.85em;
+	line-height: 1.3;
+}
+
+/* Feedback (non-field errors) */
+.gbp-cf-feedback {
+	padding: 0.8em 1em;
+	border-radius: 2px;
+	font-size: var(--wp--preset--font-size--small, 0.9rem);
+}
+
+.gbp-cf-feedback--error {
+	background: #fcf0f1;
+	color: #8a1f23;
+	border: 1px solid #d63638;
+}
+
+/* Success message (replaces the form) */
+.gbp-cf-success {
+	padding: 1.2em 1.4em;
+	border-radius: 2px;
+	background: var(--wp--preset--color--tertiary, #f0f0f0);
+	border: 1px solid var(--gbp-cf-border);
+	font-size: var(--wp--preset--font-size--medium, 1rem);
+	outline: none;
+}
+
+/* Mobile: single column */
+@media (max-width: 781px) {
+	.gbp-cf-row--fields {
+		grid-template-columns: 1fr;
+	}
+}

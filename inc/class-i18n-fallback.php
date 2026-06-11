@@ -11,7 +11,7 @@
  * textdomain and serves a hand-curated English translation whenever the
  * compiled .mo file does not provide one. The map covers admin pages
  * (Provisioning Wizard, Features, Sections, Prompts, License, Pattern Creator,
- * AI Generator). Strings that read identically in EN and DE (e.g. "Sections",
+ * AI Generator, Contact Form settings). Strings that read identically in EN and DE (e.g. "Sections",
  * "Tokens", "Premium") simply have no entry — gettext then returns the msgid
  * unchanged.
  *
@@ -418,6 +418,85 @@ class GutenBlock_Pro_I18n_Fallback {
 			'Footer'                                                           => 'Footer',
 			'Meta'                                                             => 'Meta',
 			'–'                                                                => '–',
+
+			// Contact form settings (gutenblock-pro-contact-form) ----------
+			'Kontaktformular'                                                  => 'Contact Form',
+			'Keine Berechtigung.'                                              => 'Not authorised.',
+			'Test-E-Mail an %s gesendet.'                                      => 'Test email sent to %s.',
+			'•••••••• (gespeichert – leer lassen zum Behalten)'                => '•••••••• (saved – leave blank to keep)',
+			'Empfänger'                                                        => 'Recipient',
+			'Empfänger-E-Mail'                                                 => 'Recipient email',
+			'Eingehende Anfragen werden an diese Adresse gesendet. Standard: Website-Admin-E-Mail.'
+				=> 'Incoming requests are sent to this address. Default: site admin email.',
+			'Betreff'                                                          => 'Subject',
+			'Platzhalter {site_name} wird durch den Website-Namen ersetzt. Leer = Standard.'
+				=> 'Placeholder {site_name} is replaced with the site name. Empty = default.',
+			'E-Mail-Versand einrichten'                                        => 'Set up email delivery',
+			'Damit Kontaktformular-Anfragen zuverlässig zugestellt werden, sollte deine Website E-Mails nicht direkt über WordPress versenden. Verbinde stattdessen ein echtes E-Mail-Postfach oder einen Versanddienst wie Brevo.'
+				=> 'For reliable contact form delivery, your site should not send email directly through WordPress. Connect a real mailbox or a sending service such as Brevo instead.',
+			'Empfohlen: Brevo'                                                 => 'Recommended: Brevo',
+			'Kostenloser Versanddienst – am einfachsten für die zuverlässige Zustellung.'
+				=> 'Free sending service – the easiest way to deliver reliably.',
+			'Vorhandenes E-Mail-Postfach'                                      => 'Existing email mailbox',
+			'Nutze dein bestehendes Postfach (z. B. IONOS, Strato, Google).'
+				=> 'Use your existing mailbox (e.g. IONOS, Strato, Google).',
+			'Erweitert: Manuell'                                               => 'Advanced: Manual',
+			'Für Fortgeschrittene: SMTP-Daten selbst eintragen.'
+				=> 'For advanced users: enter SMTP details yourself.',
+			'Kostenloses Konto bei Brevo erstellen und Absender bestätigen.'
+				=> 'Create a free Brevo account and confirm your sender.',
+			'Unter "SMTP & API" einen %s erzeugen (nicht den API-Key).'
+				=> 'Under "SMTP & API", create a %s (not the API key).',
+			'SMTP-Schlüssel'                                                   => 'SMTP key',
+			'SMTP-Login und SMTP-Schlüssel hier einfügen.'
+				=> 'Paste SMTP login and SMTP key here.',
+			'SMTP-Login (Benutzername)'                                        => 'SMTP login (username)',
+			'Absender-E-Mail'                                                  => 'Sender email',
+			'Die in Brevo bestätigte Absender-Adresse.'
+				=> 'The sender address confirmed in Brevo.',
+			'Absender-Name'                                                    => 'Sender name',
+			'optional'                                                         => 'optional',
+			'Wird automatisch gesetzt: %s'                                     => 'Set automatically: %s',
+			'Wird automatisch gesetzt: '                                       => 'Set automatically: ',
+			'Anbieter'                                                         => 'Provider',
+			'E-Mail-Adresse'                                                   => 'Email address',
+			'Passwort'                                                         => 'Password',
+			'Das Passwort deines E-Mail-Postfachs.'
+				=> 'Your email mailbox password.',
+			'SMTP-Host'                                                        => 'SMTP host',
+			'Port'                                                             => 'Port',
+			'587 (TLS), 465 (SSL) oder 25 (unverschlüsselt).'
+				=> '587 (TLS), 465 (SSL) or 25 (unencrypted).',
+			'Verschlüsselung'                                                  => 'Encryption',
+			'Keine'                                                            => 'None',
+			'Benutzername'                                                     => 'Username',
+			'Leer lassen, um das gespeicherte Passwort beizubehalten.'
+				=> 'Leave blank to keep the saved password.',
+			'Absender-Adresse'                                                 => 'Sender address',
+			'Test-E-Mail'                                                      => 'Test email',
+			'Sendet eine Test-E-Mail an den oben gespeicherten Empfänger. Bitte zuerst speichern.'
+				=> 'Sends a test email to the recipient saved above. Please save first.',
+			'Test-E-Mail senden'                                               => 'Send test email',
+			'Sende…'                                                           => 'Sending…',
+			'Fehler beim Senden.'                                              => 'Error while sending.',
+			'Benutzername ist die vollständige E-Mail-Adresse. Passwort = dein E-Mail-Postfach-Passwort.'
+				=> 'Username is your full email address. Password = your mailbox password.',
+			'Wichtig: Hier ist ein App-Passwort nötig, nicht dein normales Google-Passwort. Erstelle es in deinem Google-Konto unter "Sicherheit → App-Passwörter".'
+				=> 'Important: an app password is required here, not your regular Google password. Create one in your Google account under Security → App passwords.',
+			'Benutzername ist die vollständige E-Mail-Adresse. Eventuell muss SMTP-AUTH im Microsoft-Admincenter aktiviert sein.'
+				=> 'Username is your full email address. SMTP AUTH may need to be enabled in the Microsoft admin centre.',
+			'Anderer Anbieter'                                                 => 'Other provider',
+			'Für andere Anbieter nutze bitte die erweiterten SMTP-Einstellungen weiter unten.'
+				=> 'For other providers, please use the advanced SMTP settings below.',
+			'keine'                                                            => 'none',
+			'Die Anmeldung am Mailserver ist fehlgeschlagen. Bitte prüfe Benutzername und Passwort bzw. den SMTP-Schlüssel.'
+				=> 'Login to the mail server failed. Please check username and password or the SMTP key.',
+			'Die verschlüsselte Verbindung ist fehlgeschlagen. Bitte prüfe die Verschlüsselung (TLS oder SSL) und den Port.'
+				=> 'The encrypted connection failed. Please check encryption (TLS or SSL) and the port.',
+			'Die Verbindung zum Mailserver konnte nicht hergestellt werden. Bitte prüfe Host und Port.'
+				=> 'Could not connect to the mail server. Please check host and port.',
+			'Die E-Mail konnte nicht gesendet werden. Bitte prüfe die Einstellungen oder kontaktiere den Support deines Anbieters.'
+				=> 'The email could not be sent. Please check the settings or contact your provider\'s support.',
 		);
 
 		return self::$cache;

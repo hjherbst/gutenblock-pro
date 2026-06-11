@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock Plugin
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: Block patterns and Full Site Editor building blocks for WordPress — also acts as the import bridge for the GutenBlock SaaS website builder. Activate a GutenBlock Pro license to unlock premium sections and the higher AI token quota.
- * Version: 1.30.8
+ * Version: 1.32.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.30.8' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.32.0' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
@@ -118,6 +118,10 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-mobile-align.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-faq-style.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-text-formats.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-heading-text-image.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-presets.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-mailer.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-settings.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form.php';
 
 // Plugin Update Checker - GitHub Releases (initialized in hook)
 require_once GUTENBLOCK_PRO_PATH . 'vendor/plugin-update-checker/plugin-update-checker.php';
@@ -255,7 +259,20 @@ function gutenblock_pro_init() {
 		// Initialize Translation Settings Page
 		$translation_settings = new GutenBlock_Pro_Translation_Settings();
 		$translation_settings->init();
+
+		// Initialize Contact Form Settings Page (recipient + SMTP + test mail)
+		$contact_form_settings = new GutenBlock_Pro_Contact_Form_Settings();
+		$contact_form_settings->init();
 	}
+
+	// Initialize Contact Form Mailer (phpmailer_init SMTP hook; needed on
+	// both frontend submit and the admin test-mail action).
+	$contact_form_mailer = new GutenBlock_Pro_Contact_Form_Mailer();
+	$contact_form_mailer->init();
+
+	// Initialize Contact Form Block (block + REST submit; feature-gated inside).
+	$contact_form = new GutenBlock_Pro_Contact_Form();
+	$contact_form->init();
 
 	// Initialize Admin Bar Replacement (frontend; feature toggle checked inside class)
 	$admin_bar = new GutenBlock_Pro_Admin_Bar();
