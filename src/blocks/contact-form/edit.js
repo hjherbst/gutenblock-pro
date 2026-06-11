@@ -4,11 +4,11 @@
  * @package GutenBlockPro
  */
 
-import { __ } from '@wordpress/i18n';
 import { useEffect } from '@wordpress/element';
 import {
 	useBlockProps,
 	InspectorControls,
+	RichText,
 } from '@wordpress/block-editor';
 import {
 	PanelBody,
@@ -17,14 +17,7 @@ import {
 	TextareaControl,
 } from '@wordpress/components';
 
-const DEFAULTS = {
-	consent: __(
-		'Ich stimme zu, dass meine Angaben zur Bearbeitung meiner Anfrage verarbeitet werden.',
-		'gutenblock-pro'
-	),
-	submit: __( 'Absenden', 'gutenblock-pro' ),
-	success: __( 'Vielen Dank! Ihre Nachricht wurde gesendet.', 'gutenblock-pro' ),
-};
+const i18n = window.gutenblockProContactFormEditor || {};
 
 export default function Edit( { attributes, setAttributes } ) {
 	const {
@@ -56,78 +49,69 @@ export default function Edit( { attributes, setAttributes } ) {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={ __( 'Felder', 'gutenblock-pro' ) } initialOpen={ true }>
+				<PanelBody title={ i18n.panelFields } initialOpen={ true }>
 					<ToggleControl
-						label={ __( 'Name anzeigen', 'gutenblock-pro' ) }
+						label={ i18n.showName }
 						checked={ showName }
 						onChange={ ( v ) => setAttributes( { showName: v } ) }
 						__nextHasNoMarginBottom
 					/>
 					{ showName && (
 						<ToggleControl
-							label={ __( 'Name als Pflichtfeld', 'gutenblock-pro' ) }
+							label={ i18n.nameRequired }
 							checked={ nameRequired }
 							onChange={ ( v ) => setAttributes( { nameRequired: v } ) }
 							__nextHasNoMarginBottom
 						/>
 					) }
 					<ToggleControl
-						label={ __( 'Telefon anzeigen', 'gutenblock-pro' ) }
+						label={ i18n.showPhone }
 						checked={ showPhone }
 						onChange={ ( v ) => setAttributes( { showPhone: v } ) }
 						__nextHasNoMarginBottom
 					/>
 					{ showPhone && (
 						<ToggleControl
-							label={ __( 'Telefon als Pflichtfeld', 'gutenblock-pro' ) }
+							label={ i18n.phoneRequired }
 							checked={ phoneRequired }
 							onChange={ ( v ) => setAttributes( { phoneRequired: v } ) }
 							__nextHasNoMarginBottom
 						/>
 					) }
 					<p style={ { fontSize: '12px', color: '#757575', marginTop: '8px' } }>
-						{ __( 'E-Mail und Nachricht sind immer aktiv und Pflichtfelder.', 'gutenblock-pro' ) }
+						{ i18n.fieldsNote }
 					</p>
 				</PanelBody>
 
-				<PanelBody title={ __( 'Einwilligung', 'gutenblock-pro' ) } initialOpen={ false }>
+				<PanelBody title={ i18n.panelConsent } initialOpen={ false }>
 					<ToggleControl
-						label={ __( 'Checkbox anzeigen', 'gutenblock-pro' ) }
+						label={ i18n.showConsent }
 						checked={ showConsent }
 						onChange={ ( v ) => setAttributes( { showConsent: v } ) }
 						__nextHasNoMarginBottom
 					/>
 					{ showConsent && (
-						<TextareaControl
-							label={ __( 'Checkbox-Text (HTML erlaubt)', 'gutenblock-pro' ) }
-							value={ consentHtml }
-							onChange={ ( v ) => setAttributes( { consentHtml: v } ) }
-							placeholder={ DEFAULTS.consent }
-							help={ __(
-								'HTML ist erlaubt, z. B. ein Link: <a href="/datenschutz">Datenschutz</a>. Gerade Anführungszeichen verwenden.',
-								'gutenblock-pro'
-							) }
-							rows={ 5 }
-							__nextHasNoMarginBottom
-						/>
+						<p style={ { fontSize: '12px', color: '#757575', marginTop: '8px' } }>
+							{ i18n.consentEditHint }
+						</p>
 					) }
 				</PanelBody>
 
-				<PanelBody title={ __( 'Texte', 'gutenblock-pro' ) } initialOpen={ false }>
+				<PanelBody title={ i18n.panelTexts } initialOpen={ false }>
 					<TextControl
-						label={ __( 'Button-Text', 'gutenblock-pro' ) }
+						label={ i18n.submitLabel }
 						value={ submitLabel }
 						onChange={ ( v ) => setAttributes( { submitLabel: v } ) }
-						placeholder={ DEFAULTS.submit }
-						help={ __( 'Leer = automatisch je nach Sprache.', 'gutenblock-pro' ) }
+						placeholder={ i18n.submit }
+						help={ i18n.submitHelp }
 						__nextHasNoMarginBottom
 					/>
 					<TextareaControl
-						label={ __( 'Erfolgsmeldung', 'gutenblock-pro' ) }
+						label={ i18n.successLabel }
 						value={ successMessage }
 						onChange={ ( v ) => setAttributes( { successMessage: v } ) }
-						placeholder={ DEFAULTS.success }
-						help={ __( 'Ersetzt das Formular nach dem Absenden. Leer = Standard.', 'gutenblock-pro' ) }
+						placeholder={ i18n.success }
+						help={ i18n.successHelp }
 						rows={ 3 }
 						__nextHasNoMarginBottom
 					/>
@@ -143,7 +127,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						{ showName && (
 							<p className="gbp-cf-field">
 								<label>
-									{ __( 'Name', 'gutenblock-pro' ) }
+									{ i18n.name }
 									{ nameRequired && reqMark }
 								</label>
 								<input type="text" disabled />
@@ -151,7 +135,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						) }
 						<p className="gbp-cf-field">
 							<label>
-								{ __( 'E-Mail-Adresse', 'gutenblock-pro' ) }
+								{ i18n.email }
 								{ reqMark }
 							</label>
 							<input type="email" disabled />
@@ -159,7 +143,7 @@ export default function Edit( { attributes, setAttributes } ) {
 						{ showPhone && (
 							<p className="gbp-cf-field">
 								<label>
-									{ __( 'Telefonnummer', 'gutenblock-pro' ) }
+									{ i18n.phone }
 									{ phoneRequired && reqMark }
 								</label>
 								<input type="tel" disabled />
@@ -170,7 +154,7 @@ export default function Edit( { attributes, setAttributes } ) {
 					<div className="gbp-cf-row">
 						<p className="gbp-cf-field">
 							<label>
-								{ __( 'Nachricht', 'gutenblock-pro' ) }
+								{ i18n.message }
 								{ reqMark }
 							</label>
 							<textarea rows={ 6 } disabled />
@@ -181,20 +165,24 @@ export default function Edit( { attributes, setAttributes } ) {
 						<div className="gbp-cf-row gbp-cf-consent">
 							<label className="gbp-cf-consent-label">
 								<input type="checkbox" disabled />
-								<span
+								<RichText
+									tagName="span"
 									className="gbp-cf-consent-text"
-									dangerouslySetInnerHTML={ {
-										__html: consentHtml || DEFAULTS.consent,
-									} }
+									value={ consentHtml }
+									onChange={ ( v ) => setAttributes( { consentHtml: v } ) }
+									placeholder={ i18n.consent }
+									allowedFormats={ [ 'core/link' ] }
 								/>
 							</label>
 						</div>
 					) }
 
-					<div className="gbp-cf-row gbp-cf-submit-row">
-						<button type="button" className="gbp-cf-submit wp-element-button" disabled>
-							{ submitLabel || DEFAULTS.submit }
-						</button>
+					<div className="gbp-cf-row gbp-cf-submit-row wp-block-buttons">
+						<div className="wp-block-button">
+							<button type="button" className="gbp-cf-submit wp-block-button__link wp-element-button" disabled>
+								{ submitLabel || i18n.submit }
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>

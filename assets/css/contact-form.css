@@ -99,9 +99,13 @@
 	text-decoration: underline;
 }
 
-/* Submit */
-.gbp-cf-submit-row {
-	display: flex;
+/* Submit: inherit theme button styles via wp-block-button markup */
+.gbp-cf-submit-row.wp-block-buttons {
+	margin: 0;
+}
+
+.gbp-cf-submit-row .wp-block-button {
+	margin: 0;
 }
 
 .gbp-cf-submit[aria-busy="true"],

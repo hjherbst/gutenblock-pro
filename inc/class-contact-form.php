@@ -47,6 +47,7 @@ class GutenBlock_Pro_Contact_Form {
 		}
 		add_action( 'init', array( $this, 'register_block' ) );
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_i18n' ), 20 );
 	}
 
 	/**
@@ -98,7 +99,7 @@ class GutenBlock_Pro_Contact_Form {
 			'submit'          => 'Absenden',
 			'sending'         => 'Wird gesendet…',
 			'success'         => 'Vielen Dank! Ihre Nachricht wurde gesendet.',
-			'consent'         => 'Ich stimme zu, dass meine Angaben zur Bearbeitung meiner Anfrage verarbeitet werden.',
+			'consent'         => 'Ich stimme der Verarbeitung meiner Daten zur Bearbeitung meiner Anfrage zu. Ich kann meine Einwilligung jederzeit per E-Mail widerrufen. Es gelten die Datenschutzbestimmungen.',
 			'required'        => 'Pflichtfeld',
 			'err_required'    => 'Bitte füllen Sie dieses Feld aus.',
 			'err_email'       => 'Bitte geben Sie eine gültige E-Mail-Adresse ein.',
@@ -119,7 +120,7 @@ class GutenBlock_Pro_Contact_Form {
 			'submit'          => 'Send',
 			'sending'         => 'Sending…',
 			'success'         => 'Thank you! Your message has been sent.',
-			'consent'         => 'I agree that my data may be processed to handle my request.',
+			'consent'         => 'I agree to the processing of my data to handle my request. I may withdraw my consent at any time by email. The privacy policy applies.',
 			'required'        => 'Required',
 			'err_required'    => 'Please fill out this field.',
 			'err_email'       => 'Please enter a valid email address.',
@@ -133,6 +134,70 @@ class GutenBlock_Pro_Contact_Form {
 			'label_message'   => 'Message',
 		);
 		return $lang === 'de' ? $de : $en;
+	}
+
+	/**
+	 * Editor UI strings keyed for wp_localize_script (site locale, not page).
+	 *
+	 * Mirrors the frontend bilingual logic: German only for de_* site locales,
+	 * English for everything else.
+	 *
+	 * @return array<string, string>
+	 */
+	public static function editor_strings() {
+		$lang = self::resolve_lang();
+		$s    = self::strings( $lang );
+		$de   = ( 'de' === $lang );
+
+		return array(
+			'lang'              => $lang,
+			'blockTitle'        => $de ? 'Kontaktformular' : 'Contact Form',
+			'blockDescription'  => $de
+				? 'Schlankes, sicheres Kontaktformular mit konfigurierbaren Feldern, Spam-Schutz und E-Mail-Versand.'
+				: 'Lean, secure contact form with configurable fields, spam protection and email delivery.',
+			'panelFields'       => $de ? 'Felder' : 'Fields',
+			'showName'          => $de ? 'Name anzeigen' : 'Show name',
+			'nameRequired'      => $de ? 'Name als Pflichtfeld' : 'Name required',
+			'showPhone'         => $de ? 'Telefon anzeigen' : 'Show phone',
+			'phoneRequired'     => $de ? 'Telefon als Pflichtfeld' : 'Phone required',
+			'fieldsNote'        => $de
+				? 'E-Mail und Nachricht sind immer aktiv und Pflichtfelder.'
+				: 'Email and message are always shown and required.',
+			'panelConsent'      => $de ? 'Einwilligung' : 'Consent',
+			'showConsent'       => $de ? 'Checkbox anzeigen' : 'Show checkbox',
+			'consentEditHint'   => $de
+				? 'Den Checkbox-Text direkt im Block bearbeiten. Links über die Editor-Werkzeugleiste setzen.'
+				: 'Edit the checkbox text directly in the block. Add links via the editor toolbar.',
+			'panelTexts'        => $de ? 'Texte' : 'Texts',
+			'submitLabel'       => $de ? 'Button-Text' : 'Button text',
+			'submitHelp'        => $de ? 'Leer = automatisch je nach Sprache.' : 'Empty = automatic based on language.',
+			'successLabel'      => $de ? 'Erfolgsmeldung' : 'Success message',
+			'successHelp'       => $de
+				? 'Ersetzt das Formular nach dem Absenden. Leer = Standard.'
+				: 'Replaces the form after submission. Empty = default.',
+			'name'              => $s['name'],
+			'email'             => $s['email'],
+			'phone'             => $s['phone'],
+			'message'           => $s['message'],
+			'consent'           => $s['consent'],
+			'submit'            => $s['submit'],
+			'success'           => $s['success'],
+		);
+	}
+
+	/**
+	 * Pass editor strings to the block editor script (after main bundle enqueue).
+	 */
+	public function enqueue_editor_i18n() {
+		if ( ! wp_script_is( 'gutenblock-pro-ai-editor', 'registered' ) ) {
+			return;
+		}
+
+		wp_localize_script(
+			'gutenblock-pro-ai-editor',
+			'gutenblockProContactFormEditor',
+			self::editor_strings()
+		);
 	}
 
 	// -------------------------------------------------------------------------
@@ -256,10 +321,12 @@ class GutenBlock_Pro_Contact_Form {
 					</div>
 				<?php endif; ?>
 
-				<div class="gbp-cf-row gbp-cf-submit-row">
-					<button type="submit" class="gbp-cf-submit wp-element-button">
-						<span class="gbp-cf-submit-label"><?php echo $submit_label; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_html above. ?></span>
-					</button>
+				<div class="gbp-cf-row gbp-cf-submit-row wp-block-buttons">
+					<div class="wp-block-button">
+						<button type="submit" class="gbp-cf-submit wp-block-button__link wp-element-button">
+							<span class="gbp-cf-submit-label"><?php echo $submit_label; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- esc_html above. ?></span>
+						</button>
+					</div>
 				</div>
 
 				<input type="hidden" name="lang" value="<?php echo esc_attr( $lang ); ?>" />

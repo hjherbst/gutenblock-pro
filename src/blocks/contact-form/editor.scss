@@ -65,6 +65,30 @@
 
 	.gbp-cf-consent input[type="checkbox"] {
 		margin-top: 0.2em;
+		flex-shrink: 0;
+	}
+
+	.gbp-cf-consent-text {
+		flex: 1;
+		min-width: 0;
+		cursor: text;
+
+		&:focus {
+			outline: 1px dotted var(--wp-admin-theme-color, #2271b1);
+			outline-offset: 2px;
+		}
+
+		a {
+			pointer-events: auto;
+		}
+	}
+
+	.gbp-cf-submit-row.wp-block-buttons {
+		margin: 0;
+	}
+
+	.gbp-cf-submit-row .wp-block-button {
+		margin: 0;
 	}
 
 	@media (max-width: 781px) {

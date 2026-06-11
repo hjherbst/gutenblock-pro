@@ -7,6 +7,14 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.32.2] – 2026-06-11
+
+- Contact form: updated `class-contact-form.php`, `contact-form.css`, block editor (`edit.js`, `editor.scss`, `index.js`); new patterns `contact-v1` and `contact-v2`.
+- Features page: updated `class-features-page.php`, new `features-page.css`.
+- i18n fallback strings updated.
+- Patterns: refreshed `about-v4`, `carousel-v1`, `cta-v4`, `hero-v5`, `testimonial-v2`.
+- Build artefacts updated.
+
 ## [1.32.1] – 2026-06-11
 
 - GutenTheme sync: updated bundled theme from localhost. New JS modules (`motion.js`, `motion-sidebar.js`, `scroll.js`), new CSS (`motion.css`), new font (`google-sans`), updated `functions.php`, `theme.json`, `parts/header.html`, `style.css`; removed `cms-seo-panel.js`.

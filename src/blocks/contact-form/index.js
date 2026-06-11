@@ -9,25 +9,20 @@
  */
 
 import { registerBlockType } from '@wordpress/blocks';
-import { __ } from '@wordpress/i18n';
 import Edit from './edit';
 import './editor.scss';
 
+const i18n = window.gutenblockProContactFormEditor || {};
+const keywords = i18n.lang === 'de'
+	? [ 'Kontakt', 'Formular', 'E-Mail' ]
+	: [ 'Contact', 'Form', 'Email' ];
+
 registerBlockType( 'gutenblock-pro/contact-form', {
 	apiVersion: 2,
-	title: __( 'Kontaktformular', 'gutenblock-pro' ),
-	description: __(
-		'Schlankes, sicheres Kontaktformular mit konfigurierbaren Feldern, Spam-Schutz und E-Mail-Versand.',
-		'gutenblock-pro'
-	),
+	title: i18n.blockTitle || 'Contact Form',
+	description: i18n.blockDescription || '',
 	category: 'design',
-	keywords: [
-		__( 'Kontakt', 'gutenblock-pro' ),
-		__( 'Formular', 'gutenblock-pro' ),
-		__( 'Contact', 'gutenblock-pro' ),
-		__( 'Form', 'gutenblock-pro' ),
-		__( 'Email', 'gutenblock-pro' ),
-	],
+	keywords,
 	icon: 'email',
 	supports: {
 		align: [ 'wide', 'full' ],

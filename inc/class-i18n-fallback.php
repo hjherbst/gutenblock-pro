@@ -497,6 +497,11 @@ class GutenBlock_Pro_I18n_Fallback {
 				=> 'Could not connect to the mail server. Please check host and port.',
 			'Die E-Mail konnte nicht gesendet werden. Bitte prüfe die Einstellungen oder kontaktiere den Support deines Anbieters.'
 				=> 'The email could not be sent. Please check the settings or contact your provider\'s support.',
+			'Den Checkbox-Text direkt im Block bearbeiten. Links über die Editor-Werkzeugleiste setzen.'
+				=> 'Edit the checkbox text directly in the block. Add links via the editor toolbar.',
+			'Kontaktformular Block'                                            => 'Contact Form Block',
+			'Schlankes, sicheres Kontaktformular als nativer Block: konfigurierbare Felder, Honeypot- und Rate-Limit-Spamschutz, E-Mail-Versand mit optionalem SMTP.'
+				=> 'Lean, secure contact form as a native block: configurable fields, honeypot and rate-limit spam protection, email delivery with optional SMTP.',
 		);
 
 		return self::$cache;
