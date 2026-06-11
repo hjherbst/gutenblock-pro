@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.32.3] – 2026-06-11
+
+- Features admin page: fix CSS not loading on clean installs. v1.32.2 dropped the working `wp_add_inline_style( 'wp-admin', … )` path and relied on hook/screen-id checks that failed silently; restore inline CSS on `wp-admin`, detect the page via `$_GET['page']`, and inline the styles from PHP (removed redundant `features-page.css`). Contact-form feature gating (block chooser + settings submenu) moved from the local MU plugin into `class-contact-form.php`.
+
 ## [1.32.2] – 2026-06-11
 
 - Contact form: updated `class-contact-form.php`, `contact-form.css`, block editor (`edit.js`, `editor.scss`, `index.js`); new patterns `contact-v1` and `contact-v2`.

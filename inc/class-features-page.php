@@ -13,6 +13,7 @@ class GutenBlock_Pro_Features_Page {
 
 	const OPTION_NAME     = 'gutenblock_pro_features';
 	const OPTION_VARIANTS = 'gutenblock_pro_block_variants';
+	const PAGE_SLUG       = 'gutenblock-pro-features';
 
 	/**
 	 * Feature definitions (raw strings; translated in get_features()).
@@ -260,7 +261,7 @@ class GutenBlock_Pro_Features_Page {
 			__( 'Features', 'gutenblock-pro' ),
 			__( 'Features', 'gutenblock-pro' ),
 			'manage_options',
-			'gutenblock-pro-features',
+			self::PAGE_SLUG,
 			array( $this, 'render_page' )
 		);
 	}
@@ -341,59 +342,90 @@ class GutenBlock_Pro_Features_Page {
 	}
 
 	/**
+	 * Whether the current request is the Features admin page.
+	 *
+	 * Uses $_GET['page'] first because hook_suffix / screen id checks alone failed
+	 * to load CSS on some installs (see v1.32.2 regression).
+	 *
+	 * @param string|null $hook_suffix Optional hook from admin_enqueue_scripts.
+	 * @return bool
+	 */
+	private function is_features_admin_page( $hook_suffix = null ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- admin page routing.
+		if ( isset( $_GET['page'] ) && self::PAGE_SLUG === $_GET['page'] ) {
+			return true;
+		}
+		$expected_hook = 'gutenblock-pro_page_' . self::PAGE_SLUG;
+		if ( null !== $hook_suffix && $expected_hook === $hook_suffix ) {
+			return true;
+		}
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( $screen && $expected_hook === $screen->id ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Features page CSS (inlined on wp-admin; no separate stylesheet file).
+	 *
+	 * @return string
+	 */
+	private function get_features_page_css() {
+		return '
+.gbp-features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; max-width: 1200px; margin-top: 1.5rem; }
+.gbp-feature-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 4px; padding: 1.5rem; display: flex; flex-direction: column; box-shadow: 0 1px 1px rgba(0,0,0,.04); transition: box-shadow .15s; }
+.gbp-feature-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.gbp-feature-icon { width: 32px; height: 32px; margin-bottom: 1rem; color: #2271b1; flex-shrink: 0; }
+.gbp-feature-icon svg { width: 32px !important; height: 32px !important; display: block; }
+.gbp-feature-card h3 { margin: 0 0 0.5rem 0; font-size: 1.1em; }
+.gbp-feature-card p { margin: 0 0 1rem 0; color: #646970; font-size: 13px; line-height: 1.5; flex-grow: 1; }
+.gbp-feature-card .gbp-feature-badge { font-size: 11px; color: #646970; background: #f0f0f1; border-radius: 3px; padding: 1px 6px; display: inline-block; margin-bottom: 0.5rem; }
+.gbp-feature-card .gbp-feature-toggle { margin-top: auto; }
+.gbp-features-form .submit { margin-top: 1.5rem; }
+.gbp-features-section-title { margin: 2.5rem 0 0.5rem; font-size: 1.3em; border-bottom: 1px solid #c3c4c7; padding-bottom: 0.5rem; max-width: 1200px; }
+.gbp-toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+.gbp-toggle input { opacity: 0; width: 0; height: 0; }
+.gbp-toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #c3c4c7; border-radius: 24px; transition: 0.2s; }
+.gbp-toggle-slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.gbp-toggle input:checked + .gbp-toggle-slider { background: #2271b1; }
+.gbp-toggle input:checked + .gbp-toggle-slider::before { transform: translateX(20px); }
+.gbp-toggle input:disabled + .gbp-toggle-slider { opacity: 0.6; cursor: not-allowed; }
+		';
+	}
+
+	/**
 	 * Enqueue assets only on Features page
 	 *
 	 * @param string $hook Current admin page hook.
 	 */
 	public function enqueue_assets( $hook ) {
-		if ( 'gutenblock-pro_page_gutenblock-pro-features' !== $hook ) {
+		if ( ! $this->is_features_admin_page( $hook ) ) {
 			return;
 		}
-		wp_enqueue_style(
-			'gbp-features-page',
-			plugins_url( 'assets/css/features-page.css', GUTENBLOCK_PRO_FILE ),
-			array(),
-			filemtime( GUTENBLOCK_PRO_PATH . 'assets/css/features-page.css' )
-		);
+
+		$css = $this->get_features_page_css();
+		if ( '' === $css ) {
+			return;
+		}
+
+		// wp-admin is always present on admin screens; inline here worked before v1.32.2.
+		wp_enqueue_style( 'wp-admin' );
+		wp_add_inline_style( 'wp-admin', $css );
 	}
 
 	/**
 	 * Output page CSS directly in <head> as belt-and-suspenders fallback.
 	 */
 	public function output_head_styles() {
-		$screen = get_current_screen();
-		if ( ! $screen || 'gutenblock-pro_page_gutenblock-pro-features' !== $screen->id ) {
+		if ( ! $this->is_features_admin_page() ) {
 			return;
 		}
-		echo '<style id="gbp-features-inline">' . $this->get_toggle_css() . '</style>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- controlled CSS string.
-	}
-
-	/**
-	 * CSS for toggle switches (no JS required)
-	 *
-	 * @return string
-	 */
-	private function get_toggle_css() {
-		return '
-			.gbp-features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; max-width: 1200px; margin-top: 1.5rem; }
-			.gbp-feature-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 4px; padding: 1.5rem; display: flex; flex-direction: column; box-shadow: 0 1px 1px rgba(0,0,0,.04); transition: box-shadow .15s; }
-			.gbp-feature-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-			.gbp-feature-icon { width: 64px; height: 64px; margin-bottom: 1rem; color: #2271b1; }
-			.gbp-feature-icon svg { width: 100%; height: 100%; }
-			.gbp-feature-card h3 { margin: 0 0 0.5rem 0; font-size: 1.1em; }
-			.gbp-feature-card p { margin: 0 0 1rem 0; color: #646970; font-size: 13px; line-height: 1.5; flex-grow: 1; }
-			.gbp-feature-card .gbp-feature-badge { font-size: 11px; color: #646970; background: #f0f0f1; border-radius: 3px; padding: 1px 6px; display: inline-block; margin-bottom: 0.5rem; }
-			.gbp-feature-card .gbp-feature-toggle { margin-top: auto; }
-			.gbp-features-form .submit { margin-top: 1.5rem; }
-			.gbp-features-section-title { margin: 2.5rem 0 0.5rem; font-size: 1.3em; border-bottom: 1px solid #c3c4c7; padding-bottom: 0.5rem; max-width: 1200px; }
-			.gbp-toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
-			.gbp-toggle input { opacity: 0; width: 0; height: 0; }
-			.gbp-toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #c3c4c7; border-radius: 24px; transition: 0.2s; }
-			.gbp-toggle-slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-			.gbp-toggle input:checked + .gbp-toggle-slider { background: #2271b1; }
-			.gbp-toggle input:checked + .gbp-toggle-slider::before { transform: translateX(20px); }
-			.gbp-toggle input:disabled + .gbp-toggle-slider { opacity: 0.6; cursor: not-allowed; }
-		';
+		$css = $this->get_features_page_css();
+		if ( '' === $css ) {
+			return;
+		}
+		echo '<style id="gbp-features-inline">' . $css . '</style>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- controlled CSS file contents.
 	}
 
 	/**

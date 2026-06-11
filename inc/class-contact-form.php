@@ -42,12 +42,49 @@ class GutenBlock_Pro_Contact_Form {
 	 * Register block + REST route. Gated by the feature toggle.
 	 */
 	public function init() {
+		add_filter( 'allowed_block_types_all', array( $this, 'filter_allowed_blocks' ), 10, 2 );
+		add_action( 'admin_menu', array( $this, 'maybe_remove_settings_submenu' ), 999 );
+
 		if ( ! GutenBlock_Pro_Features_Page::is_feature_enabled( 'contact-form' ) ) {
 			return;
 		}
 		add_action( 'init', array( $this, 'register_block' ) );
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 		add_action( 'enqueue_block_editor_assets', array( $this, 'enqueue_editor_i18n' ), 20 );
+	}
+
+	/**
+	 * Hide the contact-form block from the editor when the feature is disabled.
+	 *
+	 * @param array|bool  $allowed Allowed block types.
+	 * @param WP_Post     $post    Current post.
+	 * @return array|bool
+	 */
+	public function filter_allowed_blocks( $allowed, $post ) {
+		if ( GutenBlock_Pro_Features_Page::is_feature_enabled( 'contact-form' ) ) {
+			return $allowed;
+		}
+		if ( true === $allowed ) {
+			$allowed = array_keys( WP_Block_Type_Registry::get_instance()->get_all_registered() );
+		}
+		return array_values(
+			array_filter(
+				(array) $allowed,
+				function ( $name ) {
+					return self::BLOCK_NAME !== $name;
+				}
+			)
+		);
+	}
+
+	/**
+	 * Remove the contact-form settings submenu when the feature is disabled.
+	 */
+	public function maybe_remove_settings_submenu() {
+		if ( GutenBlock_Pro_Features_Page::is_feature_enabled( 'contact-form' ) ) {
+			return;
+		}
+		remove_submenu_page( 'gutenblock-pro', 'gutenblock-pro-contact-form' );
 	}
 
 	/**
