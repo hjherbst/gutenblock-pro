@@ -1430,6 +1430,29 @@ class GutenBlock_Pro_Admin_Page {
 						echo file_get_contents( $block_css ) . "\n";
 					}
 				}
+
+				// Dynamic block assets (e.g. the contact-form CSS in assets/css/)
+				// are enqueued inside their render_callback during do_blocks(),
+				// which runs AFTER wp_print_styles() in the <head>. Inline any
+				// plugin-owned styles that were enqueued during rendering so they
+				// reach the iframe preview the same way they do on the frontend.
+				$preview_styles = wp_styles();
+				if ( $preview_styles instanceof WP_Styles ) {
+					foreach ( $preview_styles->queue as $style_handle ) {
+						if ( empty( $preview_styles->registered[ $style_handle ] ) ) {
+							continue;
+						}
+						$style_src = $preview_styles->registered[ $style_handle ]->src;
+						if ( ! $style_src || strpos( $style_src, GUTENBLOCK_PRO_URL ) === false ) {
+							continue;
+						}
+						$style_rel  = strtok( str_replace( GUTENBLOCK_PRO_URL, '', $style_src ), '?' );
+						$style_path = GUTENBLOCK_PRO_PATH . ltrim( $style_rel, '/' );
+						if ( file_exists( $style_path ) ) {
+							echo "/* {$style_handle} */\n" . file_get_contents( $style_path ) . "\n";
+						}
+					}
+				}
 				if ( GutenBlock_Pro_Features_Page::is_feature_enabled( 'horizontal-scroll' ) ) {
 					echo "/* Horizontal Scroll */\n" . GutenBlock_Pro_Horizontal_Scroll::get_styles() . "\n";
 				}
