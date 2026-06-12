@@ -346,6 +346,26 @@ class GutenBlock_Pro_Pattern_Loader {
 	}
 
 	/**
+	 * Whether a pattern lives under the plugin's bundled patterns directory.
+	 *
+	 * Themes may inject site-specific entries via `gutenblock_pro_patterns`
+	 * (e.g. a client homepage). Those must not surface as reusable page
+	 * templates in the GutenBlock modal — only plugin-shipped pages like
+	 * Impressum belong in the "Seiten" tab.
+	 *
+	 * @param array $pattern Pattern data.
+	 * @return bool
+	 */
+	private function is_plugin_bundled_pattern( $pattern ) {
+		if ( empty( $pattern['folder'] ) || ! is_string( $pattern['folder'] ) ) {
+			return false;
+		}
+		$folder = wp_normalize_path( $pattern['folder'] );
+		$base   = wp_normalize_path( trailingslashit( GUTENBLOCK_PRO_PATTERNS_PATH ) );
+		return str_starts_with( $folder, $base );
+	}
+
+	/**
 	 * Register all discovered patterns
 	 */
 	public function register_patterns() {
@@ -360,6 +380,11 @@ class GutenBlock_Pro_Pattern_Loader {
 			// Filter on `gutenblock_pro_patterns` may have inserted a non-
 			// array entry; guard before we touch any keys.
 			if ( ! is_array( $pattern ) ) {
+				continue;
+			}
+
+			// Page templates: plugin bundle only (no theme/site injections).
+			if ( isset( $pattern['type'] ) && $pattern['type'] === 'page' && ! $this->is_plugin_bundled_pattern( $pattern ) ) {
 				continue;
 			}
 
@@ -738,6 +763,11 @@ class GutenBlock_Pro_Pattern_Loader {
 
 		foreach ( $this->patterns as $slug => $pattern ) {
 			if ( in_array( $slug, $disabled_patterns ) ) {
+				continue;
+			}
+
+			// "Seiten" tab: only plugin-shipped page templates (e.g. Impressum).
+			if ( isset( $pattern['type'] ) && $pattern['type'] === 'page' && ! $this->is_plugin_bundled_pattern( $pattern ) ) {
 				continue;
 			}
 

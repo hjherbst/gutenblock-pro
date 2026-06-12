@@ -153,6 +153,132 @@
 	}
 
 	/**
+	 * @param {Object|null} block Block object from the block editor store.
+	 * @return {string}
+	 */
+	function getBlockClassName(block) {
+		return String((block && block.attributes && block.attributes.className) || '');
+	}
+
+	/**
+	 * Canonical GBP section shell (`gb-section-*` on the outer group/section).
+	 *
+	 * @param {Object|null} block Block object.
+	 * @return {boolean}
+	 */
+	function isGbSectionShell(block) {
+		return /\bgb-section-/.test(getBlockClassName(block));
+	}
+
+	/**
+	 * Structural section boundary (cover, full/wide group, section tag, media-text hero).
+	 * Deliberately excludes inner `gb-pattern-*` wrappers inside a section.
+	 *
+	 * @param {Object|null} block Block object from the block editor store.
+	 * @return {boolean}
+	 */
+	function isStructuralSectionWrapper(block) {
+		if (!block || !block.name) {
+			return false;
+		}
+		if (block.name === 'core/cover') {
+			return true;
+		}
+		if (block.name === 'core/media-text') {
+			const align = (block.attributes || {}).align;
+			return align === 'full' || align === 'wide';
+		}
+		if (block.name === 'core/group') {
+			const attrs = block.attributes || {};
+			const cls = getBlockClassName(block);
+			// Inner pattern markup wrapper — keep climbing to the section shell.
+			if (/\bgb-pattern-/.test(cls) && !/\bgb-section-/.test(cls)) {
+				return false;
+			}
+			if (attrs.align === 'full' || attrs.align === 'wide') {
+				return true;
+			}
+			if (attrs.tagName === 'section') {
+				return true;
+			}
+			const metaName = attrs.metadata && attrs.metadata.name;
+			if (typeof metaName === 'string' && metaName.trim() !== '') {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Outermost section wrapper containing the given block.
+	 *
+	 * Climbs the full ancestor chain (root → leaf) and prefers the outermost
+	 * `gb-section-*` shell, then any structural wrapper, then the top-level
+	 * document block so nested groups/columns/pattern innards are all skipped.
+	 *
+	 * @param {string} clientId Selected block client ID.
+	 * @return {string|null}
+	 */
+	function findOutermostSectionWrapperClientId(clientId) {
+		const blockEditor = wp.data.select('core/block-editor');
+		if (!blockEditor || !clientId) {
+			return null;
+		}
+
+		const parents = blockEditor.getBlockParents(clientId, true) || [];
+		const chain = parents.concat([clientId]);
+
+		for (let i = 0; i < chain.length; i++) {
+			if (isGbSectionShell(blockEditor.getBlock(chain[i]))) {
+				return chain[i];
+			}
+		}
+
+		for (let i = 0; i < chain.length; i++) {
+			if (isStructuralSectionWrapper(blockEditor.getBlock(chain[i]))) {
+				return chain[i];
+			}
+		}
+
+		// Last resort: top-level block in the document (sibling in the page stack).
+		return parents.length > 0 ? parents[0] : clientId;
+	}
+
+	/**
+	 * Insert index/root for pattern insertion: directly after the outermost
+	 * section wrapper around the current selection (not after the inner block).
+	 *
+	 * @return {{ index: number, rootClientId: string|undefined }|null}
+	 */
+	function getInsertPositionAfterSectionWrapper() {
+		const blockEditor = wp.data.select('core/block-editor');
+		if (!blockEditor) {
+			return null;
+		}
+
+		const selectedIds = blockEditor.getSelectedBlockClientIds
+			? blockEditor.getSelectedBlockClientIds()
+			: [];
+		const selectedId = blockEditor.getSelectedBlockClientId
+			? blockEditor.getSelectedBlockClientId()
+			: (selectedIds.length ? selectedIds[0] : null);
+
+		if (!selectedId) {
+			return null;
+		}
+
+		const anchorId = findOutermostSectionWrapperClientId(selectedId);
+		if (!anchorId) {
+			return null;
+		}
+
+		return {
+			index: blockEditor.getBlockIndex(anchorId) + 1,
+			rootClientId: blockEditor.getBlockRootClientId(anchorId),
+		};
+	}
+
+	/**
 	 * Liest den aktuellen Editor-Kontext aus dem block-editor-Store.
 	 * Rückgabewerte:
 	 *  - 'template'      → Site Editor: `wp_template` oder `wp_template_part`.
@@ -384,7 +510,17 @@
 			const insertContent = (markup) => {
 				try {
 					const blocks = wp.blocks.parse(markup);
-					insertBlocksAction(blocks);
+					// Full page templates keep the default append behaviour.
+					if (pattern.type === 'page') {
+						insertBlocksAction(blocks);
+					} else {
+						const position = getInsertPositionAfterSectionWrapper();
+						if (position) {
+							insertBlocksAction(blocks, position.index, position.rootClientId);
+						} else {
+							insertBlocksAction(blocks);
+						}
+					}
 					if (pattern.type === 'page') {
 						onClose();
 					}
