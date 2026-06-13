@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.32.6] – 2026-06-13
+
+- GutenTheme sync: removed the headless-CMS bridge from the bundled theme's `functions.php` (the `gbp_content` CPT, SEO meta panel, revalidation webhook, and `gutenblock/v1/cms/*` REST endpoints). That code was CMS-instance-only and previously leaked onto customer sites via the release ZIP. It now lives in a separate `gutenblock-headless-cms` plugin that ships only on the CMS instance, keeping the bundled theme a clean deliverable.
+
 ## [1.32.3] – 2026-06-11
 
 - Features admin page: fix CSS not loading on clean installs. v1.32.2 dropped the working `wp_add_inline_style( 'wp-admin', … )` path and relied on hook/screen-id checks that failed silently; restore inline CSS on `wp-admin`, detect the page via `$_GET['page']`, and inline the styles from PHP (removed redundant `features-page.css`). Contact-form feature gating (block chooser + settings submenu) moved from the local MU plugin into `class-contact-form.php`.

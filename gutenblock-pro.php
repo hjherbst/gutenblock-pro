@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock Plugin
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: Block patterns and Full Site Editor building blocks for WordPress — also acts as the import bridge for the GutenBlock SaaS website builder. Activate a GutenBlock Pro license to unlock premium sections and the higher AI token quota.
- * Version: 1.32.5
+ * Version: 1.32.6
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.32.5' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.32.6' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
