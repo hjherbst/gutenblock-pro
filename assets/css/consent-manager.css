@@ -1,0 +1,202 @@
+/**
+ * GutenBlock Pro – Consent Manager (frontend).
+ *
+ * A compact, theme-neutral consent banner pinned to the bottom of the viewport.
+ * Self-contained tokens with safe fallbacks so it looks consistent on any theme
+ * and does not inherit unexpected button/link styling.
+ */
+
+.gbp-consent-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 99998;
+	background: rgba(15, 23, 42, 0.45);
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.25s ease, visibility 0.25s;
+}
+
+.gbp-consent-backdrop.is-visible {
+	opacity: 1;
+	visibility: visible;
+}
+
+.gbp-consent {
+	--gbp-c-bg: #ffffff;
+	--gbp-c-fg: #1f2430;
+	--gbp-c-muted: #5b6472;
+	--gbp-c-border: #e3e6ec;
+	--gbp-c-primary: #5b2be0;
+	--gbp-c-primary-fg: #ffffff;
+	--gbp-c-radius: 14px;
+
+	position: fixed;
+	z-index: 99999;
+	left: 50%;
+	bottom: clamp(0.75rem, 2vw, 1.5rem);
+	transform: translateX(-50%) translateY(1.5rem);
+	width: min(540px, calc(100vw - 2rem));
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+	box-sizing: border-box;
+}
+
+.gbp-consent.is-visible {
+	opacity: 1;
+	visibility: visible;
+	transform: translateX(-50%) translateY(0);
+}
+
+.gbp-consent *,
+.gbp-consent *::before,
+.gbp-consent *::after {
+	box-sizing: border-box;
+}
+
+/* The category toggles and Save button start hidden until "Settings" is
+   clicked. A display value (e.g. flex) would otherwise override the [hidden]
+   attribute, so enforce it explicitly. */
+.gbp-consent [hidden] {
+	display: none !important;
+}
+
+.gbp-consent__box {
+	background: var(--gbp-c-bg);
+	color: var(--gbp-c-fg);
+	border: 1px solid var(--gbp-c-border);
+	border-radius: var(--gbp-c-radius);
+	box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+	padding: 1.25rem 1.35rem;
+	font-size: 0.9rem;
+	line-height: 1.5;
+	font-family: inherit;
+}
+
+.gbp-consent__title {
+	margin: 0 0 0.5rem;
+	font-size: 1.05rem;
+	font-weight: 700;
+	line-height: 1.25;
+	color: var(--gbp-c-fg);
+}
+
+.gbp-consent__text {
+	margin: 0;
+	color: var(--gbp-c-muted);
+}
+
+.gbp-consent__link {
+	color: var(--gbp-c-primary);
+	text-decoration: underline;
+}
+
+.gbp-consent__options {
+	margin-top: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.gbp-consent__option {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+	cursor: pointer;
+}
+
+.gbp-consent__checkbox {
+	margin-top: 0.2rem;
+	width: 1.05rem;
+	height: 1.05rem;
+	flex: 0 0 auto;
+	accent-color: var(--gbp-c-primary);
+}
+
+.gbp-consent__option-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.gbp-consent__option-label {
+	font-weight: 600;
+	color: var(--gbp-c-fg);
+}
+
+.gbp-consent__option-desc {
+	font-size: 0.8rem;
+	color: var(--gbp-c-muted);
+}
+
+.gbp-consent__actions {
+	margin-top: 1.1rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: flex-end;
+}
+
+.gbp-consent__btn {
+	appearance: none;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	padding: 0.5rem 1.05rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	font-family: inherit;
+	line-height: 1.2;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.gbp-consent__btn--ghost {
+	background: transparent;
+	color: var(--gbp-c-fg);
+	border-color: var(--gbp-c-border);
+}
+
+.gbp-consent__btn--ghost:hover {
+	border-color: var(--gbp-c-muted);
+}
+
+.gbp-consent__btn--primary {
+	background: var(--gbp-c-primary);
+	color: var(--gbp-c-primary-fg);
+}
+
+.gbp-consent__btn--primary:hover {
+	filter: brightness(1.06);
+}
+
+.gbp-consent__btn:focus-visible {
+	outline: 2px solid var(--gbp-c-primary);
+	outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+	.gbp-consent {
+		width: calc(100vw - 1.5rem);
+	}
+
+	.gbp-consent__actions {
+		justify-content: stretch;
+	}
+
+	.gbp-consent__btn {
+		flex: 1 1 auto;
+		text-align: center;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.gbp-consent {
+		transition: opacity 0.01s linear;
+		transform: translateX(-50%);
+	}
+
+	.gbp-consent-backdrop {
+		transition: opacity 0.01s linear;
+	}
+}

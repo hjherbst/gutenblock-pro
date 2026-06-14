@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock Plugin
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: Block patterns and Full Site Editor building blocks for WordPress — also acts as the import bridge for the GutenBlock SaaS website builder. Activate a GutenBlock Pro license to unlock premium sections and the higher AI token quota.
- * Version: 1.32.6
+ * Version: 1.33.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.32.6' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.33.0' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
@@ -122,6 +122,8 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-presets.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-mailer.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-consent-settings.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-consent-manager.php';
 
 // Plugin Update Checker - GitHub Releases (initialized in hook)
 require_once GUTENBLOCK_PRO_PATH . 'vendor/plugin-update-checker/plugin-update-checker.php';
@@ -263,7 +265,16 @@ function gutenblock_pro_init() {
 		// Initialize Contact Form Settings Page (recipient + SMTP + test mail)
 		$contact_form_settings = new GutenBlock_Pro_Contact_Form_Settings();
 		$contact_form_settings->init();
+
+		// Initialize Consent Settings Page (Tracking & Consent submenu)
+		$consent_settings = new GutenBlock_Pro_Consent_Settings();
+		$consent_settings->init();
 	}
+
+	// Initialize Consent Manager (frontend banner + consent-gated tracking;
+	// returns early in admin and when the banner is disabled).
+	$consent_manager = new GutenBlock_Pro_Consent_Manager();
+	$consent_manager->init();
 
 	// Initialize Contact Form Mailer (phpmailer_init SMTP hook; needed on
 	// both frontend submit and the admin test-mail action).

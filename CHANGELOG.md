@@ -7,6 +7,13 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.33.0] – 2026-06-14
+
+- New "Tracking & Consent" admin page and a lean frontend consent banner (`class-consent-settings.php`, `class-consent-manager.php`, `consent-manager.js`, `consent-manager.css`). Two categories (statistics, marketing) with a GDPR-friendly opt-in: no third-party request fires before consent. Configuration is hybrid — a single Google Tag Manager container is the recommended path, with direct IDs (GA4, Meta Pixel, Google Ads, LinkedIn) for sites without GTM. When GTM is set, only GTM loads to avoid double counting. Google Consent Mode v2 defaults are emitted as `denied` and updated on the visitor's choice. Optional dimmed backdrop highlights the banner until the visitor chooses. Optional "always load GTM" toggle loads the (cookieless) Tag Manager before consent while its tags keep respecting Consent Mode.
+- Consent banner: any link with the CSS class `.consent-settings` (or `[data-gbp-consent="open"]`) re-opens the banner straight in its settings view, so visitors can change or withdraw consent from the footer or privacy policy. The admin page documents the snippet.
+- Consent banner: optional "reload page after a changed consent" toggle. Because already-injected scripts cannot be unloaded at runtime, a returning visitor's withdrawal only takes full effect on reload; the option reloads immediately when the stored choice changes.
+- Consent UI defaults to English and switches to German only on German sites/users. The i18n fallback now keys off `determine_locale()` (the user's admin language) instead of `get_locale()` (site language), so the admin UI no longer leaks German into an English back end.
+
 ## [1.32.6] – 2026-06-13
 
 - GutenTheme sync: removed the headless-CMS bridge from the bundled theme's `functions.php` (the `gbp_content` CPT, SEO meta panel, revalidation webhook, and `gutenblock/v1/cms/*` REST endpoints). That code was CMS-instance-only and previously leaked onto customer sites via the release ZIP. It now lives in a separate `gutenblock-headless-cms` plugin that ships only on the CMS instance, keeping the bundled theme a clean deliverable.

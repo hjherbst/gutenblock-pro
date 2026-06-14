@@ -48,7 +48,11 @@ class GutenBlock_Pro_I18n_Fallback {
 	 * Hook the filters when the current locale is not German.
 	 */
 	public function init(): void {
-		$locale = (string) get_locale();
+		// Use determine_locale() so the check matches the locale WordPress
+		// actually translates with: the user's profile language in the admin,
+		// the site language on the frontend. get_locale() (site only) would
+		// leak German into an English admin when the user locale differs.
+		$locale = function_exists( 'determine_locale' ) ? (string) determine_locale() : (string) get_locale();
 		if ( $locale === '' || 0 === strpos( $locale, 'de' ) ) {
 			return;
 		}
@@ -502,6 +506,60 @@ class GutenBlock_Pro_I18n_Fallback {
 			'Kontaktformular Block'                                            => 'Contact Form Block',
 			'Schlankes, sicheres Kontaktformular als nativer Block: konfigurierbare Felder, Honeypot- und Rate-Limit-Spamschutz, E-Mail-Versand mit optionalem SMTP.'
 				=> 'Lean, secure contact form as a native block: configurable fields, honeypot and rate-limit spam protection, email delivery with optional SMTP.',
+
+			// Consent / Tracking (gutenblock-pro-consent) ------------------
+			'Blende ein schlankes Consent-Banner auf der Website ein und lade Tracking-Skripte erst nach Einwilligung. Empfohlen wird der Google Tag Manager; ohne GTM kannst du einzelne IDs direkt eintragen.'
+				=> 'Show a lean consent banner on the site and load tracking scripts only after consent. Google Tag Manager is recommended; without GTM you can enter individual IDs directly.',
+			'Banner & Darstellung'                                             => 'Banner & display',
+			'Steuere, ob und wie das Consent-Banner auf der Website erscheint.' => 'Control whether and how the consent banner appears on the site.',
+			'Consent-Banner'                                                   => 'Consent banner',
+			'Banner aktivieren und Tracking erst nach Einwilligung laden'      => 'Enable the banner and load tracking only after consent',
+			'Hintergrund'                                                      => 'Background',
+			'Seite leicht abdunkeln, bis der Nutzer eine Wahl trifft (hebt das Banner besser hervor)'
+				=> 'Slightly dim the page until the visitor makes a choice (highlights the banner)',
+			'Datenschutz-Link'                                                 => 'Privacy policy link',
+			'URL zur Datenschutzerklärung. Wird im Banner verlinkt.'           => 'URL of your privacy policy. Linked in the banner.',
+			'Banner-Titel'                                                     => 'Banner title',
+			'Optional. Leer = Standardtext in der Seitensprache.'              => 'Optional. Empty = default text in the site language.',
+			'Banner-Text'                                                      => 'Banner text',
+			'Wir respektieren deine Privatsphäre'                              => 'We respect your privacy',
+			'Wir nutzen Cookies und ähnliche Technologien für Statistik und Marketing. Du kannst selbst entscheiden, welche Kategorien du zulässt.'
+				=> 'We use cookies and similar technologies for statistics and marketing. You decide which categories to allow.',
+			'Empfohlen'                                                        => 'Recommended',
+			'Ein Container für alle Tags – verwalte Analytics, Ads, Meta und LinkedIn direkt im GTM.'
+				=> 'One container for all tags – manage Analytics, Ads, Meta and LinkedIn directly in GTM.',
+			'GTM Container-ID'                                                 => 'GTM Container ID',
+			'Wenn gesetzt, wird nur der Tag Manager geladen. Die direkten IDs unten werden dann ignoriert.'
+				=> 'When set, only the Tag Manager is loaded. The direct IDs below are then ignored.',
+			'GTM immer laden'                                                  => 'Always load GTM',
+			'Tag Manager bereits vor der Einwilligung laden'                   => 'Load the Tag Manager before consent',
+			'Der Tag Manager selbst setzt ohne Tags keine Cookies (cookieless). Tags im GTM respektieren weiterhin den Consent Mode und feuern erst nach Einwilligung. Nur sinnvoll, wenn eine GTM-Container-ID gesetzt ist.'
+				=> 'The Tag Manager itself sets no cookies without tags (cookieless). Tags inside GTM still respect Consent Mode and only fire after consent. Only useful when a GTM container ID is set.',
+			'Direkte IDs'                                                      => 'Direct IDs',
+			'Ohne GTM'                                                         => 'Without GTM',
+			'Nur nutzen, wenn du keinen Tag Manager verwendest.'              => 'Only use this if you do not use a Tag Manager.',
+			'Statistik'                                                        => 'Statistics',
+			'GA4 Measurement-ID'                                               => 'GA4 Measurement ID',
+			'Wird nach Einwilligung „Statistik“ geladen.'                      => 'Loaded after "Statistics" consent.',
+			'Meta Pixel-ID'                                                    => 'Meta Pixel ID',
+			'Google Ads Conversion-ID'                                         => 'Google Ads Conversion ID',
+			'Google Ads Conversion-Label (optional)'                           => 'Google Ads conversion label (optional)',
+			'LinkedIn Partner-ID'                                              => 'LinkedIn Partner ID',
+			'Wird nach Einwilligung „Marketing“ geladen.'                      => 'Loaded after "Marketing" consent.',
+			'Technik'                                                          => 'Technical',
+			'Erweiterte Einstellungen für die Einwilligungssteuerung.'         => 'Advanced settings for consent control.',
+			'Consent-Mode-Defaults setzen (analytics_storage und ad_storage standardmäßig „denied“, bis der Nutzer einwilligt)'
+				=> 'Set Consent Mode defaults (analytics_storage and ad_storage default to "denied" until the visitor consents)',
+			'Seite neu laden'                                                  => 'Reload page',
+			'Seite nach geänderter Einwilligung neu laden'                     => 'Reload the page after a changed consent',
+			'Ohne Reload greifen entzogene Einwilligungen erst beim nächsten Seitenaufruf, da bereits geladene Skripte nicht entfernt werden können. Mit dieser Option wird die Seite direkt neu geladen, sobald der Nutzer seine Auswahl ändert.'
+				=> 'Without a reload, revoked consent only takes effect on the next page view, because already-loaded scripts cannot be removed. With this option the page reloads immediately when the visitor changes their choice.',
+			'Einstellungen erneut öffnen'                                      => 'Reopen settings',
+			'Biete Besuchern jederzeit die Möglichkeit, ihre Einwilligung zu ändern – z. B. im Footer oder in der Datenschutzerklärung.'
+				=> 'Give visitors the option to change their consent at any time – e.g. in the footer or the privacy policy.',
+			'Versieh einen beliebigen Link mit der CSS-Klasse %s. Ein Klick darauf öffnet das Consent-Banner direkt in der Einstellungsansicht.'
+				=> 'Add the CSS class %s to any link. Clicking it opens the consent banner straight in its settings view.',
+			'Cookie-Einstellungen'                                             => 'Cookie settings',
 		);
 
 		return self::$cache;
