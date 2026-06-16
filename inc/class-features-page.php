@@ -50,6 +50,10 @@ class GutenBlock_Pro_Features_Page {
 				'name'        => 'Kontaktformular Block',
 				'description' => 'Schlankes, sicheres Kontaktformular als nativer Block: konfigurierbare Felder, Honeypot- und Rate-Limit-Spamschutz, E-Mail-Versand mit optionalem SMTP.',
 			),
+			'revocation-form' => array(
+				'name'        => 'Widerrufsformular Block',
+				'description' => 'Rechtssicheres Widerrufsformular als nativer Block für Waren, digitale Produkte und Verträge: konfigurierbare Felder, Eingangsbestätigung an den Absender, Spamschutz. Nutzt die SMTP-Einstellungen des Kontaktformulars.',
+			),
 		);
 	}
 
@@ -85,6 +89,7 @@ class GutenBlock_Pro_Features_Page {
 			'viewport-visibility' => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="m644-428-58-58q9-47-27-88t-93-32l-58-58q17-8 34.5-12t37.5-4q75 0 127.5 52.5T707-498q0 20-4 37.5T644-428Zm128 126-46-46q41-31 72.5-70t46.5-80q-50-101-143.5-160.5T480-690q-28 0-55 4t-50 12l-49-50q39-16 81-24t73-8q145 0 263.5 81.5T912-498q-25 64-67 117t-101 81Zm-29 245L601-241q-39 16-80 24.5t-83 8.5q-145 0-263.5-81.5T48-498q21-54 56-100.5t79-81.5L80-783l51-51 663 664-51 51ZM234-633q-32 26-59 58.5T132-498q50 101 143.5 160.5T480-278q22 0 43-3t41-9l-44-44q-11 5-22.5 7.5T480-326q-75 0-127.5-52.5T300-506q0-13 2.5-24.5T310-553l-76-80Z"/></svg>',
 			'text-formats'      => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
 			'contact-form'      => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>',
+			'revocation-form'   => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor"><path d="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z"/></svg>',
 		);
 		return isset( $icons[ $key ] ) ? $icons[ $key ] : '';
 	}

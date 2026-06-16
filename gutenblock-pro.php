@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock Plugin
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: Block patterns and Full Site Editor building blocks for WordPress — also acts as the import bridge for the GutenBlock SaaS website builder. Activate a GutenBlock Pro license to unlock premium sections and the higher AI token quota.
- * Version: 1.35.0
+ * Version: 1.36.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.35.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.36.0' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
@@ -123,6 +123,7 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-presets.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-mailer.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-contact-form.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-revocation-form.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-consent-settings.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-consent-manager.php';
 
@@ -285,6 +286,10 @@ function gutenblock_pro_init() {
 	// Initialize Contact Form Block (block + REST submit; feature-gated inside).
 	$contact_form = new GutenBlock_Pro_Contact_Form();
 	$contact_form->init();
+
+	// Initialize Revocation/Withdrawal Form Block (block + REST submit; feature-gated inside).
+	$revocation_form = new GutenBlock_Pro_Revocation_Form();
+	$revocation_form->init();
 
 	// Initialize Admin Bar Replacement (frontend; feature toggle checked inside class)
 	$admin_bar = new GutenBlock_Pro_Admin_Bar();

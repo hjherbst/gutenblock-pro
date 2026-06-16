@@ -1,0 +1,170 @@
+/**
+ * GutenBlock Pro – Revocation (withdrawal) Form (frontend + editor preview).
+ *
+ * Quiet, theme-driven styling mirroring the contact form: labels above inputs,
+ * thin borders, spacing via theme spacing presets with safe fallbacks. The field
+ * row is a responsive grid that collapses to a single column on mobile.
+ */
+
+.gbp-revocation-form-wrap {
+	--gbp-rf-gap: var(--wp--preset--spacing--30, 1.5rem);
+	--gbp-rf-field-gap: 0.4rem;
+	--gbp-rf-border: #cacaca;
+	--gbp-rf-muted: #6b7280;
+}
+
+.gbp-revocation-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gbp-rf-gap);
+}
+
+.gbp-revocation-form .gbp-rf-row {
+	margin: 0;
+}
+
+/* Field grid */
+.gbp-rf-row--fields {
+	display: grid;
+	gap: var(--gbp-rf-gap);
+	grid-template-columns: repeat( var( --gbp-rf-cols, 3 ), minmax( 0, 1fr ) );
+}
+
+.gbp-rf-row--fields[data-cols="1"] { --gbp-rf-cols: 1; }
+.gbp-rf-row--fields[data-cols="2"] { --gbp-rf-cols: 2; }
+.gbp-rf-row--fields[data-cols="3"] { --gbp-rf-cols: 3; }
+
+/* Field: label above input */
+.gbp-rf-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gbp-rf-field-gap);
+	margin: 0;
+}
+
+.gbp-rf-field label {
+	font-size: var(--wp--preset--font-size--small, 0.9rem);
+	line-height: 1.3;
+}
+
+.gbp-rf-req {
+	color: inherit;
+}
+
+/* Help text below a field */
+.gbp-rf-help {
+	font-size: 0.8em;
+	line-height: 1.4;
+	color: var(--gbp-rf-muted);
+}
+
+.gbp-revocation-form input[type="text"],
+.gbp-revocation-form input[type="email"],
+.gbp-revocation-form input[type="date"],
+.gbp-revocation-form textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 0.7em 0.9em;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	border: 1px solid var(--gbp-rf-border);
+	border-radius: 6px;
+}
+
+.gbp-revocation-form textarea {
+	resize: vertical;
+	min-height: 5rem;
+}
+
+.gbp-revocation-form input:focus,
+.gbp-revocation-form textarea:focus {
+	outline: 2px solid var(--wp--preset--color--primary, #1a1a1a);
+	outline-offset: 1px;
+}
+
+.gbp-revocation-form input[aria-invalid="true"],
+.gbp-revocation-form textarea[aria-invalid="true"] {
+	border-color: #d63638;
+	outline-color: #d63638;
+}
+
+/* Consent row */
+.gbp-rf-consent .gbp-rf-consent-label {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+	font-size: var(--wp--preset--font-size--small, 0.85rem);
+	line-height: 1.5;
+}
+
+.gbp-rf-consent input[type="checkbox"] {
+	margin-top: 0.2em;
+	flex: 0 0 auto;
+}
+
+.gbp-rf-consent-text a {
+	text-decoration: underline;
+}
+
+/* Submit: inherit theme button styles via wp-block-button markup */
+.gbp-rf-submit-row.wp-block-buttons {
+	margin: 0;
+}
+
+.gbp-rf-submit-row .wp-block-button {
+	margin: 0;
+}
+
+.gbp-rf-submit[aria-busy="true"],
+.gbp-rf-submit.is-busy {
+	opacity: 0.7;
+	cursor: progress;
+}
+
+/* Honeypot */
+.gbp-rf-hp {
+	position: absolute !important;
+	left: -9999px !important;
+	top: auto;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+/* Field error text */
+.gbp-rf-error {
+	color: #d63638;
+	font-size: 0.85em;
+	line-height: 1.3;
+}
+
+/* Feedback (non-field errors) */
+.gbp-rf-feedback {
+	padding: 0.8em 1em;
+	border-radius: 2px;
+	font-size: var(--wp--preset--font-size--small, 0.9rem);
+}
+
+.gbp-rf-feedback--error {
+	background: #fcf0f1;
+	color: #8a1f23;
+	border: 1px solid #d63638;
+}
+
+/* Success message (replaces the form) */
+.gbp-rf-success {
+	padding: 1.2em 1.4em;
+	border-radius: 2px;
+	background: var(--wp--preset--color--tertiary, #f0f0f0);
+	border: 1px solid var(--gbp-rf-border);
+	font-size: var(--wp--preset--font-size--medium, 1rem);
+	outline: none;
+}
+
+/* Mobile: single column */
+@media (max-width: 781px) {
+	.gbp-rf-row--fields {
+		grid-template-columns: 1fr;
+	}
+}

@@ -284,6 +284,9 @@ class GutenBlock_Pro_I18n_Fallback {
 			'Text-Dekorationen (Toolbar)'                                      => 'Text decorations (toolbar)',
 			'Fügt Einkreisen, Freihand-Unterstreichen und Marker als Toolbar-Buttons für Überschriften und Absätze hinzu.'
 				=> 'Adds circle, freehand underline and marker as toolbar buttons for headings and paragraphs.',
+			'Widerrufsformular Block'                                          => 'Withdrawal form block',
+			'Rechtssicheres Widerrufsformular als nativer Block für Waren, digitale Produkte und Verträge: konfigurierbare Felder, Eingangsbestätigung an den Absender, Spamschutz. Nutzt die SMTP-Einstellungen des Kontaktformulars.'
+				=> 'Compliant withdrawal form as a native block for goods, digital products and contracts: configurable fields, confirmation of receipt to the sender, spam protection. Uses the contact form\'s SMTP settings.',
 			// Block variant labels & descriptions (passed through __() in get_block_variant_definitions())
 			'Simple'                                                           => 'Simple',
 			'Transparenter Button ohne Hintergrund – nur Text mit Pfeil-Icon und Hover-Animation'

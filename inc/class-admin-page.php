@@ -41,8 +41,8 @@ class GutenBlock_Pro_Admin_Page {
 	 */
 	public function add_admin_menu() {
 		add_menu_page(
-			__( 'GutenBlock Plugin', 'gutenblock-pro' ),
-			__( 'GutenBlock Plugin', 'gutenblock-pro' ),
+			__( 'GutenBlock', 'gutenblock-pro' ),
+			__( 'GutenBlock', 'gutenblock-pro' ),
 			'manage_options',
 			'gutenblock-pro',
 			array( $this, 'render_admin_page' ),
@@ -205,7 +205,7 @@ class GutenBlock_Pro_Admin_Page {
 		<div class="wrap gutenblock-pro-admin">
 			<h1>
 				<span class="dashicons dashicons-layout"></span>
-				<?php _e( 'GutenBlock Plugin', 'gutenblock-pro' ); ?>
+				<?php _e( 'GutenBlock', 'gutenblock-pro' ); ?>
 			</h1>
 
 			<nav class="nav-tab-wrapper">
