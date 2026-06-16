@@ -36,8 +36,8 @@
 .wp-block-details.is-style-faq > summary::after {
 	content: '';
 	display: block;
-	width: 20px;
-	height: 20px;
+	width: 1em;
+	height: 1em;
 	flex-shrink: 0;
 	background-color: currentColor;
 	-webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -63,6 +63,7 @@
 /* Inhalts-Wrapper für die Slide-Animation (wird per PHP eingefügt) */
 .wp-block-details.is-style-faq .gbp-faq-body {
 	overflow: hidden;
+	margin: 12px 0;
 }
 
 .wp-block-details.is-style-faq .gbp-faq-body > *:first-child {
@@ -73,4 +74,21 @@
 	margin-bottom: 1.25rem;
 }
 
-/* Editor: kein Animation-Override nötig, da JS nicht im Editor läuft */
+/* Editor: content blocks are direct children of <details> (no .gbp-faq-body wrapper).
+   Mirror the frontend gaps (summary padding 20px + 12px = 32px top, 32px bottom). */
+.wp-block-details.is-style-faq > summary + * {
+	margin-top: 12px;
+}
+
+/* Bottom gap before the divider. When the block is selected the editor inserts
+   a .block-list-appender as the last child, so target the last real content
+   block in both states and neutralise the appender's own footprint. */
+.wp-block-details.is-style-faq > :last-child:not( summary ),
+.wp-block-details.is-style-faq > :not( summary ):has( + .block-list-appender ) {
+	margin-bottom: 32px;
+}
+
+.wp-block-details.is-style-faq > .block-list-appender:last-child {
+	margin: 0;
+	min-height: 0;
+}

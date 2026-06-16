@@ -14,6 +14,22 @@ class GutenBlock_Pro_Faq_Style {
 	/** @var bool Gibt an, ob mindestens ein FAQ-Block auf der Seite gefunden wurde */
 	private $has_faq = false;
 
+	/**
+	 * @param string $classes Block className attribute value.
+	 */
+	private function is_faq_style( $classes ) {
+		return false !== strpos( $classes, 'is-style-faq' )
+			|| false !== strpos( $classes, 'is-style-faq-plus' );
+	}
+
+	/**
+	 * @param string $content Post content.
+	 */
+	private function post_has_faq_style( $content ) {
+		return false !== strpos( $content, 'is-style-faq' )
+			|| false !== strpos( $content, 'is-style-faq-plus' );
+	}
+
 	public function init() {
 		add_filter( 'render_block', array( $this, 'render' ), 10, 2 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
@@ -31,7 +47,7 @@ class GutenBlock_Pro_Faq_Style {
 		}
 
 		$classes = isset( $block['attrs']['className'] ) ? $block['attrs']['className'] : '';
-		if ( false === strpos( $classes, 'is-style-faq' ) ) {
+		if ( ! $this->is_faq_style( $classes ) ) {
 			return $content;
 		}
 
@@ -75,7 +91,7 @@ class GutenBlock_Pro_Faq_Style {
 		}
 
 		$post = get_post();
-		if ( ! $post || false === strpos( $post->post_content, 'is-style-faq' ) ) {
+		if ( ! $post || ! $this->post_has_faq_style( $post->post_content ) ) {
 			return;
 		}
 

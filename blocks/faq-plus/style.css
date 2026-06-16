@@ -1,0 +1,118 @@
+/* === FAQ-Stilvariante (+/−) für core/details === */
+
+.wp-block-details.is-style-faq-plus {
+	border: none;
+	padding: 0;
+	margin-block: 0;
+}
+
+/* Trennlinie unterhalb jedes Blocks – adaptiv zu currentColor */
+.wp-block-details.is-style-faq-plus {
+	border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.wp-block-details.is-style-faq-plus > summary {
+	list-style: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 1.25rem 0;
+	cursor: pointer;
+	font-weight: 500;
+	user-select: none;
+	position: relative;
+}
+
+/* Nativen Marker entfernen */
+.wp-block-details.is-style-faq-plus > summary::-webkit-details-marker {
+	display: none;
+}
+.wp-block-details.is-style-faq-plus > summary::marker {
+	display: none;
+	content: '';
+}
+
+/* Plus/Minus-Icon rechts – 1em = summary font-size, vertikaler SVG-Strich dreht sich */
+.wp-block-details.is-style-faq-plus > summary::after {
+	content: '';
+	display: block;
+	flex-shrink: 0;
+	width: 1em;
+	height: 1em;
+	background-color: currentColor;
+	-webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M5 12h14' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E");
+	-webkit-mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	-webkit-mask-mode: alpha;
+	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M5 12h14' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E");
+	mask-mode: alpha;
+	mask-size: contain;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	opacity: 0.85;
+}
+
+.wp-block-details.is-style-faq-plus > summary::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	right: 0;
+	width: 1em;
+	height: 1em;
+	margin-top: -0.5em;
+	background-color: currentColor;
+	-webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M12 5v14' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E");
+	-webkit-mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	-webkit-mask-mode: alpha;
+	mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M12 5v14' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E");
+	mask-mode: alpha;
+	mask-size: contain;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	opacity: 0.85;
+	transform-origin: center center;
+	transition: transform 0.35s ease;
+	pointer-events: none;
+}
+
+/* Vertikaler Strich dreht auf die horizontale Linie → Minus */
+.wp-block-details.is-style-faq-plus[open] > summary::before {
+	transform: rotate(90deg);
+}
+
+/* Inhalts-Wrapper für die Slide-Animation (wird per PHP eingefügt) */
+.wp-block-details.is-style-faq-plus .gbp-faq-body {
+	overflow: hidden;
+	margin: 12px 0;
+}
+
+.wp-block-details.is-style-faq-plus .gbp-faq-body > *:first-child {
+	margin-top: 0;
+}
+
+.wp-block-details.is-style-faq-plus .gbp-faq-body > *:last-child {
+	margin-bottom: 1.25rem;
+}
+
+/* Editor: content blocks are direct children of <details> (no .gbp-faq-body wrapper).
+   Mirror the frontend gaps (summary padding 20px + 12px = 32px top, 32px bottom). */
+.wp-block-details.is-style-faq-plus > summary + * {
+	margin-top: 12px;
+}
+
+/* Bottom gap before the divider. When the block is selected the editor inserts
+   a .block-list-appender as the last child, so target the last real content
+   block in both states and neutralise the appender's own footprint. */
+.wp-block-details.is-style-faq-plus > :last-child:not( summary ),
+.wp-block-details.is-style-faq-plus > :not( summary ):has( + .block-list-appender ) {
+	margin-bottom: 32px;
+}
+
+.wp-block-details.is-style-faq-plus > .block-list-appender:last-child {
+	margin: 0;
+	min-height: 0;
+}

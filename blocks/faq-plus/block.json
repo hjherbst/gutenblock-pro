@@ -1,0 +1,7 @@
+{
+	"block": "core/details",
+	"name": "faq-plus",
+	"label": "FAQ (+/−)",
+	"type": "variant",
+	"description": "FAQ-Akkordeon: Plus/Minus-Icon rechts, Slide-Effekt beim Auf-/Zuklappen, automatische FAQPage-Strukturdaten"
+}
