@@ -286,11 +286,20 @@ class GutenBlock_Pro_Horizontal_Scroll {
 	justify-content: space-between;
 	margin-top: 1rem;
 	padding: 0 0.5rem;
+	color: inherit;
 }
 .gb-hscroll-dots {
 	display: flex;
 	gap: 6px;
 	align-items: center;
+}
+.gb-hscroll-dots button,
+.gb-hscroll-prev,
+.gb-hscroll-next {
+	-webkit-appearance: none;
+	appearance: none;
+	color: inherit;
+	-webkit-tap-highlight-color: transparent;
 }
 .gb-hscroll-dots button {
 	width: 8px;

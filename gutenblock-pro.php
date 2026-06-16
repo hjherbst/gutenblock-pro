@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock Plugin
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: Block patterns and Full Site Editor building blocks for WordPress — also acts as the import bridge for the GutenBlock SaaS website builder. Activate a GutenBlock Pro license to unlock premium sections and the higher AI token quota.
- * Version: 1.34.0
+ * Version: 1.35.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.34.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.35.0' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
@@ -104,6 +104,7 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-features-page.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-admin-bar.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-container-forms.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-horizontal-scroll.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-viewport-visibility.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-media-text-stack.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-material-icons.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-translation-settings.php';
@@ -296,6 +297,10 @@ function gutenblock_pro_init() {
 	// Initialize Horizontal Scroll (columns block when feature enabled)
 	$horizontal_scroll = new GutenBlock_Pro_Horizontal_Scroll();
 	$horizontal_scroll->init();
+
+	// Initialize Viewport Visibility (hide group/button per viewport when feature enabled)
+	$viewport_visibility = new GutenBlock_Pro_Viewport_Visibility();
+	$viewport_visibility->init();
 
 	// Initialize Media Text Stack (Text/Medien block: immer stapeln, reverse stapeln)
 	$media_text_stack = new GutenBlock_Pro_Media_Text_Stack();

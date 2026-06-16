@@ -278,6 +278,9 @@ class GutenBlock_Pro_I18n_Fallback {
 			'Horizontal Scroll'                                                => 'Horizontal scroll',
 			'Horizontales Scrollen für Spalten-Blöcke mit Snap, Dots und Pfeilen.'
 				=> 'Horizontal scrolling for columns blocks with snap, dots and arrows.',
+			'Viewport-Sichtbarkeit'                                            => 'Viewport visibility',
+			'Blendet Gruppen-, Button- und Buttons-Blöcke je nach Viewport (Desktop, Tablet, Mobile) per Toggle aus.'
+				=> 'Hides group, button and buttons blocks per viewport (desktop, tablet, mobile) via toggle.',
 			'Text-Dekorationen (Toolbar)'                                      => 'Text decorations (toolbar)',
 			'Fügt Einkreisen, Freihand-Unterstreichen und Marker als Toolbar-Buttons für Überschriften und Absätze hinzu.'
 				=> 'Adds circle, freehand underline and marker as toolbar buttons for headings and paragraphs.',
