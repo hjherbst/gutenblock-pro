@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.37.0] – 2026-06-19
+
+- Contact and withdrawal form blocks: honour `alignwide` / `alignfull` from the block toolbar on the frontend
+- Withdrawal form: remove field help texts (frontend, editor preview, and strings)
+- English Brevo SMTP setup steps in contact form settings (i18n fallback)
+
 ## [1.33.0] – 2026-06-14
 
 - New "Tracking & Consent" admin page and a lean frontend consent banner (`class-consent-settings.php`, `class-consent-manager.php`, `consent-manager.js`, `consent-manager.css`). Two categories (statistics, marketing) with a GDPR-friendly opt-in: no third-party request fires before consent. Configuration is hybrid — a single Google Tag Manager container is the recommended path, with direct IDs (GA4, Meta Pixel, Google Ads, LinkedIn) for sites without GTM. When GTM is set, only GTM loads to avoid double counting. Google Consent Mode v2 defaults are emitted as `denied` and updated on the visitor's choice. Optional dimmed backdrop highlights the banner until the visitor chooses. Optional "always load GTM" toggle loads the (cookieless) Tag Manager before consent while its tags keep respecting Consent Mode.

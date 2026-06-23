@@ -455,8 +455,12 @@ class GutenBlock_Pro_I18n_Fallback {
 				=> 'For advanced users: enter SMTP details yourself.',
 			'Kostenloses Konto bei Brevo erstellen und Absender bestätigen.'
 				=> 'Create a free Brevo account and confirm your sender.',
+			'Kostenloses Konto bei %s erstellen und Absender bestätigen.'
+				=> 'Create a free %s account and confirm your sender address.',
 			'Unter "SMTP & API" einen %s erzeugen (nicht den API-Key).'
 				=> 'Under "SMTP & API", create a %s (not the API key).',
+			'Unter "SMTP & API" einen SMTP-Schlüssel erzeugen (nicht den API-Key).'
+				=> 'Under "SMTP & API", create an SMTP key (not the API key).',
 			'SMTP-Schlüssel'                                                   => 'SMTP key',
 			'SMTP-Login und SMTP-Schlüssel hier einfügen.'
 				=> 'Paste SMTP login and SMTP key here.',

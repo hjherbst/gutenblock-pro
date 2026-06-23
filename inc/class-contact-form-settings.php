@@ -250,9 +250,7 @@ class GutenBlock_Pro_Contact_Form_Settings {
 		// On a fresh install no method is chosen yet; preselect the recommended
 		// Brevo path so exactly one panel is visible instead of all at once.
 		$display_method = ( 'none' === $method ) ? 'brevo' : $method;
-		$brevo_help_url = ( 0 === strpos( (string) get_locale(), 'de' ) )
-			? 'https://help.brevo.com/hc/de/articles/209467485'
-			: 'https://help.brevo.com/hc/en-us/articles/209467485';
+		$brevo_url      = 'https://get.brevo.com/3s6b626q5b6r';
 		?>
 		<?php $this->print_inline_assets(); ?>
 		<div class="wrap gbp-cf-settings" data-method="<?php echo esc_attr( $display_method ); ?>">
@@ -319,16 +317,16 @@ class GutenBlock_Pro_Contact_Form_Settings {
 				<?php // --- Brevo panel --- ?>
 				<div class="gbp-cf-panel" data-panel="brevo">
 					<ol class="gbp-cf-steps">
-						<li><?php esc_html_e( 'Kostenloses Konto bei Brevo erstellen und Absender bestätigen.', 'gutenblock-pro' ); ?></li>
 						<li>
 							<?php
 							printf(
-								/* translators: %s: link to Brevo SMTP docs */
-								esc_html__( 'Unter "SMTP & API" einen %s erzeugen (nicht den API-Key).', 'gutenblock-pro' ),
-								'<a href="' . esc_url( $brevo_help_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'SMTP-Schlüssel', 'gutenblock-pro' ) . '</a>'
+								/* translators: %s: link to Brevo signup */
+								esc_html__( 'Kostenloses Konto bei %s erstellen und Absender bestätigen.', 'gutenblock-pro' ),
+								'<a href="' . esc_url( $brevo_url ) . '" target="_blank" rel="noopener noreferrer">Brevo</a>'
 							);
 							?>
 						</li>
+						<li><?php esc_html_e( 'Unter "SMTP & API" einen SMTP-Schlüssel erzeugen (nicht den API-Key).', 'gutenblock-pro' ); ?></li>
 						<li><?php esc_html_e( 'SMTP-Login und SMTP-Schlüssel hier einfügen.', 'gutenblock-pro' ); ?></li>
 					</ol>
 					<table class="form-table" role="presentation">

@@ -94,6 +94,14 @@ class GutenBlock_Pro_Contact_Form {
 		register_block_type(
 			self::BLOCK_NAME,
 			array(
+				// Declare align support server-side too, so get_block_wrapper_attributes()
+				// emits the alignwide/alignfull class chosen in the editor toolbar.
+				'supports'        => array(
+					'align' => array( 'wide', 'full' ),
+				),
+				'attributes'      => array(
+					'align' => array( 'type' => 'string' ),
+				),
 				'render_callback' => array( $this, 'render_block' ),
 			)
 		);
@@ -288,12 +296,18 @@ class GutenBlock_Pro_Contact_Form {
 
 		$req_mark = '<span class="gbp-cf-req" aria-hidden="true">*</span>';
 
+		// Merge block-supports wrapper attributes (e.g. alignwide/alignfull) so the
+		// content width chosen in the block toolbar is honoured on the frontend.
+		$wrapper_attributes = get_block_wrapper_attributes( array(
+			'class'                => 'gbp-contact-form-wrap',
+			'data-gbp-contact-form' => '',
+			'data-form-id'         => $form_id,
+			'data-success'         => $success_message,
+		) );
+
 		ob_start();
 		?>
-		<div class="gbp-contact-form-wrap"
-			data-gbp-contact-form
-			data-form-id="<?php echo esc_attr( $form_id ); ?>"
-			data-success="<?php echo esc_attr( $success_message ); ?>">
+		<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by get_block_wrapper_attributes. ?>>
 			<form class="gbp-contact-form" novalidate>
 				<div class="gbp-cf-feedback" role="alert" aria-live="assertive" hidden></div>
 

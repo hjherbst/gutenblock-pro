@@ -51,13 +51,6 @@
 	color: inherit;
 }
 
-/* Help text below a field */
-.gbp-rf-help {
-	font-size: 0.8em;
-	line-height: 1.4;
-	color: var(--gbp-rf-muted);
-}
-
 .gbp-revocation-form input[type="text"],
 .gbp-revocation-form input[type="email"],
 .gbp-revocation-form input[type="date"],
