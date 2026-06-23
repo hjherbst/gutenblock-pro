@@ -681,12 +681,45 @@ class GutenBlock_Pro_Provisioning_Wizard {
 	}
 
 	/**
+	 * Returns the attachment ID for a previously sideloaded remote URL, or 0
+	 * when not found. Checks the custom `_gbp_source_url` meta we write after
+	 * every sideload and the standard `_source_url` stored by
+	 * `media_sideload_image` for broad compatibility.
+	 *
+	 * @param string $url Remote URL.
+	 * @return int Attachment ID or 0.
+	 */
+	private function find_attachment_by_source_url( string $url ): int {
+		global $wpdb;
+		$att_id = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT post_id FROM {$wpdb->postmeta}
+				 WHERE meta_key IN ('_gbp_source_url', '_source_url')
+				   AND meta_value = %s
+				 LIMIT 1",
+				$url
+			)
+		);
+		return $att_id ?: 0;
+	}
+
+	/**
 	 * Ein Bild sideloaden.
+	 *
+	 * Skips the download when the URL was already imported in a previous run
+	 * (identified via the `_gbp_source_url` post meta we tag each attachment
+	 * with). Avoids duplicate Media Library entries on repeated imports.
 	 *
 	 * @param string $url Remote URL.
 	 * @return int Attachment-ID oder 0.
 	 */
 	private function sideload_one( string $url ): int {
+		$existing = $this->find_attachment_by_source_url( $url );
+		if ( $existing ) {
+			$this->debug_log( sprintf( 'import_assets: already in library %s (att=%d) — skipping', $url, $existing ) );
+			return $existing;
+		}
+
 		$tmp = download_url( $url );
 		if ( is_wp_error( $tmp ) ) {
 			return 0;
@@ -699,9 +732,13 @@ class GutenBlock_Pro_Provisioning_Wizard {
 
 		$att_id = media_handle_sideload( $file_array, 0 );
 		if ( is_wp_error( $att_id ) ) {
-			@unlink( $tmp );
+			@unlink( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 			return 0;
 		}
+
+		// Tag with the original remote URL so subsequent imports can skip it.
+		update_post_meta( (int) $att_id, '_gbp_source_url', $url );
+
 		return (int) $att_id;
 	}
 

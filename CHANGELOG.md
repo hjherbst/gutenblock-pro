@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.38.0] – 2026-06-23
+
+- Import: skip re-downloading images that were already sideloaded in a previous import. Each sideloaded attachment is now tagged with `_gbp_source_url` post meta; subsequent imports look up this meta (and the standard `_source_url`) before calling `download_url`, so unchanged images are reused from the Media Library instead of duplicated.
+
 ## [1.37.0] – 2026-06-19
 
 - Contact and withdrawal form blocks: honour `alignwide` / `alignfull` from the block toolbar on the frontend
