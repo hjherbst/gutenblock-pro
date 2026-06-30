@@ -1,0 +1,58 @@
+/**
+ * GutenBlock Pro - Circled Secondary List Block Variant
+ */
+
+ul.wp-block-list.is-style-circled-secondary,
+ul.is-style-circled-secondary {
+	padding: 0;
+}
+
+.wp-block-list.is-style-circled-secondary li,
+ul.is-style-circled-secondary li {
+	list-style: none;
+	position: relative;
+	padding-left: 1.75em;
+	padding-bottom: 0.2em;
+}
+
+.wp-block-list.is-style-circled-secondary li::before,
+ul.is-style-circled-secondary li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.2em;
+	width: 1.2em;
+	height: 1.2em;
+	background-color: var(--wp--preset--color--secondary);
+	border-radius: 50%;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 0.8em 0.8em;
+	background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%3E%3Cpath%20fill='none'%20stroke='%23fff'%20stroke-width='2'%20d='M2%208l4%204%208-8'/%3E%3C/svg%3E");
+}
+
+.block-editor-block-list__layout ul.is-style-circled-secondary {
+	padding: 0;
+}
+
+.block-editor-block-list__layout ul.is-style-circled-secondary li {
+	list-style: none;
+	position: relative;
+	padding-left: 1.75em;
+	padding-bottom: 0.2em;
+}
+
+.block-editor-block-list__layout ul.is-style-circled-secondary li::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.2em;
+	width: 1.2em;
+	height: 1.2em;
+	background-color: var(--wp--preset--color--secondary);
+	border-radius: 50%;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 0.8em 0.8em;
+	background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%3E%3Cpath%20fill='none'%20stroke='%23fff'%20stroke-width='2'%20d='M2%208l4%204%208-8'/%3E%3C/svg%3E");
+}

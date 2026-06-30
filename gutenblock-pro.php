@@ -91,7 +91,6 @@ function gutenblock_pro_resolve_pattern_php_path( $slug ) {
 
 // Load classes
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-i18n-fallback.php';
-require_once GUTENBLOCK_PRO_PATH . 'inc/class-site-editor-styles-button.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-tone-injector.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-pattern-loader.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-asset-loader.php';
@@ -215,11 +214,6 @@ function gutenblock_pro_init() {
 	// new strings). Active only on non-de_* locales — German sites keep the
 	// untouched msgids.
 	( new GutenBlock_Pro_I18n_Fallback() )->init();
-
-	// Re-introduce the half-filled-circle "Styles" pinned-item in the
-	// Site Editor (WP 7.0 removed the trigger + side panel from page-
-	// edit routes; see CHANGELOG 1.30.2).
-	( new GutenBlock_Pro_Site_Editor_Styles_Button() )->init();
 
 	// Initialize License System
 	GutenBlock_Pro_License::get_instance();

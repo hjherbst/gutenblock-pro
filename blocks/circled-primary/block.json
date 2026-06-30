@@ -1,0 +1,7 @@
+{
+	"block": "core/list",
+	"name": "circled-primary",
+	"label": "Circled Primary",
+	"type": "variant",
+	"description": "Liste mit Primary-Kreisen und Häkchen"
+}

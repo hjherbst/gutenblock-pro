@@ -295,6 +295,13 @@ class GutenBlock_Pro_I18n_Fallback {
 			'Pill-Button mit animiertem Kreis-Pfeil-Icon rechts'               => 'Pill button with an animated circle arrow icon on the right',
 			'Checkmark'                                                        => 'Checkmark',
 			'Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente'       => 'Shows check marks (✓) instead of bullets for all list items',
+			'Circled Primary'                                                  => 'Circled Primary',
+			'Liste mit Primary-Kreisen und Häkchen'                            => 'List with primary-coloured circles and check marks',
+			'Circled Secondary'                                                => 'Circled Secondary',
+			'Liste mit Secondary-Kreisen und Häkchen'                          => 'List with secondary-coloured circles and check marks',
+			'Two Columns'                                                      => 'Two Columns',
+			'Stellt den Inhalt in zwei Spalten dar (auf Mobilgeräten einspaltig)'
+				=> 'Displays content in two columns (single column on mobile)',
 			'Space Between'                                                    => 'Space Between',
 			'Verteilt Kinder-Elemente gleichmäßig (justify-content: space-between)'
 				=> 'Distributes child elements evenly (justify-content: space-between)',

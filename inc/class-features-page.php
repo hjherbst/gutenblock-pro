@@ -112,6 +112,8 @@ class GutenBlock_Pro_Features_Page {
 			'step-circle' => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
 			'vertical-center' => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H9v6H5V3H3zm8 2H3v8h2v-6h4v6h2zm2-2h8V3h-2v6h-4V3h-2zm8 2h-8v8h2v-6h4v6h2z"/></svg>',
 			'checkmark-list' => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>',
+			'circled-primary' => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.35"/><path d="M9 12.5l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+			'circled-secondary' => '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.15"/><path d="M9 12.5l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2"/></svg>',
 		);
 		return isset( $icons[ $slug ] ) ? $icons[ $slug ] : '<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>';
 	}
@@ -138,6 +140,16 @@ class GutenBlock_Pro_Features_Page {
 			'checkmark-list'     => array(
 				'label'       => 'Checkmark',
 				'description' => 'Zeigt Checkmarks (✓) statt Bullets für alle Listenelemente',
+				'block'       => 'core/list',
+			),
+			'circled-primary'    => array(
+				'label'       => 'Circled Primary',
+				'description' => 'Liste mit Primary-Kreisen und Häkchen',
+				'block'       => 'core/list',
+			),
+			'circled-secondary'  => array(
+				'label'       => 'Circled Secondary',
+				'description' => 'Liste mit Secondary-Kreisen und Häkchen',
 				'block'       => 'core/list',
 			),
 			'space-between'      => array(

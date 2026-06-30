@@ -1,0 +1,7 @@
+{
+	"block": "core/list",
+	"name": "circled-secondary",
+	"label": "Circled Secondary",
+	"type": "variant",
+	"description": "Liste mit Secondary-Kreisen und Häkchen"
+}
