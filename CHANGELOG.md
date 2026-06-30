@@ -7,6 +7,13 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.39.0] – 2026-06-30
+
+- List block: new style variants **Circled Primary** and **Circled Secondary** (theme palette circles with check marks).
+- List block: rename style variant **Zweispaltig** to **Two Columns** (slug unchanged).
+- Site Editor: remove the WP 7.0 styles-sidebar workaround; styles panel stays native (template view only).
+- Patterns: strip fixed heading font sizes so `theme.json` controls the scale; add `scripts/strip-heading-font-sizes.php`.
+
 ## [1.38.0] – 2026-06-23
 
 - Import: skip re-downloading images that were already sideloaded in a previous import. Each sideloaded attachment is now tagged with `_gbp_source_url` post meta; subsequent imports look up this meta (and the standard `_source_url`) before calling `download_url`, so unchanged images are reused from the Media Library instead of duplicated.
