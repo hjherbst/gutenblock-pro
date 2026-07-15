@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.40.1] – 2026-07-15
+
+- Fix: include the new `blocks-tabs/` directory in the release ZIP. In 1.40.0 the release workflow only packaged a fixed folder whitelist, so the shipped plugin was missing the tabs block assets/metadata and the **Reiter (Tabs)** block was not registered on installs updated via the ZIP (local checkouts were unaffected).
+
 ## [1.40.0] – 2026-07-15
 
 - New **Reiter (Tabs)** block: a container block (`gutenblock-pro/tabs`) with tab children (`gutenblock-pro/tab`) that display nested blocks in switchable, accessible tabs (ARIA `tablist`/`tab`/`tabpanel`, keyboard navigation). Server-rendered so tab labels always follow the child block titles.
