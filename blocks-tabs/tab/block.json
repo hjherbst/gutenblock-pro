@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "gutenblock-pro/tab",
+	"title": "Reiter-Inhalt",
+	"category": "design",
+	"icon": "media-default",
+	"description": "Einzelner Reiter (Panel) innerhalb des Reiter-Blocks.",
+	"textdomain": "gutenblock-pro",
+	"parent": [ "gutenblock-pro/tabs" ],
+	"attributes": {
+		"title": { "type": "string" }
+	},
+	"usesContext": [ "gutenblock-pro/activeTab" ],
+	"supports": {
+		"reusable": false,
+		"html": false,
+		"anchor": true,
+		"spacing": { "padding": true, "blockGap": true },
+		"color": { "background": true, "text": true }
+	},
+	"editorScript": "gutenblock-pro-tabs-editor",
+	"style": "gutenblock-pro-tabs"
+}

@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.40.0] – 2026-07-15
+
+- New **Reiter (Tabs)** block: a container block (`gutenblock-pro/tabs`) with tab children (`gutenblock-pro/tab`) that display nested blocks in switchable, accessible tabs (ARIA `tablist`/`tab`/`tabpanel`, keyboard navigation). Server-rendered so tab labels always follow the child block titles.
+- Tabs: mobile-friendly UI – tabs turn into scrollable pill buttons and each panel shows a clearly styled "next tab" link. The next-tab link can optionally be enabled on desktop too via a block toggle.
+- i18n: German source strings with English fallbacks for the tabs block (`Reiter`, `Reiter %d`, `Nächster Reiter`).
+
 ## [1.39.0] – 2026-06-30
 
 - List block: new style variants **Circled Primary** and **Circled Secondary** (theme palette circles with check marks).

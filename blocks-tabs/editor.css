@@ -1,0 +1,24 @@
+/**
+ * GutenBlock Pro – Reiter (Tabs) block, editor-only tweaks.
+ */
+
+.gbp-tabs.is-editor .gbp-tabs__nav {
+	align-items: center;
+	gap: 0.25rem;
+}
+
+/* Use compact component buttons as the editor tab switcher. */
+.gbp-tabs.is-editor .gbp-tabs__tab.components-button {
+	border-bottom: 2px solid transparent;
+	border-radius: 4px 4px 0 0;
+}
+
+.gbp-tabs.is-editor .gbp-tabs__add.components-button {
+	margin-inline-start: auto;
+}
+
+/* Make each editable panel visually distinct in the canvas. */
+.gbp-tabs.is-editor .gbp-tabs__panel.is-active {
+	outline: 1px dashed var(--wp-admin-theme-color, #3858e9);
+	outline-offset: 4px;
+}

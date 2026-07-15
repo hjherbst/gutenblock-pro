@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "gutenblock-pro/tabs",
+	"title": "Reiter",
+	"category": "design",
+	"icon": "index-card",
+	"description": "Zeigt verschachtelte Bl\u00f6cke in umschaltbaren Reitern (Tabs).",
+	"keywords": [ "tabs", "reiter", "tab", "registerkarten", "accordion" ],
+	"textdomain": "gutenblock-pro",
+	"attributes": {
+		"activeTab": { "type": "number", "default": 0 },
+		"showNextOnDesktop": { "type": "boolean", "default": false }
+	},
+	"providesContext": {
+		"gutenblock-pro/activeTab": "activeTab"
+	},
+	"supports": {
+		"align": [ "wide", "full" ],
+		"anchor": true,
+		"html": false,
+		"spacing": { "margin": true, "padding": true, "blockGap": true },
+		"color": { "background": true, "text": true, "gradients": true },
+		"typography": { "fontSize": true, "lineHeight": true }
+	},
+	"editorScript": "gutenblock-pro-tabs-editor",
+	"style": "gutenblock-pro-tabs",
+	"editorStyle": "gutenblock-pro-tabs-editor",
+	"viewScript": "gutenblock-pro-tabs-view"
+}

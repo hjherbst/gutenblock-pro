@@ -1,0 +1,164 @@
+/**
+ * GutenBlock Pro – Reiter (Tabs) block.
+ * Shared styles for frontend + editor canvas.
+ */
+
+.gbp-tabs {
+	--gbp-tabs-accent: var(--wp--preset--color--primary, #2563eb);
+	--gbp-tabs-border: var(--wp--preset--color--contrast, rgba(0, 0, 0, 0.12));
+	--gbp-tabs-muted: var(--wp--preset--color--contrast-2, #555);
+}
+
+.gbp-tabs__nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1.5rem;
+	align-items: flex-end;
+	margin-bottom: var(--wp--style--block-gap, 1.5rem);
+	border-bottom: 1px solid var(--gbp-tabs-border);
+}
+
+.gbp-tabs__tab {
+	appearance: none;
+	background: none;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -1px;
+	padding: 0.5em 0.15em;
+	font: inherit;
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--gbp-tabs-muted);
+	cursor: pointer;
+	transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.gbp-tabs__tab:hover,
+.gbp-tabs__tab:focus-visible {
+	color: var(--gbp-tabs-accent);
+}
+
+.gbp-tabs__tab:focus-visible {
+	outline: 2px solid var(--gbp-tabs-accent);
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+
+.gbp-tabs__tab.is-active,
+.gbp-tabs__tab[aria-selected="true"] {
+	color: var(--gbp-tabs-accent);
+	border-bottom-color: var(--gbp-tabs-accent);
+}
+
+.gbp-tabs__panel[hidden] {
+	display: none;
+}
+
+.gbp-tabs__panel:focus {
+	outline: none;
+}
+
+/* "Next tab" affordance. Hidden by default; shown on mobile (media query) and
+ * on desktop when the block opts in via the .has-next-desktop modifier. */
+.gbp-tabs__next {
+	display: none;
+	flex-direction: column;
+	gap: 0.15em;
+	width: 100%;
+	margin-top: 1.5rem;
+	padding: 0.85em 1.1em;
+	text-align: start;
+	font: inherit;
+	cursor: pointer;
+	background: transparent;
+	border: 1px solid var(--gbp-tabs-accent);
+	border-radius: 12px;
+	color: var(--gbp-tabs-accent);
+	transition: background 0.15s ease, color 0.15s ease;
+}
+
+.gbp-tabs.has-next-desktop .gbp-tabs__next {
+	display: flex;
+}
+
+.gbp-tabs__next:hover,
+.gbp-tabs__next:focus-visible {
+	background: var(--gbp-tabs-accent);
+	color: var(--wp--preset--color--base, #fff);
+}
+
+.gbp-tabs__next:focus-visible {
+	outline: 2px solid var(--gbp-tabs-accent);
+	outline-offset: 2px;
+}
+
+.gbp-tabs__next-label {
+	font-size: 0.72em;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	opacity: 0.85;
+}
+
+.gbp-tabs__next-title {
+	font-size: 1.05em;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+/* Arrow cue after the title. */
+.gbp-tabs__next-title::after {
+	content: " \2192";
+}
+
+/* ── Mobile: make it obvious the tabs are tappable ──────────────────────────
+ * On small screens the underline style reads like plain text. We switch to
+ * clearly tappable pill buttons and let the nav scroll horizontally so it is
+ * obvious there is more to reveal. */
+@media (max-width: 600px) {
+	.gbp-tabs__nav {
+		flex-wrap: nowrap;
+		gap: 0.5rem;
+		align-items: stretch;
+		border-bottom: 0;
+		padding-bottom: 0.5rem;
+		/* Horizontal scroll with snap when the tabs do not fit. */
+		overflow-x: auto;
+		scroll-snap-type: x proximity;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
+	}
+
+	.gbp-tabs__nav::-webkit-scrollbar {
+		display: none;
+	}
+
+	.gbp-tabs__tab {
+		flex: 0 0 auto;
+		margin-bottom: 0;
+		padding: 0.55em 1.1em;
+		border: 1px solid var(--gbp-tabs-border);
+		border-radius: 999px;
+		font-weight: 600;
+		background: transparent;
+		scroll-snap-align: start;
+	}
+
+	.gbp-tabs__tab.is-active,
+	.gbp-tabs__tab[aria-selected="true"] {
+		color: var(--wp--preset--color--base, #fff);
+		background: var(--gbp-tabs-accent);
+		border-color: var(--gbp-tabs-accent);
+	}
+
+	/* Hint that panels belong to the selected pill. */
+	.gbp-tabs__panels {
+		border-top: 1px solid var(--gbp-tabs-border);
+		padding-top: var(--wp--style--block-gap, 1.25rem);
+	}
+
+	/* Show the "next tab" affordance on mobile regardless of the desktop opt-in. */
+	.gbp-tabs__next {
+		display: flex;
+	}
+}

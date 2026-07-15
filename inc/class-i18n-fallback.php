@@ -431,6 +431,12 @@ class GutenBlock_Pro_I18n_Fallback {
 			'Rate-Limit erreicht. Bitte warte einen Moment.'                   => 'Rate limit reached. Please wait a moment.',
 			'Schreibe einen passenden Text für das Element „%s".'              => 'Write fitting text for the element "%s".',
 			'Seite %d'                                                         => 'Page %d',
+
+			// Tabs / Reiter block (frontend) -------------------------------
+			'Reiter'                                                           => 'Tabs',
+			'Reiter %d'                                                        => 'Tab %d',
+			'Nächster Reiter'                                                  => 'Next',
+
 			'Header'                                                           => 'Header',
 			'Footer'                                                           => 'Footer',
 			'Meta'                                                             => 'Meta',

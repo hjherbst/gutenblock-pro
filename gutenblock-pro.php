@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock Plugin
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: Block patterns and Full Site Editor building blocks for WordPress — also acts as the import bridge for the GutenBlock SaaS website builder. Activate a GutenBlock Pro license to unlock premium sections and the higher AI token quota.
- * Version: 1.39.0
+ * Version: 1.40.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.39.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.40.0' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
@@ -113,6 +113,7 @@ require_once GUTENBLOCK_PRO_PATH . 'includes/bridge/includes/gutenblock-pattern-
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-block-registry.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-grid-responsive.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-sticky-feature.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-tabs.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-flexible-heading.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-mobile-align.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-faq-style.php';
@@ -324,6 +325,10 @@ function gutenblock_pro_init() {
 	// Initialize Sticky Feature Block (sticky section with scroll-synced image)
 	$sticky_feature = new GutenBlock_Pro_Sticky_Feature();
 	$sticky_feature->init();
+
+	// Initialize Tabs/Reiter Block (container + tab child with switchable panels)
+	$tabs = new GutenBlock_Pro_Tabs();
+	$tabs->init();
 
 	// Initialize Flexible Heading Block (grouped H1/H2 with styled span parts)
 	$flexible_heading = new GutenBlock_Pro_Flexible_Heading();
