@@ -144,7 +144,7 @@ class GutenBlock_Pro_Revocation_Form {
 			'err_consent'       => 'Bitte stimmen Sie der Verarbeitung zu.',
 			'err_generic'       => 'Der Widerruf konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.',
 			'err_rate'          => 'Zu viele Anfragen. Bitte versuchen Sie es in einigen Minuten erneut.',
-			'honeypot'          => 'Postleitzahl',
+			'honeypot'          => 'Website',
 			// Mail labels.
 			'label_name'        => 'Name',
 			'label_email'       => 'E-Mail',
@@ -181,7 +181,7 @@ class GutenBlock_Pro_Revocation_Form {
 			'err_consent'       => 'Please agree to the processing of your data.',
 			'err_generic'       => 'The withdrawal could not be sent. Please try again later.',
 			'err_rate'          => 'Too many requests. Please try again in a few minutes.',
-			'honeypot'          => 'Postal code',
+			'honeypot'          => 'Website',
 			'label_name'        => 'Name',
 			'label_email'       => 'Email',
 			'label_order'       => 'Order/booking number',
@@ -474,10 +474,9 @@ class GutenBlock_Pro_Revocation_Form {
 					</div>
 				<?php endif; ?>
 
-				<?php // Honeypot: visually hidden, ignored by humans, filled by bots. ?>
 				<div class="gbp-rf-hp" aria-hidden="true">
-					<label for="<?php echo $fid; ?>-postcode"><?php echo esc_html( $s['honeypot'] ); ?></label>
-					<input type="text" id="<?php echo $fid; ?>-postcode" name="postcode" tabindex="-1" autocomplete="off" />
+					<label for="<?php echo $fid; ?>-gbp-hp"><?php echo esc_html( $s['honeypot'] ); ?></label>
+					<input type="text" id="<?php echo $fid; ?>-gbp-hp" name="gbp_hp" value="" tabindex="-1" autocomplete="new-password" readonly />
 				</div>
 
 				<?php if ( $show_consent ) : ?>
@@ -583,8 +582,13 @@ class GutenBlock_Pro_Revocation_Form {
 			return new WP_REST_Response( array( 'message' => $s['err_generic'] ), 403 );
 		}
 
-		// Honeypot: pretend success, send nothing.
-		if ( '' !== trim( (string) $request->get_param( 'postcode' ) ) ) {
+		// Honeypot: filled by bots. Also accept legacy "postcode" (pre-1.40.2 name that
+		// Chromium/Edge autofilled from address profiles, causing silent mail skips).
+		$honeypot = trim( (string) $request->get_param( 'gbp_hp' ) );
+		if ( '' === $honeypot ) {
+			$honeypot = trim( (string) $request->get_param( 'postcode' ) );
+		}
+		if ( '' !== $honeypot ) {
 			return new WP_REST_Response( array( 'message' => $s['success'] ), 200 );
 		}
 

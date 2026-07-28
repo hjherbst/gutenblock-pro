@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.40.2] – 2026-07-28
+
+- Fix: honeypot field used `postcode` / “Postleitzahl” and was autofilled by Chromium-based browsers (Edge etc.), so contact and withdrawal forms returned success without sending email. Renamed and hardened against autofill.
+
 ## [1.40.1] – 2026-07-15
 
 - Fix: include the new `blocks-tabs/` directory in the release ZIP. In 1.40.0 the release workflow only packaged a fixed folder whitelist, so the shipped plugin was missing the tabs block assets/metadata and the **Reiter (Tabs)** block was not registered on installs updated via the ZIP (local checkouts were unaffected).
