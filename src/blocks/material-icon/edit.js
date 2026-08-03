@@ -47,7 +47,7 @@ function CustomSvgPreview( { markup, size, color } ) {
 	if ( ! markup ) return null;
 	return (
 		<span
-			className="wp-block-gutenblock-pro-material-icon"
+			className="wp-block-gutenblock-pro-material-icon wp-block-gutenblock-pro-material-icon--custom"
 			style={ { display: 'inline-block', width: size + 'px', height: size + 'px', color } }
 		>
 			<div

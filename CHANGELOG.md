@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.40.3] – 2026-07-28
+
+- Fix: custom (uploaded) Material Icon SVGs that use strokes no longer get a solid `fill` on the root `<svg>`, which previously turned outline icons into black blobs. Stroke-based uploads now render with `fill: none` (Material Symbols unchanged).
+
 ## [1.40.2] – 2026-07-28
 
 - Fix: honeypot field used `postcode` / “Postleitzahl” and was autofilled by Chromium-based browsers (Edge etc.), so contact and withdrawal forms returned success without sending email. Renamed and hardened against autofill.

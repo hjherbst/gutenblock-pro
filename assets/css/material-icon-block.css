@@ -15,3 +15,14 @@
 .wp-block-gutenblock-pro-material-icon > span {
 	display: inline-block;
 }
+
+/*
+ * Custom uploads are often stroke-based line icons. The block used to set
+ * fill="#000000" on the root <svg>, which solid-fills shapes that should stay
+ * open. Force fill:none when the SVG (or a descendant) uses stroke.
+ * Material Symbols keep their path fill and are unaffected (no stroke).
+ */
+.wp-block-gutenblock-pro-material-icon--custom > svg:has([stroke]),
+.wp-block-gutenblock-pro-material-icon--custom > svg[stroke] {
+	fill: none;
+}

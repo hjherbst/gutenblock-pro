@@ -144,7 +144,7 @@ class GutenBlock_Pro_Material_Icons {
 			if ( $markup !== '' ) {
 				$markup = $this->sanitize_svg_markup( $markup );
 				$markup = $this->apply_svg_size_and_fill( $markup, $size_attr, $fill );
-				$inner  = '<span class="wp-block-gutenblock-pro-material-icon' . esc_attr( $align_class ) . '" style="' . esc_attr( $display_css ) . ' width:' . esc_attr( $size_attr ) . '; height:' . esc_attr( $size_attr ) . ';">' . $markup . '</span>';
+				$inner  = '<span class="wp-block-gutenblock-pro-material-icon wp-block-gutenblock-pro-material-icon--custom' . esc_attr( $align_class ) . '" style="' . esc_attr( $display_css ) . ' width:' . esc_attr( $size_attr ) . '; height:' . esc_attr( $size_attr ) . ';">' . $markup . '</span>';
 				return $this->wrap_with_link( $inner, $url, $link_target );
 			}
 			return '';
@@ -217,7 +217,8 @@ class GutenBlock_Pro_Material_Icons {
 	}
 
 	/**
-	 * Set width, height and fill on root SVG element.
+	 * Set width/height on the root SVG. Apply fill only for filled icons;
+	 * stroke-based uploads get fill="none" so outlines are not solid-filled.
 	 *
 	 * @param string $markup   SVG markup.
 	 * @param string $size_css e.g. "48px".
@@ -225,7 +226,14 @@ class GutenBlock_Pro_Material_Icons {
 	 * @return string Modified SVG.
 	 */
 	private function apply_svg_size_and_fill( $markup, $size_css, $fill ) {
-		$markup = preg_replace( '/<svg\s/i', '<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr( $size_css ) . '" height="' . esc_attr( $size_css ) . '" fill="' . esc_attr( $fill ) . '" aria-hidden="true" ', $markup, 1 );
+		$uses_stroke = (bool) preg_match( '/\bstroke(?:-|=)/i', $markup );
+		$fill_value  = $uses_stroke ? 'none' : $fill;
+		$markup      = preg_replace(
+			'/<svg\s/i',
+			'<svg xmlns="http://www.w3.org/2000/svg" width="' . esc_attr( $size_css ) . '" height="' . esc_attr( $size_css ) . '" fill="' . esc_attr( $fill_value ) . '" aria-hidden="true" ',
+			$markup,
+			1
+		);
 		return $markup;
 	}
 

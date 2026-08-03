@@ -12,6 +12,12 @@
 	max-width: 100%;
 }
 
+/* Match frontend: stroke-based custom SVGs must not inherit a solid fill. */
+.wp-block-gutenblock-pro-material-icon--custom svg:has([stroke]),
+.wp-block-gutenblock-pro-material-icon--custom svg[stroke] {
+	fill: none;
+}
+
 .gutenblock-material-icon-placeholder,
 .gutenblock-material-icon-preview {
 	display: flex;
