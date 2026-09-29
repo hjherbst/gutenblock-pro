@@ -111,6 +111,23 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.',
 			'sanitize_callback' => array( $this, 'sanitize_ai_context' ),
 			'default'           => '',
 		) );
+		register_setting( 'gutenblock_pro_license_settings', GutenBlock_Pro_Agent_Proxy::OPTION_OPENAI_KEY, array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		) );
+		register_setting( 'gutenblock_pro_license_settings', GutenBlock_Pro_Agent_Proxy::OPTION_ANTHROPIC_KEY, array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		) );
+		register_setting( 'gutenblock_pro_license_settings', GutenBlock_Pro_Agent_Proxy::OPTION_AGENT_PROVIDER, array(
+			'type'              => 'string',
+			'sanitize_callback' => function ( $value ) {
+				return in_array( $value, array( 'openai', 'anthropic' ), true ) ? $value : 'openai';
+			},
+			'default'           => 'openai',
+		) );
 	}
 
 	/**
@@ -137,15 +154,17 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.',
 			'gutenblock-pro_page_gutenblock-pro-ai',
 			'gutenblock-pro_page_gutenblock-pro-license',
 		);
-		if ( ! in_array( $hook, $allowed_hooks, true ) ) {
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+		if ( ! in_array( $hook, $allowed_hooks, true ) && ! in_array( $page, array( 'gutenblock-pro-ai', 'gutenblock-pro-license' ), true ) ) {
 			return;
 		}
 
+		$css_file = GUTENBLOCK_PRO_PATH . 'assets/css/ai-settings.css';
 		wp_enqueue_style(
 			'gutenblock-pro-ai-settings',
 			GUTENBLOCK_PRO_URL . 'assets/css/ai-settings.css',
 			array(),
-			GUTENBLOCK_PRO_VERSION
+			file_exists( $css_file ) ? (string) filemtime( $css_file ) : GUTENBLOCK_PRO_VERSION
 		);
 
 		wp_enqueue_script(
@@ -328,11 +347,13 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 			? __( 'GutenBlock Pro – Lizenz', 'gutenblock-pro' )
 			: __( 'GutenBlock Pro – License', 'gutenblock-pro' );
 		?>
-		<div class="wrap gutenblock-pro-ai-settings">
+		<div class="wrap gutenblock-pro-ai-settings gb-license-settings">
 			<h1>
 				<span class="dashicons dashicons-admin-network"></span>
 				<?php echo esc_html( $title ); ?>
 			</h1>
+
+			<?php $this->render_agent_credits_section(); ?>
 
 			<!-- License Section -->
 			<div class="gb-settings-section">
@@ -369,31 +390,14 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 							</button>
 						</div>
 						<p class="description">
-							<?php
-							printf(
-								esc_html__( 'Noch keine Lizenz? %s', 'gutenblock-pro' ),
-								'<a href="https://app.gutenblock.com/gutenblock-pro" target="_blank">' . esc_html__( 'Jetzt kaufen', 'gutenblock-pro' ) . '</a>'
-							);
-							?>
+							<?php esc_html_e( 'Hast du bereits einen Lizenzschlüssel, trägst du ihn hier ein. Agent-Credits kaufst du oben im Paket.', 'gutenblock-pro' ); ?>
 						</p>
-						<div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; font-size: 12px; color: #646970;">
-							<span style="display: inline-flex; align-items: center; gap: 4px;">
-								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
-								<?php esc_html_e( '1 Mio. AI-Tokens monatlich', 'gutenblock-pro' ); ?>
-							</span>
-							<span style="display: inline-flex; align-items: center; gap: 4px;">
-								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
-								<?php esc_html_e( 'Alle Premium-Patterns freigeschalten', 'gutenblock-pro' ); ?>
-							</span>
-							<span style="display: inline-flex; align-items: center; gap: 4px;">
-								<span class="dashicons dashicons-yes-alt" style="color: #00a32a; font-size: 16px; width: 16px; height: 16px;"></span>
-								<?php esc_html_e( 'Einmalig zahlen, lebenslang nutzen', 'gutenblock-pro' ); ?>
-							</span>
-						</div>
 					<?php endif; ?>
 					<div id="gb-license-message" class="gb-message hidden"></div>
 				</div>
 			</div>
+
+			<?php $this->render_byok_section(); ?>
 
 			<!-- Token Usage Section -->
 			<div class="gb-settings-section">
@@ -434,6 +438,166 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 					<?php endif; ?>
 				</div>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Agent pattern credits (trial wallet + purchase packs).
+	 */
+	private function render_agent_credits_section() {
+		$credits = GutenBlock_Pro_Agent_Credits::get_summary();
+		$catalog = GutenBlock_Pro_Agent_Credits::fetch_credit_catalog();
+		$packs   = $catalog['packs'];
+		$cost    = isset( $catalog['costPerPattern'] ) ? (int) $catalog['costPerPattern'] : (int) $credits['costPerPattern'];
+		$trial   = isset( $catalog['trialCredits'] ) ? (int) $catalog['trialCredits'] : (int) $credits['trialTotal'];
+		?>
+		<div class="gb-settings-section">
+			<h2><?php esc_html_e( 'Agent-Credits', 'gutenblock-pro' ); ?></h2>
+			<p class="description">
+				<?php
+				printf(
+					esc_html__( '1 Pattern inkl. Textgenerierung = %1$d Credits. Eine Seite mit ~8 Sections ≈ %2$d Credits. Du startest mit %3$d Test-Credits.', 'gutenblock-pro' ),
+					$cost,
+					$cost * 8,
+					$trial
+				);
+				?>
+			</p>
+
+			<div class="gb-token-box">
+				<div class="gb-token-meter">
+					<div class="gb-token-bar">
+						<?php
+						$cap        = max( 1, (int) $credits['trialTotal'] );
+						$percentage = min( 100, ( $credits['balance'] / $cap ) * 100 );
+						$bar_class  = $percentage < 15 ? 'critical' : ( $percentage < 35 ? 'warning' : '' );
+						?>
+						<div class="gb-token-progress <?php echo esc_attr( $bar_class ); ?>"
+						     style="width: <?php echo esc_attr( $percentage ); ?>%"></div>
+					</div>
+					<div class="gb-token-numbers">
+						<span class="gb-token-used"><?php echo esc_html( number_format_i18n( $credits['balance'] ) ); ?></span>
+						<span class="gb-token-separator">·</span>
+						<span class="gb-token-limit"><?php echo esc_html( number_format_i18n( $credits['used'] ) ); ?></span>
+						<span class="gb-token-label"><?php esc_html_e( 'verbraucht', 'gutenblock-pro' ); ?></span>
+					</div>
+				</div>
+			</div>
+
+			<?php if ( ! empty( $packs ) ) : ?>
+				<div class="gb-credit-packs">
+					<?php foreach ( $packs as $pack ) : ?>
+						<?php
+						$classes = 'gb-credit-pack';
+						if ( ! empty( $pack['highlighted'] ) ) {
+							$classes .= ' gb-credit-pack--highlight';
+						}
+						$has_url = ! empty( $pack['buyable'] ) && ! empty( $pack['slug'] );
+						$url     = $has_url ? GutenBlock_Pro_Agent_Credits::buy_url( $pack['slug'], admin_url( 'admin.php?page=gutenblock-pro-license' ) ) : '';
+						?>
+						<div class="<?php echo esc_attr( $classes ); ?>">
+							<?php if ( ! empty( $pack['badge'] ) ) : ?>
+								<span class="gb-credit-pack__badge"><?php echo esc_html( $pack['badge'] ); ?></span>
+							<?php endif; ?>
+							<h3 class="gb-credit-pack__name"><?php echo esc_html( $pack['name'] ); ?></h3>
+							<p class="gb-credit-pack__credits">
+								<?php
+								printf(
+									/* translators: %s: formatted credit amount */
+									esc_html__( '%s Credits', 'gutenblock-pro' ),
+									esc_html( number_format_i18n( (int) $pack['credits'] ) )
+								);
+								?>
+							</p>
+							<?php if ( ! empty( $pack['description'] ) ) : ?>
+								<p class="gb-credit-pack__tagline"><?php echo esc_html( $pack['description'] ); ?></p>
+							<?php endif; ?>
+							<?php if ( ! empty( $pack['priceLabel'] ) ) : ?>
+								<p class="gb-credit-pack__price">
+									<?php if ( ! empty( $pack['originalPriceLabel'] ) ) : ?>
+										<span class="gb-credit-pack__price-was"><?php echo esc_html( $pack['originalPriceLabel'] ); ?></span>
+									<?php endif; ?>
+									<span class="gb-credit-pack__price-now"><?php echo esc_html( $pack['priceLabel'] ); ?></span>
+								</p>
+							<?php endif; ?>
+							<?php if ( ! empty( $pack['features'] ) ) : ?>
+								<ul class="gb-credit-pack__features">
+									<?php foreach ( $pack['features'] as $feature ) : ?>
+										<li><?php echo esc_html( $feature ); ?></li>
+									<?php endforeach; ?>
+								</ul>
+							<?php endif; ?>
+							<?php if ( $has_url ) : ?>
+								<a class="button button-primary gb-credit-pack__cta" href="<?php echo esc_url( $url ); ?>">
+									<?php esc_html_e( 'Jetzt kaufen', 'gutenblock-pro' ); ?>
+								</a>
+							<?php else : ?>
+								<span class="button disabled gb-credit-pack__cta"><?php esc_html_e( 'Demnächst kaufbar', 'gutenblock-pro' ); ?></span>
+							<?php endif; ?>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			<?php else : ?>
+				<p class="description">
+					<?php esc_html_e( 'Credit-Pakete konnten gerade nicht geladen werden. Bitte später erneut öffnen.', 'gutenblock-pro' ); ?>
+				</p>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Own API keys (Option B). Shown when the annual BYOK license is active
+	 * or when developing on a local domain.
+	 */
+	private function render_byok_section() {
+		$allowed = $this->license->has_byok_access();
+		$provider = get_option( GutenBlock_Pro_Agent_Proxy::OPTION_AGENT_PROVIDER, 'openai' );
+		$openai   = get_option( GutenBlock_Pro_Agent_Proxy::OPTION_OPENAI_KEY, '' );
+		$anthropic = get_option( GutenBlock_Pro_Agent_Proxy::OPTION_ANTHROPIC_KEY, '' );
+		?>
+		<div class="gb-settings-section">
+			<h2><?php esc_html_e( 'Eigene API-Keys (Option B)', 'gutenblock-pro' ); ?></h2>
+			<?php if ( ! $allowed ) : ?>
+				<p class="description">
+					<?php esc_html_e( 'Mit der Jahreslizenz nutzt du eigene OpenAI- oder Anthropic-Keys statt Prepaid-Credits.', 'gutenblock-pro' ); ?>
+				</p>
+			<?php else : ?>
+				<form method="post" action="options.php">
+					<?php settings_fields( 'gutenblock_pro_license_settings' ); ?>
+					<table class="form-table" role="presentation">
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Anbieter', 'gutenblock-pro' ); ?></th>
+							<td>
+								<select name="<?php echo esc_attr( GutenBlock_Pro_Agent_Proxy::OPTION_AGENT_PROVIDER ); ?>">
+									<option value="openai" <?php selected( $provider, 'openai' ); ?>>OpenAI</option>
+									<option value="anthropic" <?php selected( $provider, 'anthropic' ); ?>>Anthropic (Claude)</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'OpenAI API Key', 'gutenblock-pro' ); ?></th>
+							<td>
+								<input type="password" class="regular-text" autocomplete="off"
+									name="<?php echo esc_attr( GutenBlock_Pro_Agent_Proxy::OPTION_OPENAI_KEY ); ?>"
+									value="<?php echo esc_attr( $openai ); ?>"
+									placeholder="sk-…">
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Anthropic API Key', 'gutenblock-pro' ); ?></th>
+							<td>
+								<input type="password" class="regular-text" autocomplete="off"
+									name="<?php echo esc_attr( GutenBlock_Pro_Agent_Proxy::OPTION_ANTHROPIC_KEY ); ?>"
+									value="<?php echo esc_attr( $anthropic ); ?>"
+									placeholder="sk-ant-…">
+							</td>
+						</tr>
+					</table>
+					<?php submit_button( __( 'Keys speichern', 'gutenblock-pro' ) ); ?>
+				</form>
+			<?php endif; ?>
 		</div>
 		<?php
 	}

@@ -301,11 +301,11 @@ class GutenBlock_Pro_Tone_Injector {
 		return implode( "\n", array(
 			'/* GutenBlock Pro: Tone-aware Inheritance für Material-Icons, Trenner, Outline-Buttons */',
 
-			// Material-Icons → currentColor
-			'.has-contrast-background-color .wp-block-gutenblock-pro-material-icon svg,',
-			'.has-contrast-background-color .wp-block-gutenblock-pro-material-icon svg *,',
-			'.has-tertiary-background-color .wp-block-gutenblock-pro-material-icon svg,',
-			'.has-tertiary-background-color .wp-block-gutenblock-pro-material-icon svg * {',
+			// Material-Icons → currentColor (skip icons with an explicit block color)
+			'.has-contrast-background-color .wp-block-gutenblock-pro-material-icon:not(.has-explicit-icon-color) svg,',
+			'.has-contrast-background-color .wp-block-gutenblock-pro-material-icon:not(.has-explicit-icon-color) svg *,',
+			'.has-tertiary-background-color .wp-block-gutenblock-pro-material-icon:not(.has-explicit-icon-color) svg,',
+			'.has-tertiary-background-color .wp-block-gutenblock-pro-material-icon:not(.has-explicit-icon-color) svg * {',
 			'  fill: currentColor !important;',
 			'}',
 
@@ -337,8 +337,8 @@ class GutenBlock_Pro_Tone_Injector {
 			'}',
 
 			// Material-Icons im Soft-Wrapper → contrast (nicht base)
-			'.has-contrast-background-color .has-tertiary-background-color .wp-block-gutenblock-pro-material-icon svg,',
-			'.has-contrast-background-color .has-tertiary-background-color .wp-block-gutenblock-pro-material-icon svg * {',
+			'.has-contrast-background-color .has-tertiary-background-color .wp-block-gutenblock-pro-material-icon:not(.has-explicit-icon-color) svg,',
+			'.has-contrast-background-color .has-tertiary-background-color .wp-block-gutenblock-pro-material-icon:not(.has-explicit-icon-color) svg * {',
 			'  fill: var(--wp--preset--color--contrast) !important;',
 			'}',
 

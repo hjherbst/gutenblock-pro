@@ -226,6 +226,36 @@ class GutenBlock_Pro_License {
 	}
 
 	/**
+	 * Check if a named license feature is present.
+	 *
+	 * @param string $feature Feature slug (e.g. agent-byok).
+	 * @return bool
+	 */
+	public function has_feature( $feature ) {
+		$features = get_option( self::OPTION_LICENSE_FEATURES, array() );
+		return is_array( $features ) && in_array( $feature, $features, true );
+	}
+
+	/**
+	 * Yearly BYOK license (Option B) — own OpenAI / Anthropic keys.
+	 *
+	 * @return bool
+	 */
+	public function has_byok_access() {
+		$home = home_url();
+		if ( false !== strpos( $home, '.local' ) || false !== strpos( $home, 'localhost' ) ) {
+			return true;
+		}
+		if ( ! $this->is_pro() ) {
+			return false;
+		}
+		if ( $this->has_feature( 'agent-byok' ) ) {
+			return true;
+		}
+		return get_option( self::OPTION_LICENSE_PLAN, '' ) === 'agent-annual';
+	}
+
+	/**
 	 * Check if user has Premium access (Pro Plus or Lifetime)
 	 * Premium access allows using premium patterns
 	 *

@@ -40,6 +40,8 @@ class GutenBlock_Pro_Consent_Settings {
 			'gtm_id'              => '',
 			'gtm_always'          => false,
 			'ga4_id'              => '',
+			'matomo_url'          => '',
+			'matomo_site_id'      => '',
 			'meta_pixel_id'       => '',
 			'google_ads_id'       => '',
 			'google_ads_label'    => '',
@@ -119,8 +121,10 @@ class GutenBlock_Pro_Consent_Settings {
 
 		$out['gtm_id']              = isset( $input['gtm_id'] ) ? $this->clean_id( $input['gtm_id'] ) : '';
 		$out['gtm_always']          = ! empty( $input['gtm_always'] );
-		$out['ga4_id']              = isset( $input['ga4_id'] ) ? $this->clean_id( $input['ga4_id'] ) : '';
-		$out['meta_pixel_id']       = isset( $input['meta_pixel_id'] ) ? $this->clean_id( $input['meta_pixel_id'] ) : '';
+		$out['ga4_id']         = isset( $input['ga4_id'] ) ? $this->clean_id( $input['ga4_id'] ) : '';
+		$out['matomo_url']     = isset( $input['matomo_url'] ) ? $this->clean_matomo_url( $input['matomo_url'] ) : '';
+		$out['matomo_site_id'] = isset( $input['matomo_site_id'] ) ? $this->clean_matomo_site_id( $input['matomo_site_id'] ) : '';
+		$out['meta_pixel_id']  = isset( $input['meta_pixel_id'] ) ? $this->clean_id( $input['meta_pixel_id'] ) : '';
 		$out['google_ads_id']       = isset( $input['google_ads_id'] ) ? $this->clean_id( $input['google_ads_id'] ) : '';
 		$out['google_ads_label']    = isset( $input['google_ads_label'] ) ? $this->clean_id( $input['google_ads_label'] ) : '';
 		$out['linkedin_partner_id'] = isset( $input['linkedin_partner_id'] ) ? $this->clean_id( $input['linkedin_partner_id'] ) : '';
@@ -142,6 +146,39 @@ class GutenBlock_Pro_Consent_Settings {
 	private function clean_id( $value ) {
 		$value = is_string( $value ) ? trim( $value ) : '';
 		return preg_replace( '/[^A-Za-z0-9\-_\/]/', '', $value );
+	}
+
+	/**
+	 * Normalize a Matomo instance URL (trailing slash, https only).
+	 * Taken from the Matomo snippet: var u="https://….matomo.cloud/";
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	private function clean_matomo_url( $value ) {
+		$value = is_string( $value ) ? trim( $value ) : '';
+		if ( '' === $value ) {
+			return '';
+		}
+		$value = esc_url_raw( $value );
+		if ( '' === $value ) {
+			return '';
+		}
+		return trailingslashit( $value );
+	}
+
+	/**
+	 * Matomo Site ID is numeric (from setSiteId in the Matomo snippet).
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	private function clean_matomo_site_id( $value ) {
+		$value = is_string( $value ) || is_numeric( $value ) ? trim( (string) $value ) : '';
+		if ( '' === $value || ! preg_match( '/^\d+$/', $value ) ) {
+			return '';
+		}
+		return $value;
 	}
 
 	/**
@@ -257,7 +294,7 @@ class GutenBlock_Pro_Consent_Settings {
 											value="<?php echo esc_attr( $s['gtm_id'] ); ?>"
 											placeholder="GTM-XXXXXXX" />
 										<p class="description">
-											<?php esc_html_e( 'Wenn gesetzt, wird nur der Tag Manager geladen. Die direkten IDs unten werden dann ignoriert.', 'gutenblock-pro' ); ?>
+											<?php esc_html_e( 'Wenn gesetzt, lädt das Banner den Tag Manager für Marketing-Tags. GA4- und Matomo-Felder unter „Statistik“ werden weiterhin direkt geladen; Marketing-IDs unten werden ignoriert.', 'gutenblock-pro' ); ?>
 										</p>
 									</td>
 								</tr>
@@ -286,7 +323,7 @@ class GutenBlock_Pro_Consent_Settings {
 									<?php esc_html_e( 'Direkte IDs', 'gutenblock-pro' ); ?>
 									<span class="gbp-consent-badge"><?php esc_html_e( 'Ohne GTM', 'gutenblock-pro' ); ?></span>
 								</h2>
-								<p class="gbp-consent-card__desc"><?php esc_html_e( 'Nur nutzen, wenn du keinen Tag Manager verwendest.', 'gutenblock-pro' ); ?></p>
+								<p class="gbp-consent-card__desc"><?php esc_html_e( 'GA4 und Matomo funktionieren auch parallel zu GTM. Marketing-IDs nur ohne GTM nutzen.', 'gutenblock-pro' ); ?></p>
 							</div>
 						</header>
 						<div class="gbp-consent-card__body">
@@ -302,7 +339,29 @@ class GutenBlock_Pro_Consent_Settings {
 											name="<?php echo esc_attr( self::OPTION_NAME ); ?>[ga4_id]"
 											value="<?php echo esc_attr( $s['ga4_id'] ); ?>"
 											placeholder="G-XXXXXXXXXX" />
-										<p class="description"><?php esc_html_e( 'Wird nach Einwilligung „Statistik“ geladen.', 'gutenblock-pro' ); ?></p>
+										<p class="description">
+											<?php esc_html_e( 'Wird nach Einwilligung „Statistik“ geladen. Bei gesetztem GTM wird GA4 zusätzlich direkt geladen, falls du die ID hier einträgst (GTM bleibt für andere Tags aktiv). Doppelte GA4-Tags im GTM vermeiden.', 'gutenblock-pro' ); ?>
+										</p>
+
+										<label for="gbp_consent_matomo_url" class="gbp-consent-sublabel"><?php esc_html_e( 'Matomo URL', 'gutenblock-pro' ); ?></label>
+										<input type="url" class="regular-text" id="gbp_consent_matomo_url"
+											name="<?php echo esc_attr( self::OPTION_NAME ); ?>[matomo_url]"
+											value="<?php echo esc_attr( $s['matomo_url'] ); ?>"
+											placeholder="https://dein-konto.matomo.cloud/" />
+
+										<label for="gbp_consent_matomo_site_id" class="gbp-consent-sublabel"><?php esc_html_e( 'Matomo Site-ID', 'gutenblock-pro' ); ?></label>
+										<input type="text" class="regular-text" id="gbp_consent_matomo_site_id"
+											name="<?php echo esc_attr( self::OPTION_NAME ); ?>[matomo_site_id]"
+											value="<?php echo esc_attr( $s['matomo_site_id'] ); ?>"
+											placeholder="1"
+											inputmode="numeric"
+											pattern="[0-9]*"
+											style="max-width: 8rem;" />
+										<p class="description">
+											<?php esc_html_e( 'Aus dem Matomo-Tracking-Code übernehmen – nicht das ganze Snippet einfügen. Die URL steht bei var u="…", die Site-ID bei setSiteId. Beide Felder sind nötig. Wird nach Einwilligung „Statistik“ geladen; manuelle Matomo-Snippets im Theme entfernen.', 'gutenblock-pro' ); ?>
+										</p>
+										<pre class="gbp-consent-code">var u="https://dein-konto.matomo.cloud/";
+_paq.push(['setSiteId', '1']);</pre>
 									</td>
 								</tr>
 								<tr>

@@ -7,9 +7,10 @@
  * GTM / GA4 / Meta / Google Ads / LinkedIn snippets are injected client-side
  * by assets/js/consent-manager.js once the matching category is granted.
  *
- * When a Google Tag Manager container is configured it is the only loader
- * (tags are managed inside GTM); the direct IDs are used only when GTM is
- * empty. Google Consent Mode v2 defaults are printed early (denied) so tags
+ * When Google Tag Manager is configured it loads marketing-related tags from
+ * the container; GA4 and Matomo URLs from settings still load on statistics
+ * consent so measurement IDs entered in the plugin are not silently dropped.
+ * Google Consent Mode v2 defaults are printed early (denied) so tags
  * fired through GTM respect consent from the first paint.
  *
  * @package GutenBlockPro
@@ -49,6 +50,7 @@ class GutenBlock_Pro_Consent_Manager {
 		$s = $this->settings;
 		return '' !== $s['gtm_id']
 			|| '' !== $s['ga4_id']
+			|| ( '' !== $s['matomo_url'] && '' !== $s['matomo_site_id'] )
 			|| '' !== $s['meta_pixel_id']
 			|| '' !== $s['google_ads_id']
 			|| '' !== $s['linkedin_partner_id'];
@@ -132,13 +134,17 @@ gtag('consent', 'default', {
 			// Load GTM before consent (it is cookieless without tags; tags still
 			// respect Consent Mode and only fire after opt-in).
 			'gtmAlways'   => $has_gtm && ! empty( $s['gtm_always'] ),
-			// Direct IDs only when GTM is not in use (avoids double counting).
-			'ga4Id'              => $has_gtm ? '' : $s['ga4_id'],
-			'metaPixelId'        => $has_gtm ? '' : $s['meta_pixel_id'],
-			'googleAdsId'        => $has_gtm ? '' : $s['google_ads_id'],
-			'googleAdsLabel'     => $has_gtm ? '' : $s['google_ads_label'],
-			'linkedinPartnerId'  => $has_gtm ? '' : $s['linkedin_partner_id'],
-			'strings'            => $strings,
+			// Marketing direct IDs only when GTM is not in use (avoids double counting).
+			// GA4 and Matomo stay available with GTM: many sites use GTM for Ads/Meta
+			// while GA4 / Matomo are configured here (GTM may not include them).
+			'ga4Id'             => $s['ga4_id'],
+			'matomoUrl'         => $s['matomo_url'],
+			'matomoSiteId'      => $s['matomo_site_id'],
+			'metaPixelId'       => $has_gtm ? '' : $s['meta_pixel_id'],
+			'googleAdsId'       => $has_gtm ? '' : $s['google_ads_id'],
+			'googleAdsLabel'    => $has_gtm ? '' : $s['google_ads_label'],
+			'linkedinPartnerId' => $has_gtm ? '' : $s['linkedin_partner_id'],
+			'strings'           => $strings,
 		);
 
 		return $config;

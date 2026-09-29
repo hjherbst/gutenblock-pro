@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: GutenBlock Plugin
+ * Plugin Name: GutenBlock FSE Agent
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
- * Description: Block patterns and Full Site Editor building blocks for WordPress — also acts as the import bridge for the GutenBlock SaaS website builder. Activate a GutenBlock Pro license to unlock premium sections and the higher AI token quota.
- * Version: 1.40.3
+ * Description: AI agent for the WordPress Full Site Editor — insert curated patterns and build pages from a prompt. Also acts as the import bridge for the GutenBlock website builder.
+ * Version: 1.41.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -13,9 +13,8 @@
  * Text Domain: gutenblock-pro
  * Domain Path: /languages
  *
- * Display name is "GutenBlock Plugin"; the technical slug, text-domain and
+ * Display name is "GutenBlock FSE Agent"; the technical slug, text-domain and
  * folder stay `gutenblock-pro` so existing installations keep getting updates.
- * "GutenBlock Pro" now refers exclusively to the paid license tier.
  *
  * @package GutenBlockPro
  */
@@ -25,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.40.3' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.41.0' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );
@@ -99,6 +98,8 @@ require_once GUTENBLOCK_PRO_PATH . 'inc/class-pattern-creator.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-license.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-generator.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-ai-settings.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-agent-credits.php';
+require_once GUTENBLOCK_PRO_PATH . 'inc/class-agent-proxy.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-features-page.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-admin-bar.php';
 require_once GUTENBLOCK_PRO_PATH . 'inc/class-container-forms.php';
@@ -219,8 +220,11 @@ function gutenblock_pro_init() {
 	// Initialize License System
 	GutenBlock_Pro_License::get_instance();
 
-	// Initialize AI Generator
+	// Initialize AI Generator (editor assets + remaining prompt REST)
 	GutenBlock_Pro_AI_Generator::get_instance();
+
+	// FSE Agent REST proxy
+	GutenBlock_Pro_Agent_Proxy::get_instance();
 
 	// Initialize Pattern Loader
 	$pattern_loader = new GutenBlock_Pro_Pattern_Loader();

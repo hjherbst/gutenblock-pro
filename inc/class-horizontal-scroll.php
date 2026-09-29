@@ -256,28 +256,65 @@ class GutenBlock_Pro_Horizontal_Scroll {
 .editor-styles-wrapper .gb-hscroll-wrapper.alignfull {
 	max-width: none;
 }
-.has-horizontal-scroll {
+/* Default hscroll (all viewports). Mobile-only uses a separate block below
+ * so desktop keeps core .wp-block-columns flex layout untouched.
+ * Use flex-basis + max-width (not only min-width): constrained inner content
+ * otherwise forces columns wider than the scrollport. */
+.has-horizontal-scroll:not(.is-hscroll-mobile-only) {
 	display: flex !important;
 	flex-wrap: nowrap !important;
 	overflow-x: auto;
 	scroll-snap-type: x mandatory;
 	-webkit-overflow-scrolling: touch;
 	scrollbar-width: none;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	min-width: 0;
 }
-.has-horizontal-scroll::-webkit-scrollbar { display: none; }
-.has-horizontal-scroll > .wp-block-column {
-	flex: 0 0 auto;
+.has-horizontal-scroll:not(.is-hscroll-mobile-only)::-webkit-scrollbar { display: none; }
+.has-horizontal-scroll:not(.is-hscroll-mobile-only) > .wp-block-column {
+	box-sizing: border-box;
+	flex: 0 0 calc((100% - var(--hscroll-peek, 0px)) / var(--hscroll-cols, 3));
+	width: calc((100% - var(--hscroll-peek, 0px)) / var(--hscroll-cols, 3));
+	max-width: calc((100% - var(--hscroll-peek, 0px)) / var(--hscroll-cols, 3));
+	min-width: 0;
 	scroll-snap-align: start;
-	min-width: calc((100% - var(--hscroll-peek, 0px)) / var(--hscroll-cols, 3));
 }
 @media (max-width: 781px) {
-	.has-horizontal-scroll > .wp-block-column {
-		min-width: calc((100% - var(--hscroll-peek-tablet, 0px)) / var(--hscroll-cols-tablet, 2));
+	.has-horizontal-scroll:not(.is-hscroll-mobile-only) > .wp-block-column {
+		flex-basis: calc((100% - var(--hscroll-peek-tablet, 0px)) / var(--hscroll-cols-tablet, 2));
+		width: calc((100% - var(--hscroll-peek-tablet, 0px)) / var(--hscroll-cols-tablet, 2));
+		max-width: calc((100% - var(--hscroll-peek-tablet, 0px)) / var(--hscroll-cols-tablet, 2));
 	}
 }
 @media (max-width: 600px) {
-	.has-horizontal-scroll > .wp-block-column {
-		min-width: calc((100% - var(--hscroll-peek-mobile, 0px)) / var(--hscroll-cols-mobile, 1));
+	.has-horizontal-scroll:not(.is-hscroll-mobile-only) > .wp-block-column {
+		flex-basis: calc((100% - var(--hscroll-peek-mobile, 0px)) / var(--hscroll-cols-mobile, 1));
+		width: calc((100% - var(--hscroll-peek-mobile, 0px)) / var(--hscroll-cols-mobile, 1));
+		max-width: calc((100% - var(--hscroll-peek-mobile, 0px)) / var(--hscroll-cols-mobile, 1));
+	}
+	/* Mobile-only: enable scroll behaviour only on small screens */
+	.has-horizontal-scroll.is-hscroll-mobile-only {
+		display: flex !important;
+		flex-wrap: nowrap !important;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+		min-width: 0;
+	}
+	.has-horizontal-scroll.is-hscroll-mobile-only::-webkit-scrollbar { display: none; }
+	.has-horizontal-scroll.is-hscroll-mobile-only > .wp-block-column {
+		box-sizing: border-box;
+		flex: 0 0 calc((100% - var(--hscroll-peek-mobile, 0px)) / var(--hscroll-cols-mobile, 1));
+		width: calc((100% - var(--hscroll-peek-mobile, 0px)) / var(--hscroll-cols-mobile, 1));
+		max-width: calc((100% - var(--hscroll-peek-mobile, 0px)) / var(--hscroll-cols-mobile, 1));
+		min-width: 0;
+		scroll-snap-align: start;
 	}
 }
 .gb-hscroll-nav {
@@ -339,18 +376,8 @@ class GutenBlock_Pro_Horizontal_Scroll {
 .gb-hscroll-prev:hover, .gb-hscroll-next:hover {
 	background: rgba(0,0,0,0.05);
 }
+/* Hide nav on viewports where mobile-only scroll is inactive */
 @media (min-width: 601px) {
-	.has-horizontal-scroll.is-hscroll-mobile-only {
-		display: revert !important;
-		flex-wrap: revert !important;
-		overflow-x: revert;
-		scroll-snap-type: revert;
-	}
-	.has-horizontal-scroll.is-hscroll-mobile-only > .wp-block-column {
-		flex: revert;
-		scroll-snap-align: revert;
-		min-width: revert;
-	}
 	.gb-hscroll-wrapper:has(.is-hscroll-mobile-only) .gb-hscroll-nav {
 		display: none;
 	}

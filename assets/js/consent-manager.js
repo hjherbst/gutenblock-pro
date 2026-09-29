@@ -21,7 +21,7 @@
 	}
 
 	var DENIED = { analytics: false, marketing: false };
-	var loaded = { analytics: false, marketing: false, gtm: false };
+	var loaded = { analytics: false, marketing: false, gtm: false, matomo: false };
 
 	// ── Cookie helpers ──────────────────────────────────────────────────────
 
@@ -122,6 +122,38 @@
 		gtag('config', cfg.ga4Id);
 	}
 
+	function loadMatomo() {
+		if (loaded.matomo || !cfg.matomoUrl || !cfg.matomoSiteId) {
+			return;
+		}
+		loaded.matomo = true;
+
+		var u = cfg.matomoUrl;
+		if (u.charAt(u.length - 1) !== '/') {
+			u += '/';
+		}
+
+		var _paq = (window._paq = window._paq || []);
+		_paq.push(['trackPageView']);
+		_paq.push(['enableLinkTracking']);
+		_paq.push(['setTrackerUrl', u + 'matomo.php']);
+		_paq.push(['setSiteId', String(cfg.matomoSiteId)]);
+
+		// Matomo Cloud serves matomo.js from cdn.matomo.cloud; self-hosted
+		// installs use the instance URL (same pattern as Matomo's snippet).
+		var scriptSrc = u + 'matomo.js';
+		try {
+			var host = new URL(u).hostname;
+			if (host.indexOf('.matomo.cloud') !== -1) {
+				scriptSrc =
+					'https://cdn.matomo.cloud/' + host + '/matomo.js';
+			}
+		} catch (e) {
+			/* keep instance URL */
+		}
+		injectScript(scriptSrc);
+	}
+
 	function loadMetaPixel() {
 		if (!cfg.metaPixelId) {
 			return;
@@ -186,14 +218,28 @@
 		injectScript('https://snap.licdn.com/li.lms-analytics/insight.min.js');
 	}
 
+	function notifyConsentChange(state) {
+		try {
+			document.dispatchEvent(
+				new CustomEvent('gbp-consent-change', { detail: state })
+			);
+		} catch (e) {
+			/* IE11 / very old browsers */
+		}
+	}
+
 	function applyConsent(state) {
 		updateConsentMode(state);
+		notifyConsentChange(state);
 
-		// GTM path: a single container manages all tags. It is loaded once any
-		// category is granted; tag firing inside GTM respects Consent Mode.
+		// GTM path: container for marketing (and optional tags in GTM UI).
 		if (cfg.useGtm) {
 			if (state.analytics || state.marketing) {
 				loadGtm();
+			}
+			if (state.analytics) {
+				loadGa4();
+				loadMatomo();
 			}
 			return;
 		}
@@ -201,6 +247,7 @@
 		// Direct path.
 		if (state.analytics) {
 			loadGa4();
+			loadMatomo();
 		}
 		if (state.marketing) {
 			loadMetaPixel();

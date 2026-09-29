@@ -100,6 +100,7 @@ class GutenBlock_Pro_AI_Generator {
 		wp_localize_script( 'gutenblock-pro-ai-editor', 'gutenblockProConfig', array(
 			'ajaxUrl'            => admin_url( 'admin-ajax.php' ),
 			'restUrl'            => rest_url( 'gutenblock-pro/v1/' ),
+			'pluginUrl'          => GUTENBLOCK_PRO_URL,
 			'nonce'              => wp_create_nonce( 'wp_rest' ),
 			'isPro'              => $license->is_pro(),
 			'hasPremium'         => $license->has_premium_access(),
@@ -166,19 +167,10 @@ class GutenBlock_Pro_AI_Generator {
 	 * Register REST API endpoints
 	 */
 	public function register_api_endpoints() {
-		// Generate text
+		// Generate text (legacy, kept for pattern-creator tooling)
 		register_rest_route( 'gutenblock-pro/v1', '/ai/generate', array(
 			'methods'             => 'POST',
 			'callback'            => array( $this, 'api_generate_text' ),
-			'permission_callback' => function() {
-				return current_user_can( 'edit_posts' );
-			},
-		) );
-
-		// Generate group content (multiple fields)
-		register_rest_route( 'gutenblock-pro/v1', '/ai/generate-group', array(
-			'methods'             => 'POST',
-			'callback'            => array( $this, 'api_generate_group' ),
 			'permission_callback' => function() {
 				return current_user_can( 'edit_posts' );
 			},

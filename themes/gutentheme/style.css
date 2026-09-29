@@ -52,35 +52,32 @@ button,
  * scroll.js toggles .scroll-up / .scroll-down on <body> and adds
  * .scroll-reveal on <html>. Targets the template-part header wrapper
  * (tagName "header") and any block carrying the .site-header class.
+ * Applies on all viewports so mobile content is not covered while scrolling down.
  */
 
-@media (min-width: 600px) {
-
-	header.wp-block-template-part,
-	.site-header {
-		position: sticky;
-		top: 0;
-		z-index: 1000;
-	}
-
-	.scroll-reveal header.wp-block-template-part,
-	.scroll-reveal .site-header {
-		transition: transform var(--gt-motion-slow) var(--gt-motion-ease);
-	}
-
-	.scroll-reveal body.scroll-down header.wp-block-template-part,
-	.scroll-reveal body.scroll-down .site-header {
-		transform: translateY(-100%);
-	}
-
-	.scroll-reveal body.scroll-up header.wp-block-template-part,
-	.scroll-reveal body.scroll-up .site-header {
-		transform: translateY(0);
-	}
-
+header.wp-block-template-part,
+.site-header {
+	position: sticky;
+	top: 0;
+	z-index: 1000;
 }
 
-@media (min-width: 600px) and (prefers-reduced-motion: reduce) {
+.scroll-reveal header.wp-block-template-part,
+.scroll-reveal .site-header {
+	transition: transform var(--gt-motion-slow) var(--gt-motion-ease);
+}
+
+.scroll-reveal body.scroll-down header.wp-block-template-part,
+.scroll-reveal body.scroll-down .site-header {
+	transform: translateY(-100%);
+}
+
+.scroll-reveal body.scroll-up header.wp-block-template-part,
+.scroll-reveal body.scroll-up .site-header {
+	transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
 
 	.scroll-reveal header.wp-block-template-part,
 	.scroll-reveal .site-header {

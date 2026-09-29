@@ -309,14 +309,9 @@ class GutenBlock_Pro_Pattern_Loader {
 		if ( isset( $parsed['type'] ) && $parsed['type'] === 'page' ) {
 			// Pages go to "GutenBlock Pages" category
 			$parsed['categories'] = array( 'gutenblock-pro-pages', 'gutenblock-pro' );
-			// Page-type patterns surface in WordPress' "Choose a pattern"
-			// modal that appears when creating a new page (or any CPT that
-			// supports post-content). Without `core/post-content` in
-			// blockTypes the modal would offer no patterns at all for
-			// custom post types like `gbp_content`.
-			if ( ! in_array( 'core/post-content', $parsed['blockTypes'], true ) ) {
-				$parsed['blockTypes'][] = 'core/post-content';
-			}
+			// Do not add core/post-content: that registers the pattern for WordPress'
+			// "Choose a pattern" modal on new pages. Users build pages via the Agent
+			// or the GutenBlock pattern modal instead.
 		} else {
 			// Sections go to "GutenBlock Sections" with optional subgroup
 			$parsed['categories'] = array( 'gutenblock-pro-sections', 'gutenblock-pro' );

@@ -123,6 +123,9 @@ class GutenBlock_Pro_Material_Icons {
 			? 'var(--wp--preset--color--' . esc_attr( $color_slug ) . ')'
 			: esc_attr( $color );
 
+		// When the block has an explicit color, tone-inheritance must not force currentColor.
+		$explicit_color_class = ( $color_slug !== '' || $color !== '' ) ? ' has-explicit-icon-color' : '';
+
 		$size_attr = $size . 'px';
 
 		// Block render_callback skips the WP block-supports filter for `align`,
@@ -144,7 +147,7 @@ class GutenBlock_Pro_Material_Icons {
 			if ( $markup !== '' ) {
 				$markup = $this->sanitize_svg_markup( $markup );
 				$markup = $this->apply_svg_size_and_fill( $markup, $size_attr, $fill );
-				$inner  = '<span class="wp-block-gutenblock-pro-material-icon wp-block-gutenblock-pro-material-icon--custom' . esc_attr( $align_class ) . '" style="' . esc_attr( $display_css ) . ' width:' . esc_attr( $size_attr ) . '; height:' . esc_attr( $size_attr ) . ';">' . $markup . '</span>';
+				$inner  = '<span class="wp-block-gutenblock-pro-material-icon wp-block-gutenblock-pro-material-icon--custom' . esc_attr( $explicit_color_class ) . esc_attr( $align_class ) . '" style="' . esc_attr( $display_css ) . ' width:' . esc_attr( $size_attr ) . '; height:' . esc_attr( $size_attr ) . ';">' . $markup . '</span>';
 				return $this->wrap_with_link( $inner, $url, $link_target );
 			}
 			return '';
@@ -171,7 +174,7 @@ class GutenBlock_Pro_Material_Icons {
 		$aria = $icon ? ' aria-hidden="false" role="img" aria-label="' . esc_attr( str_replace( '_', ' ', $icon ) ) . '"' : ' aria-hidden="true"';
 
 		$inner = sprintf(
-			'<span class="wp-block-gutenblock-pro-material-icon%6$s" style="%7$s width:%1$s; height:%1$s;">' .
+			'<span class="wp-block-gutenblock-pro-material-icon%8$s%6$s" style="%7$s width:%1$s; height:%1$s;">' .
 			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="%2$s" width="%1$s" height="%1$s" fill="%3$s"%4$s><path d="%5$s"/></svg>' .
 			'</span>',
 			esc_attr( $size_attr ),
@@ -180,7 +183,8 @@ class GutenBlock_Pro_Material_Icons {
 			$aria,
 			esc_attr( $path ),
 			esc_attr( $align_class ),
-			esc_attr( $display_css )
+			esc_attr( $display_css ),
+			esc_attr( $explicit_color_class )
 		);
 		return $this->wrap_with_link( $inner, $url, $link_target );
 	}

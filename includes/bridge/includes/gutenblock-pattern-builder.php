@@ -78,6 +78,7 @@ function gutenblock_bridge_rest_get_patterns() {
 			'description'    => wp_strip_all_tags( (string) $desc ),
 			'ai_hint'        => isset( $p['ai_hint'] ) ? (string) $p['ai_hint'] : '',
 			'content_fields' => $content_fields,
+			'classes'        => gutenblock_bridge_extract_pattern_classes( (string) $slug ),
 			'has_style'      => ! empty( $p['has_style'] ),
 			'tones'          => $tones,
 		);
@@ -129,6 +130,31 @@ function gutenblock_bridge_extract_pattern_content_fields( string $slug ): array
 	);
 
 	return $ids;
+}
+
+/**
+ * Distinctive CSS classes from a pattern (section wrapper, pattern class, button styles).
+ *
+ * @param string $slug Pattern slug.
+ * @return string[]
+ */
+function gutenblock_bridge_extract_pattern_classes( string $slug ): array {
+	if ( '' === $slug || ! defined( 'GUTENBLOCK_PRO_PATTERNS_PATH' ) ) {
+		return array();
+	}
+	$html_path = trailingslashit( GUTENBLOCK_PRO_PATTERNS_PATH ) . sanitize_title( $slug ) . '/content.html';
+	if ( ! is_file( $html_path ) ) {
+		return array();
+	}
+	$html = (string) file_get_contents( $html_path );
+	if ( '' === $html ) {
+		return array();
+	}
+	if ( ! preg_match_all( '/\b(gb-(?:section|pattern)-[a-z0-9-]+|is-style-[a-z0-9-]+)\b/i', $html, $m ) ) {
+		return array();
+	}
+	$classes = array_values( array_unique( array_map( 'strtolower', $m[1] ) ) );
+	return array_slice( $classes, 0, 12 );
 }
 
 /**

@@ -28,7 +28,7 @@
 		}
 	);
 
-	// ── Inspector-Controls (Sidebar) ──────────────────────────────────────────
+	// ── Additive Sidebar only – never touch Core Layout / toolbar controls ───
 	addFilter(
 		'editor.BlockEdit',
 		'gutenblock-pro/grid-responsive-control',
@@ -53,7 +53,6 @@
 					createElement(
 						InspectorControls,
 						{},
-						// ── Responsive Spalten ────────────────────────────────────────────
 						createElement(
 							PanelBody,
 							{ title: __( 'Responsive Spalten', 'gutenblock-pro' ), initialOpen: true },
@@ -85,9 +84,7 @@
 		}, 'withGridResponsiveControl' )
 	);
 
-	// ── Editor-Vorschau: align-items: start im Block-Wrapper ─────────────────
-	// Der PHP render_block-Filter greift nur im Frontend.
-	// Für den Editor (inkl. FSE) wenden wir den Style via BlockListBlock an.
+	// ── Editor preview: align-items start ────────────────────────────────────
 	addFilter(
 		'editor.BlockListBlock',
 		'gutenblock-pro/grid-align-top-editor',
@@ -103,7 +100,6 @@
 				if ( ! props.attributes[ ATTR_ALIGN_TOP ] ) {
 					return createElement( BlockListBlock, props );
 				}
-				// Inline-Style auf den Block-Wrapper anwenden
 				var wrapperProps = Object.assign(
 					{},
 					props.wrapperProps,

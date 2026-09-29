@@ -345,6 +345,11 @@ class GutenBlock_Pro_I18n_Fallback {
 			'Custom Prompts speichern'                                         => 'Save custom prompts',
 			'Custom Prompts erfolgreich gespeichert'                           => 'Custom prompts saved successfully',
 			'Prompts erfolgreich aktualisiert'                                 => 'Prompts updated successfully',
+			'Sieht gut aus'                                                    => 'Looks good',
+			'Anders beschreiben'                                               => 'Describe it differently',
+			'Fehlende Texte werden ergänzt…'                                   => 'Completing missing copy…',
+			'Gespeichert. Du kannst deine Angaben jederzeit unter GutenBlock → Prompts anpassen.'
+				=> 'Saved. You can update this anytime under GutenBlock → Prompts.',
 			'Token-Verbrauch'                                                  => 'Token usage',
 			'Tokens'                                                           => 'Tokens',
 			'Verbleibend: %1$s Tokens. Reset: %2$s'                            => 'Remaining: %1$s tokens. Reset: %2$s',
@@ -359,6 +364,29 @@ class GutenBlock_Pro_I18n_Fallback {
 			'Alle Premium-Patterns freigeschalten'                             => 'All premium patterns unlocked',
 			'Jetzt kaufen'                                                     => 'Buy now',
 			'Noch keine Lizenz? %s'                                            => 'No license yet? %s',
+			'Hast du bereits einen Lizenzschlüssel, trägst du ihn hier ein. Agent-Credits kaufst du oben im Paket.'
+				=> 'If you already have a license key, enter it here. Buy agent credits in the packs above.',
+			'Mit der Jahreslizenz nutzt du eigene OpenAI- oder Anthropic-Keys statt Prepaid-Credits.'
+				=> 'With the annual license you use your own OpenAI or Anthropic keys instead of prepaid credits.',
+			'Agent-Credits'                                                    => 'Agent credits',
+			'1 Pattern inkl. Textgenerierung = %1$d Credits. Eine Seite mit ~8 Sections ≈ %2$d Credits. Du startest mit %3$d Test-Credits.'
+				=> '1 pattern including copy = %1$d credits. A page with ~8 sections ≈ %2$d credits. You start with %3$d trial credits.',
+			'%s Credits'                                                       => '%s credits',
+			'Paket kaufen'                                                     => 'Buy pack',
+			'Jetzt kaufen'                                                     => 'Buy now',
+			'Credits kaufen'                                                   => 'Buy credits',
+			'Nur Administratoren können Credits kaufen.'                       => 'Only administrators can buy credits.',
+			'Kauf nicht möglich'                                               => 'Purchase not possible',
+			'Zurück'                                                           => 'Back',
+			'Kein Paket ausgewählt.'                                           => 'No pack selected.',
+			'GutenBlock ist gerade nicht erreichbar. Bitte in ein paar Minuten erneut versuchen.' => 'GutenBlock is currently unreachable. Please try again in a few minutes.',
+			'Checkout konnte nicht gestartet werden.'                          => 'Checkout could not be started.',
+			'Dein Credit-Guthaben ist aufgebraucht. Kaufe ein Paket — Bezahlung in wenigen Klicks, ohne Lizenzschlüssel.' => 'Your credits are used up. Buy a pack — a few clicks, no license key needed.',
+			'Deine Test-Credits sind aufgebraucht. Kaufe ein Credit-Paket — Bezahlung in wenigen Klicks, ohne Lizenzschlüssel.' => 'Your trial credits are used up. Buy a credit pack — a few clicks, no license key needed.',
+			'Demnächst kaufbar'                                                => 'Coming soon',
+			'Credit-Pakete konnten gerade nicht geladen werden. Bitte später erneut öffnen.'
+				=> 'Credit packs could not be loaded just now. Please try again later.',
+			'verbraucht'                                                       => 'used',
 
 			// License page (gutenblock-pro-license) ------------------------
 			'Lizenz'                                                           => 'License',
