@@ -391,9 +391,6 @@ class GutenBlock_Pro_Agent_Proxy {
 		$can_chat = false;
 		$reason   = '';
 		$code     = '';
-		$pack     = $byok ? '' : GutenBlock_Pro_Agent_Credits::recommended_pack_slug();
-		$buy_url  = ( $pack && current_user_can( 'manage_options' ) ) ? GutenBlock_Pro_Agent_Credits::buy_url( $pack ) : '';
-
 		if ( $byok ) {
 			$can_chat = true;
 		} elseif ( $has_key && is_int( $saas_bal ) ) {
@@ -438,8 +435,8 @@ class GutenBlock_Pro_Agent_Proxy {
 				'balance'         => is_int( $saas_bal ) ? $saas_bal : $credits['balance'],
 				'balanceSource'   => $source,
 				'upgradeUrl'      => 'https://app.gutenblock.com/licenses',
-				'creditsShopUrl'  => admin_url( 'admin.php?page=gutenblock-pro-license' ),
-				'buyUrl'          => $buy_url,
+				// Pack picker on the license page; the actual Stripe redirect happens after choosing a pack.
+				'creditsShopUrl'  => admin_url( 'admin.php?page=gutenblock-pro-license#gb-credit-packs' ),
 				'settingsUrl'     => admin_url( 'admin.php?page=gutenblock-pro-ai' ),
 				'siteLanguage'    => self::site_language(),
 				'siteContext'     => (string) get_option( 'gutenblock_pro_ai_context', '' ),

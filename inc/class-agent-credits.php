@@ -197,40 +197,25 @@ class GutenBlock_Pro_Agent_Credits {
 	 * One-click buy link for a pack: hits admin-post, which asks the SaaS for a
 	 * Stripe Checkout URL bound to this site and redirects there.
 	 *
+	 * Returns a raw URL (with `&`, not `&amp;`) so it is safe for JSON → React
+	 * hrefs. Do not use wp_nonce_url() here: that applies esc_html() and breaks
+	 * query args when the string is put into editor JS. Escape with esc_url()
+	 * when printing into HTML attributes.
+	 *
 	 * @param string $slug       Pack slug.
 	 * @param string $return_url Where the "Back to WordPress" button on the thank-you page leads.
 	 * @return string
 	 */
 	public static function buy_url( $slug, $return_url = '' ) {
 		$args = array(
-			'action' => 'gutenblock_buy_credits',
-			'pack'   => sanitize_title( (string) $slug ),
+			'action'   => 'gutenblock_buy_credits',
+			'pack'     => sanitize_title( (string) $slug ),
+			'_wpnonce' => wp_create_nonce( 'gutenblock_buy_credits' ),
 		);
 		if ( '' !== $return_url ) {
 			$args['return'] = $return_url;
 		}
-		return wp_nonce_url( add_query_arg( $args, admin_url( 'admin-post.php' ) ), 'gutenblock_buy_credits' );
-	}
-
-	/**
-	 * The pack to push in the editor when credits run out (highlighted, else first buyable).
-	 *
-	 * @return string Pack slug or ''.
-	 */
-	public static function recommended_pack_slug() {
-		$fallback = '';
-		foreach ( self::get_credit_packs() as $pack ) {
-			if ( empty( $pack['buyable'] ) || empty( $pack['slug'] ) ) {
-				continue;
-			}
-			if ( ! empty( $pack['highlighted'] ) ) {
-				return $pack['slug'];
-			}
-			if ( '' === $fallback ) {
-				$fallback = $pack['slug'];
-			}
-		}
-		return $fallback;
+		return add_query_arg( $args, admin_url( 'admin-post.php' ) );
 	}
 
 	/**

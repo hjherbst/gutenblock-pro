@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.41.1] – 2026-09-29
+
+- Agent panel "Buy credits" opens the license page pack picker first; Stripe Checkout starts after choosing a pack (no direct jump to a recommended pack).
+- Fix: credit buy URLs built with a raw query string so React `href` receives unescaped `&` (wp_nonce_url HTML-escaped params broke checkout).
+
 ## [1.41.0] – 2026-09-29
 
 - **GutenBlock FSE Agent:** left-docked chat in the block / site editor. Describe a page or section; the agent picks a catalog pattern, fills copy, and inserts blocks. Native Undo and post revisions apply.

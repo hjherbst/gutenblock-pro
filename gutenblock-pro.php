@@ -3,7 +3,7 @@
  * Plugin Name: GutenBlock FSE Agent
  * Plugin URI: https://github.com/hjherbst/gutenblock-pro
  * Description: AI agent for the WordPress Full Site Editor — insert curated patterns and build pages from a prompt. Also acts as the import bridge for the GutenBlock website builder.
- * Version: 1.41.0
+ * Version: 1.41.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Hans-Jürgen Herbst
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants
-define( 'GUTENBLOCK_PRO_VERSION', '1.41.0' );
+define( 'GUTENBLOCK_PRO_VERSION', '1.41.1' );
 define( 'GUTENBLOCK_PRO_FILE', __FILE__ );
 define( 'GUTENBLOCK_PRO_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GUTENBLOCK_PRO_URL', plugin_dir_url( __FILE__ ) );

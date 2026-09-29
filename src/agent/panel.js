@@ -584,9 +584,8 @@ export function AgentPanel({ onClose }) {
 	const balance = typeof status?.balance === 'number' ? status.balance : credits?.balance;
 	const used = credits?.used ?? 0;
 	const costPerPattern = credits?.costPerPattern ?? 10;
-	// One-click Stripe checkout for the recommended pack; falls back to the packs page (e.g. non-admins).
-	const buyUrl = status?.buyUrl || '';
-	const shopUrl = buyUrl || status?.creditsShopUrl || status?.upgradeUrl || '';
+	// Opens the pack picker on the license page; Stripe starts once a pack is chosen there.
+	const shopUrl = status?.creditsShopUrl || status?.upgradeUrl || '';
 	const settingsUrl = status?.settingsUrl;
 	const canChat = status?.canChat !== false;
 	const confirmLabel = status?.ui?.confirm || __('Sieht gut aus', 'gutenblock-pro');

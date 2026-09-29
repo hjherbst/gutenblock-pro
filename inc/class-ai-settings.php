@@ -452,7 +452,7 @@ Responses für Titel, CTA und Listen nicht mit Punkt am Ende.';
 		$cost    = isset( $catalog['costPerPattern'] ) ? (int) $catalog['costPerPattern'] : (int) $credits['costPerPattern'];
 		$trial   = isset( $catalog['trialCredits'] ) ? (int) $catalog['trialCredits'] : (int) $credits['trialTotal'];
 		?>
-		<div class="gb-settings-section">
+		<div class="gb-settings-section" id="gb-credit-packs">
 			<h2><?php esc_html_e( 'Agent-Credits', 'gutenblock-pro' ); ?></h2>
 			<p class="description">
 				<?php
