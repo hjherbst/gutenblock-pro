@@ -7,12 +7,14 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
-## [1.41.0] – 2026-08-18
+## [1.41.0] – 2026-09-29
 
 - **GutenBlock FSE Agent:** left-docked chat in the block / site editor. Describe a page or section; the agent picks a catalog pattern, fills copy, and inserts blocks. Native Undo and post revisions apply.
 - Two billing modes (managed at gutenblock.com): prepaid pattern credits via the SaaS API, or a yearly license with your own OpenAI / Anthropic keys.
 - One-click credit purchase: "Buy credits" in the agent panel and on the license page opens Stripe Checkout bound to your site — no account, no license key. Credits appear automatically after payment.
 - Removed the AI text controls from the block inspector (right sidebar). Prompt settings remain under GutenBlock → Prompts.
+- **Tracking & Consent:** GA4 Measurement-ID is loaded after statistics consent even when GTM is configured (was previously dropped, so GA saw no traffic when only GTM was set).
+- **Matomo:** classic tracking via Matomo URL + Site-ID fields (Matomo Cloud and self-hosted); loaded after statistics consent. Remove duplicate theme snippets to avoid double counting.
 
 ## [1.40.3] – 2026-07-28
 
