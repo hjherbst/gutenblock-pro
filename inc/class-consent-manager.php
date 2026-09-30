@@ -39,6 +39,43 @@ class GutenBlock_Pro_Consent_Manager {
 		// Consent Mode defaults must run before any tag → very early in <head>.
 		add_action( 'wp_head', array( $this, 'print_consent_mode_defaults' ), 1 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+		add_action( 'wp_footer', array( $this, 'print_matomo_snippet' ), 5 );
+	}
+
+	/**
+	 * Print the Matomo tracking snippet as inert text/plain.
+	 *
+	 * Browsers never execute it, so nothing is loaded or sent before consent
+	 * (the real tracker is injected by consent-manager.js after "Statistik").
+	 * It only exists so Matomo's setup check, which scans the page HTML for the
+	 * tracking code, finds it and stops reporting "snippet not installed".
+	 */
+	public function print_matomo_snippet() {
+		$s = $this->settings;
+		if ( '' === $s['matomo_url'] || '' === $s['matomo_site_id'] ) {
+			return;
+		}
+
+		$base = trailingslashit( $s['matomo_url'] );
+		$host = wp_parse_url( $base, PHP_URL_HOST );
+		// Same source logic as consent-manager.js (Matomo Cloud serves matomo.js from its CDN).
+		$src = ( $host && false !== strpos( $host, '.matomo.cloud' ) )
+			? 'https://cdn.matomo.cloud/' . $host . '/matomo.js'
+			: $base . 'matomo.js';
+		?>
+<script type="text/plain" id="gbp-matomo-snippet" data-gbp-consent="analytics">
+var _paq = window._paq = window._paq || [];
+_paq.push(['trackPageView']);
+_paq.push(['enableLinkTracking']);
+(function() {
+	var u = "<?php echo esc_js( $base ); ?>";
+	_paq.push(['setTrackerUrl', u + 'matomo.php']);
+	_paq.push(['setSiteId', '<?php echo esc_js( (string) absint( $s['matomo_site_id'] ) ); ?>']);
+	var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+	g.async = true; g.src = "<?php echo esc_js( $src ); ?>"; s.parentNode.insertBefore(g, s);
+})();
+</script>
+		<?php
 	}
 
 	/**

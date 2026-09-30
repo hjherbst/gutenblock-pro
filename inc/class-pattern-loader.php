@@ -436,9 +436,6 @@ class GutenBlock_Pro_Pattern_Loader {
 			$content = GutenBlock_Pro_Tone_Injector::inject( $content, $tone );
 		}
 
-		// Check if pattern is premium
-		$is_premium = isset( $pattern['premium'] ) && $pattern['premium'] === true;
-
 		// CSS class marker for asset detection
 		// Tone variants keep the base slug class so their styles are loaded.
 		$base_slug = $pattern['slug'];
@@ -453,10 +450,6 @@ class GutenBlock_Pro_Pattern_Loader {
 			$content,
 			1
 		);
-
-		if ( $is_premium ) {
-			error_log( '[GutenBlock Pro] Registered premium pattern: ' . $slug );
-		}
 
 		// Titel um Ton-Label ergänzen
 		$title = $pattern['title'];

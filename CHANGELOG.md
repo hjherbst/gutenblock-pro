@@ -7,6 +7,12 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.41.2] – 2026-09-30
+
+- Fix: remove `error_log` noise when registering premium patterns — it polluted Matomo archive API JSON responses and broke report archiving.
+- Matomo setup check: print the tracker snippet as inert `text/plain` in the footer so Matomo finds it in page HTML; real tracking still loads only after statistics consent.
+- `carousel-v1` is no longer a premium-only pattern.
+
 ## [1.41.1] – 2026-09-29
 
 - Agent panel "Buy credits" opens the license page pack picker first; Stripe Checkout starts after choosing a pack (no direct jump to a recommended pack).

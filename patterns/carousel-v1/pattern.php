@@ -20,7 +20,7 @@ return array (
     3 => 'galery',
   ),
   'content' => '',
-  'premium' => true,
+  'premium' => false,
   'ai_hint' => 'Single-column layout; no container background; header H2 and paragraph above a row of five equal columns; each column contains a content image; no CTAs or extra media.',
   'content_fields' => 
   array (
