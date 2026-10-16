@@ -1477,6 +1477,12 @@ class GutenBlock_Pro_Admin_Page {
 		</html>
 		<?php
 		$html = ob_get_clean();
+		// Strip scheme/host from same-origin asset URLs (plugin images, wp-block-library
+		// CSS/JS from wp_print_styles, etc.) so the static preview cache stays portable
+		// across domain migrations (localhost → production).
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$html = GutenBlock_Pro_Pattern_Loader::make_same_origin_urls_root_relative( $html );
+		}
 		set_transient( $cache_key, $html, HOUR_IN_SECONDS );
 
 		// Persist a static copy in uploads/ so subsequent iframe loads bypass the
@@ -1645,7 +1651,11 @@ if ( $block_support_styles ) {
 </body>
 </html>
 <?php
-		return (string) ob_get_clean();
+		$html = (string) ob_get_clean();
+		if ( class_exists( 'GutenBlock_Pro_Pattern_Loader' ) ) {
+			$html = GutenBlock_Pro_Pattern_Loader::make_same_origin_urls_root_relative( $html );
+		}
+		return $html;
 	}
 
 	/**

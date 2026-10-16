@@ -7,6 +7,10 @@ All notable changes to this project are documented here. The format follows
 The full per-release notes (with build artifacts) live on the
 [GitHub Releases page](https://github.com/hjherbst/gutenblock-pro/releases).
 
+## [1.41.3] – 2026-10-16
+
+- Fix: pattern preview HTML (admin + FSE modal) no longer bakes absolute site URLs into the static preview cache. Plugin images, CSS and JS use root-relative paths so previews keep working after domain migrations (e.g. localhost → production). Clear `uploads/gutenblock-pro/preview-cache/` after updating if old cached files remain.
+
 ## [1.41.2] – 2026-09-30
 
 - Fix: remove `error_log` noise when registering premium patterns — it polluted Matomo archive API JSON responses and broke report archiving.

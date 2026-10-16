@@ -481,6 +481,39 @@ class GutenBlock_Pro_Pattern_Loader {
 	}
 
 	/**
+	 * Absolute plugin base URL for the current install (scheme + host + path).
+	 *
+	 * @return string Empty string when unavailable.
+	 */
+	public static function plugin_asset_absolute_base() {
+		if ( defined( 'GUTENBLOCK_PRO_URL' ) ) {
+			return rtrim( GUTENBLOCK_PRO_URL, '/' );
+		}
+		if ( defined( 'GUTENBLOCK_PRO_FILE' ) && function_exists( 'plugins_url' ) ) {
+			return rtrim( plugins_url( '', GUTENBLOCK_PRO_FILE ), '/' );
+		}
+		return '';
+	}
+
+	/**
+	 * Root-relative plugin base path (no scheme/host), e.g.
+	 * `/wp-content/plugins/gutenblock-pro` or `/subdir/wp-content/plugins/gutenblock-pro`.
+	 *
+	 * Prefer this for pattern markup and static preview HTML so caches/backups
+	 * remain portable across domains (localhost → production).
+	 *
+	 * @return string
+	 */
+	public static function plugin_asset_root_relative_base() {
+		$abs  = self::plugin_asset_absolute_base();
+		$path = $abs !== '' ? wp_parse_url( $abs, PHP_URL_PATH ) : '';
+		if ( is_string( $path ) && $path !== '' ) {
+			return untrailingslashit( $path );
+		}
+		return '/wp-content/plugins/gutenblock-pro';
+	}
+
+	/**
 	 * Re-hostet alle absoluten URLs auf Plugin-Assets (`/wp-content/plugins/gutenblock-pro/...`)
 	 * auf die aktuelle Plugin-Installation.
 	 *
@@ -491,30 +524,28 @@ class GutenBlock_Pro_Pattern_Loader {
 	 * Plugin-Pfad der lokalen WP-Installation eingesetzt wird – egal, welche Host-Domain
 	 * im Quelldokument steht.
 	 *
-	 * Erkennt auch den Platzhalter `__PLUGIN_URL__` (für künftige host-agnostische
-	 * Pattern-Files).
+	 * Erkennt auch den Platzhalter `__PLUGIN_URL__`.
 	 *
-	 * Idempotent: Auf der Ursprungs-Instanz selbst ist der Replace ein No-op.
+	 * Default ist **root-relative** (`/wp-content/plugins/...`), damit Pattern-Markup und
+	 * Preview-Caches domain-agnostisch bleiben. Absolute URLs nur bei `$root_relative = false`.
+	 *
+	 * Idempotent: Auf der Ursprungs-Instanz selbst ist der Replace ein No-op (bzw. nur
+	 * Scheme/Host-Strip bei root-relative).
 	 *
 	 * @param string $content
+	 * @param bool   $root_relative When true (default), emit root-relative paths.
 	 * @return string
 	 */
-	public static function normalize_plugin_asset_urls( $content ) {
+	public static function normalize_plugin_asset_urls( $content, $root_relative = true ) {
 		if ( ! is_string( $content ) || $content === '' ) {
 			return $content;
 		}
 
-		// Prefer the precomputed plugin URL constant; fall back to `plugins_url()`
-		// against `GUTENBLOCK_PRO_FILE` for safety. Both yield the same value but
-		// the constant route works even on early hooks where `plugins_url()` may
-		// not yet be available.
-		if ( defined( 'GUTENBLOCK_PRO_URL' ) ) {
-			$base = rtrim( GUTENBLOCK_PRO_URL, '/' );
-		} elseif ( defined( 'GUTENBLOCK_PRO_FILE' ) && function_exists( 'plugins_url' ) ) {
-			$base = rtrim( plugins_url( '', GUTENBLOCK_PRO_FILE ), '/' );
-		} else {
+		$abs_base = self::plugin_asset_absolute_base();
+		if ( $abs_base === '' ) {
 			return $content;
 		}
+		$base = $root_relative ? self::plugin_asset_root_relative_base() : $abs_base;
 
 		if ( strpos( $content, '__PLUGIN_URL__' ) !== false ) {
 			$content = str_replace( '__PLUGIN_URL__', $base, $content );
@@ -531,6 +562,55 @@ class GutenBlock_Pro_Pattern_Loader {
 			},
 			$content
 		);
+	}
+
+	/**
+	 * Rewrite same-origin absolute URLs in a full HTML document to root-relative paths.
+	 *
+	 * Used for static pattern preview HTML (admin + FSE modal iframes). Those documents
+	 * are persisted under `uploads/gutenblock-pro/preview-cache/` and must not bake in
+	 * `http://localhost:…` for images, CSS (`wp_print_styles`) or scripts — otherwise a
+	 * migrated/production site keeps loading preview assets from the old host.
+	 *
+	 * @param string $html Full HTML document.
+	 * @return string
+	 */
+	public static function make_same_origin_urls_root_relative( $html ) {
+		if ( ! is_string( $html ) || $html === '' ) {
+			return $html;
+		}
+
+		$origins = array();
+		foreach ( array( home_url(), site_url(), content_url(), plugins_url(), includes_url() ) as $url ) {
+			$parts = wp_parse_url( $url );
+			if ( empty( $parts['host'] ) ) {
+				continue;
+			}
+			$scheme = isset( $parts['scheme'] ) ? $parts['scheme'] : 'http';
+			$origin = $scheme . '://' . $parts['host'];
+			if ( ! empty( $parts['port'] ) ) {
+				$origin .= ':' . $parts['port'];
+			}
+			$origins[] = $origin;
+		}
+		$origins = array_unique( $origins );
+
+		foreach ( $origins as $origin ) {
+			// http://host:port/path → /path  (and bare http://host:port → empty → keep as / via next pass if needed)
+			$html = str_replace( $origin, '', $html );
+		}
+
+		// Protocol-relative same-host leftovers: //localhost:10038/wp-content/...
+		foreach ( $origins as $origin ) {
+			$parts = wp_parse_url( $origin );
+			if ( empty( $parts['host'] ) ) {
+				continue;
+			}
+			$hostport = $parts['host'] . ( ! empty( $parts['port'] ) ? ':' . $parts['port'] : '' );
+			$html     = preg_replace( '#(?<=["\'(])//' . preg_quote( $hostport, '#' ) . '/#', '/', $html );
+		}
+
+		return $html;
 	}
 
 	/**
