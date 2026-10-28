@@ -1,6 +1,10 @@
 /**
  * Suppress WordPress core "Choose a pattern" on new pages.
  * GutenBlock builds content via the FSE Agent and its own pattern modal.
+ *
+ * Important: match by pattern-browser UI only — never by modal title.
+ * Titles like "Create pattern" / "Muster erstellen" also contain those words
+ * and must stay open for the native unsynced-pattern flow.
  */
 
 import { dispatch, select, subscribe } from '@wordpress/data';
@@ -13,6 +17,10 @@ const GB_MODAL_MARKERS = [
 	'gutenblock-pro-pattern-creator-modal',
 	'gutenblock-material-icon-modal',
 ];
+
+/** DOM markers that only appear in the starter "Choose a pattern" dialog. */
+const STARTER_PATTERN_BROWSER =
+	'.block-editor-block-patterns-list, .block-editor-patterns__grid, .block-editor-block-patterns-explorer';
 
 function isGutenBlockModal(frame) {
 	if (!frame) {
@@ -46,18 +54,8 @@ function tryCloseStarterPatternModal(frame) {
 		return false;
 	}
 
-	const heading = frame.querySelector('.components-modal__header-heading');
-	const label = (heading?.textContent || '').toLowerCase();
-	const isPatternPicker =
-		label.includes('pattern') ||
-		label.includes('muster') ||
-		label.includes('vorlage') ||
-		label.includes('template') ||
-		frame.querySelector(
-			'.block-editor-block-patterns-list, .block-editor-patterns__grid, .block-editor-block-patterns-explorer'
-		);
-
-	if (!isPatternPicker) {
+	// Require an actual pattern browser — title matching closed "Create pattern".
+	if (!frame.querySelector(STARTER_PATTERN_BROWSER)) {
 		return false;
 	}
 

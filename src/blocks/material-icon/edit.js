@@ -32,10 +32,28 @@ function getViewBoxFromData( data ) {
 	return data.viewBox;
 }
 
-function SvgPreview( { path, size, color, viewBox = DEFAULT_VIEWBOX } ) {
+/**
+ * Match PHP render: when the block has an explicit color, mark it so
+ * tone-inheritance CSS (fill: currentColor !important inside tertiary /
+ * contrast sections) does not override the chosen icon color in the editor.
+ */
+function iconClassName( { custom = false, hasExplicitColor = false } = {} ) {
+	return [
+		'wp-block-gutenblock-pro-material-icon',
+		custom ? 'wp-block-gutenblock-pro-material-icon--custom' : '',
+		hasExplicitColor ? 'has-explicit-icon-color' : '',
+	]
+		.filter( Boolean )
+		.join( ' ' );
+}
+
+function SvgPreview( { path, size, color, viewBox = DEFAULT_VIEWBOX, hasExplicitColor = false } ) {
 	if ( ! path ) return null;
 	return (
-		<span className="wp-block-gutenblock-pro-material-icon" style={ { display: 'inline-block', width: size + 'px', height: size + 'px' } }>
+		<span
+			className={ iconClassName( { hasExplicitColor } ) }
+			style={ { display: 'inline-block', width: size + 'px', height: size + 'px', color } }
+		>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox={ viewBox } width={ size } height={ size } fill={ color } aria-hidden="true">
 				<path d={ path } />
 			</svg>
@@ -43,11 +61,11 @@ function SvgPreview( { path, size, color, viewBox = DEFAULT_VIEWBOX } ) {
 	);
 }
 
-function CustomSvgPreview( { markup, size, color } ) {
+function CustomSvgPreview( { markup, size, color, hasExplicitColor = false } ) {
 	if ( ! markup ) return null;
 	return (
 		<span
-			className="wp-block-gutenblock-pro-material-icon wp-block-gutenblock-pro-material-icon--custom"
+			className={ iconClassName( { custom: true, hasExplicitColor } ) }
 			style={ { display: 'inline-block', width: size + 'px', height: size + 'px', color } }
 		>
 			<div
@@ -154,6 +172,8 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 	const hasMaterialIcon = iconSource !== 'custom' && !! icon;
 	const hasCustomSvg = iconSource === 'custom' && !! customSvgMarkup;
 	const hasIcon = hasMaterialIcon || hasCustomSvg;
+	// Same condition as class-material-icons.php render_block().
+	const hasExplicitColor = !!( colorSlug || color );
 	const pathCacheRef = useRef( {} );
 
 	const getPathsForIcons = useCallback( ( iconNames ) => {
@@ -280,11 +300,22 @@ export default function Edit( { attributes, setAttributes, isSelected } ) {
 				{ hasIcon ? (
 					<div className="gutenblock-material-icon-preview">
 						{ hasCustomSvg ? (
-							<CustomSvgPreview markup={ customSvgMarkup } size={ size } color={ displayColor } />
+							<CustomSvgPreview
+								markup={ customSvgMarkup }
+								size={ size }
+								color={ displayColor }
+								hasExplicitColor={ hasExplicitColor }
+							/>
 						) : loadingPaths ? (
 							<span className="gutenblock-material-icon-loading">{ __( 'Laden…', 'gutenblock-pro' ) }</span>
 						) : svgPath ? (
-							<SvgPreview path={ svgPath } size={ size } color={ displayColor } viewBox={ viewBox || DEFAULT_VIEWBOX } />
+							<SvgPreview
+								path={ svgPath }
+								size={ size }
+								color={ displayColor }
+								viewBox={ viewBox || DEFAULT_VIEWBOX }
+								hasExplicitColor={ hasExplicitColor }
+							/>
 						) : (
 							<div className="gutenblock-material-icon-error">
 								<span>{ __( 'Icon konnte nicht geladen werden.', 'gutenblock-pro' ) }</span>
